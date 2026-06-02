@@ -1,0 +1,44 @@
+name: focus_desk
+description: A simple Pomodoro timer with menu bar controls and focus music.
+publish_to: none
+version: 0.1.0+1
+
+environment:
+  sdk: '>=3.8.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/music/
+
+  # Stint typography (see THIRD_PARTY_NOTICES.md). SIL Open Font License;
+  # licenses in assets/fonts/*/OFL.txt. Static instances cut from the Google Fonts
+  # variable files; Martian Mono at its default width (wdth 112.5).
+  fonts:
+    - family: MartianMono
+      fonts:
+        - asset: assets/fonts/MartianMono/MartianMono-Light.ttf
+          weight: 300
+        - asset: assets/fonts/MartianMono/MartianMono-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/MartianMono/MartianMono-Medium.ttf
+          weight: 500
+    - family: HankenGrotesk
+      fonts:
+        - asset: assets/fonts/HankenGrotesk/HankenGrotesk-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/HankenGrotesk/HankenGrotesk-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/HankenGrotesk/HankenGrotesk-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/HankenGrotesk/HankenGrotesk-Bold.ttf
+          weight: 700

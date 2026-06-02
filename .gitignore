@@ -1,0 +1,37 @@
+.dart_tool/
+build/
+.DS_Store
+.idea/
+*.iml
+macos/Flutter/ephemeral/
+macos/Pods/
+**/xcuserdata/
+coverage/
+.tooling/
+
+# Private development records and historical design inputs.
+docs/native-verification-backup.json
+docs/verification.md
+docs/specs/
+docs/handoff/
+docs/screenshots/
+design.md
+
+# Local credentials, signing material, and editor state.
+.env
+.env.*
+!.env.example
+*.p12
+*.p8
+*.mobileprovision
+*.provisionprofile
+*.keychain*
+.vscode/
+
+# Optional media tool caches; editable source and final media are committed.
+node_modules/
+tooling/video/output/
+tooling/video/.hyperframes/
+*.log
+__pycache__/
+.venv/
