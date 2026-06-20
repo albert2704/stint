@@ -1,0 +1,49 @@
+name: Checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: checks-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  macos:
+    name: Flutter and native macOS checks
+    runs-on: macos-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Install pinned Flutter SDK
+        env:
+          FLUTTER_REVISION: 5fc346839b5d0eef006ed8404392afb4dfae428d
+        run: |
+          git clone --depth 1 --branch 3.47.6 https://github.com/flutter/flutter.git "$RUNNER_TEMP/flutter"
+          test "$(git -C "$RUNNER_TEMP/flutter" rev-parse HEAD)" = "$FLUTTER_REVISION"
+          echo "$RUNNER_TEMP/flutter/bin" >> "$GITHUB_PATH"
+      - name: Prepare dependencies and engine
+        run: |
+          bash scripts/flutter.sh pub get
+          bash scripts/flutter.sh precache --macos --no-ios --no-android --no-web --no-linux --no-windows --no-fuchsia
+      - name: Analyze
+        run: bash scripts/flutter.sh analyze lib test
+      - name: Flutter tests
+        run: bash scripts/flutter.sh test --reporter expanded
+      - name: Native macOS checks
+        run: |
+          bash scripts/test-keymap.sh
+          TZ=UTC bash scripts/test-completion-alert.sh
+          # Reuse the compiled harness to exercise local midnight outside UTC.
+          TZ=Asia/Ho_Chi_Minh build/native-tests/completion-alert
+          bash scripts/test-notification-card.sh
+          bash scripts/test-music-state.sh
+          bash scripts/test-youtube-presentation.sh
