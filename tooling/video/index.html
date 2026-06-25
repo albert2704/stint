@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=1280,height=720"><title>Stint — Focus. Rest. Repeat.</title>
+<script src="node_modules/gsap/dist/gsap.min.js"></script>
+<style>
+@font-face{font-family:HankenGrotesk;src:url('assets/HankenGrotesk-Regular.ttf');font-weight:400}
+@font-face{font-family:HankenGrotesk;src:url('assets/HankenGrotesk-Bold.ttf');font-weight:700}
+@font-face{font-family:MartianMono;src:url('assets/MartianMono-Regular.ttf');font-weight:400}
+*{box-sizing:border-box}body{margin:0;background:#101113;color:#EDECEA;font-family:HankenGrotesk,sans-serif}
+#root{position:relative;width:100%;height:100%;overflow:hidden;background:#101113}
+.clip{position:absolute;inset:0}.inner{position:absolute;inset:0}
+.brand{z-index:10;position:absolute;left:64px;top:42px;display:flex;align-items:center;gap:13px;font:700 28px HankenGrotesk,sans-serif;letter-spacing:-1px}.brand img{width:38px;height:38px}
+.edition{z-index:10;position:absolute;right:64px;top:53px;font:400 11px MartianMono,monospace;color:#ABAFB7;letter-spacing:1px}
+.copy{position:absolute;left:64px;top:172px;width:555px}.eyebrow{color:#F88932;font:400 12px MartianMono,monospace;letter-spacing:2px;margin:0 0 24px}
+h1,h2,p{margin:0}h1,h2{font-size:68px;line-height:1.24;letter-spacing:-2.5px;font-weight:700}h1 span,h2 span{display:block}.accent{color:#F88932}.blue{color:#78B9E6}
+.description{font-size:23px;line-height:1.45;color:#ABAFB7;margin-top:25px;max-width:480px}
+.chips{display:flex;gap:10px;margin-top:30px}.chip{font:400 12px MartianMono,monospace;color:#EDECEA;padding:12px 15px;border:1px solid #36393E;border-radius:7px}
+.shot{position:absolute;left:776px;top:108px;width:342px;border:1px solid #36393E;border-radius:18px;overflow:hidden;background:#101113}.shot img{width:100%;display:block}.shot.rhythm{top:108px;left:767px;width:365px}.shot.progress{top:108px;left:790px;width:320px}
+.footer{position:absolute;left:64px;bottom:37px;right:64px;display:flex;justify-content:space-between;color:#ABAFB7;font:400 10px MartianMono,monospace;letter-spacing:1.2px}.footer strong{font-weight:400;color:#F88932}.divider{position:absolute;left:64px;right:64px;bottom:69px;height:1px;background:#2E3035}
+.sound-shot{position:absolute;left:670px;top:235px;width:520px;height:283px;overflow:hidden;border:1px solid #36393E;border-radius:22px;background:#1B1C1F}.sound-shot img{display:block;width:552px;position:absolute;left:-16px;top:-493px}
+.caption{position:absolute;left:685px;top:546px;width:490px;color:#ABAFB7;font-size:16px;text-align:center}
+.film-progress{z-index:10;position:absolute;left:534px;top:61px;width:212px;height:3px;background:#2E3035;border-radius:3px;overflow:hidden}.film-fill{width:100%;height:100%;background:#F88932;transform-origin:left}
+</style></head><body>
+<div data-hf-id="hf-s7t5" id="root" data-composition-id="stint-demo" data-width="1280" data-height="720" data-start="0" data-duration="25">
+<div data-hf-id="hf-ewih" class="brand"><img data-hf-id="hf-g45q" src="assets/stint-icon.png" alt="Stint icon">stint</div><div class="film-progress" aria-hidden="true"><div class="film-fill"></div></div><div data-hf-id="hf-g4lj" class="edition">POMODORO FOR MACOS</div>
+<div data-hf-id="hf-duct" id="scene-1" data-composition-id="scene-1" data-composition-src="compositions/frames/1.html" data-start="0" data-duration="5" data-width="1280" data-height="720" data-track-index="0"></div>
+<div data-hf-id="hf-8kva" id="scene-2" data-composition-id="scene-2" data-composition-src="compositions/frames/2.html" data-start="5" data-duration="5" data-width="1280" data-height="720" data-track-index="1"></div>
+<div data-hf-id="hf-u3rm" id="scene-3" data-composition-id="scene-3" data-composition-src="compositions/frames/3.html" data-start="10" data-duration="5" data-width="1280" data-height="720" data-track-index="2"></div>
+<div data-hf-id="hf-hrrd" id="scene-4" data-composition-id="scene-4" data-composition-src="compositions/frames/4.html" data-start="15" data-duration="5" data-width="1280" data-height="720" data-track-index="3"></div>
+<div data-hf-id="hf-ym7r" id="scene-5" data-composition-id="scene-5" data-composition-src="compositions/frames/5.html" data-start="20" data-duration="5" data-width="1280" data-height="720" data-track-index="4"></div>
+<audio id="quiet-keys-bed" src=".media/audio/bgm/bgm_001.wav" data-label="Quiet Keys · music bed" data-start="0" data-duration="25" data-media-start="0" data-track-index="5" data-volume="1" data-automation="{&quot;version&quot;:1,&quot;lanes&quot;:[{&quot;target&quot;:&quot;volume&quot;,&quot;points&quot;:[{&quot;t&quot;:0,&quot;v&quot;:0},{&quot;t&quot;:0.8,&quot;v&quot;:0.7},{&quot;t&quot;:23.7,&quot;v&quot;:0.7},{&quot;t&quot;:25,&quot;v&quot;:0}]}]}"></audio>
+</div><script>const tl=gsap.timeline({paused:true});tl.fromTo('.film-fill',{scaleX:0},{scaleX:1,duration:25,ease:'none'},0);window.__timelines['stint-demo']=tl;</script></body></html>

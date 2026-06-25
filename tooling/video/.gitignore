@@ -1,0 +1,8 @@
+node_modules/
+.hyperframes/
+renders/
+*.log
+snapshots/
+.DS_Store
+.thumbnails/
+.waveform-cache/
