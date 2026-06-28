@@ -1,0 +1,32 @@
+name: Bug report
+description: Report a reproducible problem in Stint
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: Please use demonstration data. Keep personal workspace files, audio, and credentials out of this public report.
+  - type: textarea
+    id: behavior
+    attributes:
+      label: What happened?
+      description: Include what you expected to happen.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: macOS version, Mac architecture, Stint commit, and build method.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Screenshots or logs
+      description: Optional. Remove personal paths and data before uploading.

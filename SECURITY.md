@@ -1,0 +1,21 @@
+# Security
+
+Stint is an early macOS application. Security fixes currently target the latest default branch. There is no long-term support release policy yet.
+
+## Report a vulnerability
+
+Please use [GitHub's private vulnerability reporting](https://github.com/albert2704/stint/security/advisories/new). Include the affected commit or version, macOS version, reproduction steps, and likely impact. A small reproduction using synthetic data is more useful than a copy of your personal workspace.
+
+Do not put credentials, imported audio, saved notes, timer history, or personal file paths in a public issue. If private reporting is unavailable, open a public issue asking for a private contact channel without disclosing the vulnerability.
+
+There is no guaranteed response time or bug bounty. Coordinated disclosure is appreciated.
+
+## Relevant boundaries
+
+- The app stores state locally and does not provide a Stint account or cloud service.
+- YouTube playback connects to external YouTube services in a native WebKit view.
+- Imported audio is copied into the app's local library.
+- The development bundle is signed locally, not notarized for public distribution.
+- Global shortcuts register specific key combinations. The shortcut recorder captures keys only while you explicitly record a binding in Stint.
+
+See the [privacy notes](docs/privacy.md) for storage and network behavior.
