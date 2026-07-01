@@ -1,0 +1,42 @@
+name: Package macOS
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: package-macos-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  package:
+    name: Universal macOS preview
+    runs-on: macos-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Install pinned Flutter SDK
+        env:
+          FLUTTER_REVISION: 5fc346839b5d0eef006ed8404392afb4dfae428d
+        run: |
+          git clone --depth 1 --branch 3.47.6 https://github.com/flutter/flutter.git "$RUNNER_TEMP/flutter"
+          test "$(git -C "$RUNNER_TEMP/flutter" rev-parse HEAD)" = "$FLUTTER_REVISION"
+          echo "$RUNNER_TEMP/flutter/bin" >> "$GITHUB_PATH"
+      - name: Build and verify universal packages
+        run: bash scripts/package-macos.sh
+      - name: Preserve packages
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: stint-macos-preview
+          path: |
+            build/distribution/*.dmg
+            build/distribution/*.zip
+            build/distribution/SHA256SUMS.txt
+            build/distribution/entitlements.plist
+          if-no-files-found: error
+          retention-days: 14
