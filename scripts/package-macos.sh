@@ -40,6 +40,7 @@ cp assets/fonts/MartianMono/OFL.txt "$LICENSES/MartianMono-OFL.txt"
 STINT_SDK="$(sed -n 's/^FLUTTER_ROOT=//p' macos/Flutter/ephemeral/Flutter-Generated.xcconfig | head -1)"
 cp "$STINT_SDK/LICENSE" "$LICENSES/Flutter-LICENSE.txt"
 cp "$STINT_SDK/bin/cache/artifacts/engine/darwin-x64-release/LICENSE.artifacts.md" "$LICENSES/Flutter-Engine-NOTICES.md"
+cp "$STINT_SDK/bin/cache/pkg/sky_engine/LICENSE" "$LICENSES/Flutter-Engine-LICENSE.txt"
 
 # The preview has an integrity signature, not Apple Developer ID signing.
 while IFS= read -r -d '' framework; do
@@ -68,6 +69,9 @@ info = plistlib.loads((pathlib.Path(sys.argv[2])/'Contents/Info.plist').read_byt
 assert info['CFBundleShortVersionString'] == sys.argv[3]
 assert info['LSMinimumSystemVersion'] == '12.0'
 PY
+if [ "${STINT_PACKAGE_SMOKE_TEST:-0}" = 1 ]; then
+  python3 scripts/smoke-release-macos.py "$APP" "$OUTPUT/bootstrap.log"
+fi
 cat > "$STAGE/Install Stint.txt" <<'TEXT'
 Stint for macOS 12 or later (Apple Silicon and Intel)
 
