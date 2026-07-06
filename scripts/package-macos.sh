@@ -51,7 +51,7 @@ codesign --verify --deep --strict --verbose=2 "$APP"
 for binary in "$APP/Contents/MacOS/Stint" \
   "$APP/Contents/Frameworks/App.framework/App" \
   "$APP/Contents/Frameworks/FlutterMacOS.framework/FlutterMacOS"; do
-  lipo -verify_arch arm64 x86_64 "$binary"
+  lipo "$binary" -verify_arch arm64 x86_64
 done
 if find "$APP" -name kernel_blob.bin -print | grep -q .; then
   echo 'Refusing to package a debug Dart kernel.' >&2
