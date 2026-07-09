@@ -49,12 +49,32 @@ The Apple Silicon Command Line Tools development build was built and its code si
 
 The initial public source files also built successfully in a clean temporary checkout, using Flutter from `PATH` and a shared package cache. Static analysis and all 146 Flutter tests passed in that copy. No private design handoff files or project-local SDK were present. These checks verify the documented local packaging route and tests against the files being published.
 
+## Downloadable package verification
+
+**Passed on 10 October 2026:** [Package macOS run 38019933799](https://github.com/albert2704/stint/actions/runs/38019933799), at source commit `1c2e3d3`, built the v0.1.0 universal release with full Xcode on an Apple Silicon GitHub runner. This is separate from the earlier Command Line Tools debug build.
+
+[`scripts/package-macos.sh`](../scripts/package-macos.sh) completed these checks:
+
+- Full Xcode release build with `arm64` and `x86_64` slices verified in the app executable, `App.framework`, and `FlutterMacOS.framework`.
+- Deep, strict verification of the ad hoc app signature and its embedded frameworks.
+- No debug Dart kernel, with sandbox/network client entitlements present and JIT/debugger entitlements absent.
+- App version `0.1.0` and declared minimum macOS version `12.0`.
+- DMG verification and SHA256 checksum generation for the DMG and ZIP archives.
+
+The [development guide](development.md#package-a-downloadable-prerelease) gives the reproduction command and output paths.
+
+The manual [Package macOS workflow](../.github/workflows/package-macos.yml) also passed [`scripts/smoke-release-macos.py`](../scripts/smoke-release-macos.py) on the disposable Apple Silicon runner. The exact staged app stayed alive, and Flutter/native startup created its sandbox data directory. The check terminated that process afterward. It did not interact with a contributor's saved workspace and refuses to run outside the expected CI environment.
+
+These results establish both architecture slices and startup on the runner's Apple Silicon host. Physical Intel and macOS 12 device testing, the downloaded app's Gatekeeper flow, and a manual install/upgrade have not been verified. Bootstrap is not a full UI session and does not exercise every timer, music, or notification action.
+
+The downloaded v0.1.0 DMG and ZIP passed SHA256 comparison on an Apple Silicon Mac. The extracted ZIP app passed strict signature verification and contained both architectures in its executable and frameworks. The disk image passed `hdiutil verify`. A copied release bundle with a separate test identifier opened the interface and passed Start/Pause interaction checks; the published bundle was not modified. This isolated UI check does not establish an upgrade or Gatekeeper flow with the production app identity.
+
 ## Limits and manual checks
 
 - Physical Mac-wide shortcut delivery remains a manual check. Targeted UI automation can reach the app's shortcut recorder without going through system hotkey matching. Registration success and headless routing tests do not prove hardware-key delivery from another app.
 - Test **Control + Option + Command + S** while another app is active. The timer panel should appear. Test Start/Pause next; Reset and Skip should show confirmation when the interval has unfinished time.
 - YouTube needs real network and embedding permission for the chosen video. Headless tests cannot guarantee availability of a third-party stream.
 - System notification presentation depends on macOS permissions and Focus settings. A normal-Quit notification should also be tested on a real Mac.
-- The Xcode release build, Intel hardware, code signing for distribution, and notarization are not verified release paths yet. Android is not implemented.
+- The universal Xcode package and Apple Silicon bootstrap passed. Physical Intel and macOS 12 testing, Gatekeeper interaction, and a manual upgrade remain unverified. The prerelease uses ad hoc signing; Apple Developer ID signing and notarization are not provided. Android is not implemented.
 
 CI runs the same automated suites on a GitHub-hosted Mac. A green run is useful evidence for the tested commit, not a claim that all hardware and OS behaviors have been exercised.

@@ -1,6 +1,6 @@
 # Developing Stint
 
-Stint combines a Flutter interface with small native macOS services. The verified development route builds an Apple Silicon debug app using Apple's Command Line Tools. A standard Flutter/Xcode project is also included, but its release build has not been verified in the current project environment.
+Stint combines a Flutter interface with small native macOS services. The verified local development route builds an Apple Silicon debug app using Apple's Command Line Tools. A separate full Xcode workflow builds a universal release app and downloadable DMG and ZIP files. Its package checks and Apple Silicon bootstrap passed in the [v0.1.0 packaging run](https://github.com/albert2704/stint/actions/runs/38019933799).
 
 [Architecture](architecture.md) · [Contributing](../CONTRIBUTING.md) · [Troubleshooting](troubleshooting.md) · [README](../README.md)
 
@@ -12,10 +12,10 @@ Stint combines a Flutter interface with small native macOS services. The verifie
 | Verified local architecture | Apple Silicon (`arm64`). |
 | Development toolchain | Flutter, Dart, Apple's Command Line Tools, and the macOS SDK. |
 | Last recorded Flutter toolchain | Flutter 3.47.6 / Dart 3.13.5. |
-| Standard Xcode host | Included; full Xcode build and release packaging remain unverified. |
-| Intel Mac | The local helper rejects non-arm64 hosts. The standard Xcode route is a possible porting path, not a verified binary. |
+| Xcode release packaging | `scripts/package-macos.sh` builds both `arm64` and `x86_64`; package checks and Apple Silicon bootstrap passed for v0.1.0. |
+| Intel Mac | The release contains a verified Intel slice, but no physical Intel run has been verified. The local debug helper remains arm64 only. |
 | Android / iOS / Windows / Linux / web | Not implemented or supported by this repository's native services. |
-| Distribution | No Developer ID signing, notarization, updater, or App Store release is configured. |
+| Distribution | The prerelease workflow uses ad hoc signing. Developer ID signing, notarization, an updater, and an App Store release are not configured. |
 
 The Dart SDK constraint is declared in [pubspec.yaml](../pubspec.yaml); it is not a promise that every Flutter version satisfying that constraint has been tested. `pubspec.lock` records package resolution. There are no third-party runtime packages; development dependencies include Flutter's test framework and lint rules.
 
@@ -63,7 +63,7 @@ open 'build/verified/Stint.app'
 
 Quit the earlier app first before opening the alternate bundle. Both bundles use the same application identity and local data; they are not isolated test profiles. Use controlled fixtures for destructive tests instead of a personal workspace.
 
-The helper packages a debug engine; it is not a replacement for a complete distribution pipeline. Rebuild and relaunch this bundle after source changes. Use the standard Flutter route below if you need Flutter's normal `run` workflow and have a suitable Xcode installation.
+The helper packages a debug engine for Apple Silicon. Rebuild and relaunch this bundle after source changes. Use the standard Flutter route below for Flutter's normal `run` workflow, or [release packaging](#package-a-downloadable-prerelease) for a universal app, with a suitable full Xcode installation.
 
 ## Standard Flutter / Xcode route
 
@@ -75,7 +75,7 @@ bash scripts/flutter.sh run -d macos
 bash scripts/flutter.sh build macos --release
 ```
 
-These are the standard project entry points, **not recorded successful builds for this project**. Validate them on a full Xcode machine before documenting support or publishing a binary. Native changes may require updating both the Xcode project and the Command Line Tools script. Do not assume a Swift runner change affects the separate local Objective-C host.
+These are the standard project entry points; their results should be verified on the machine you use. For the downloadable prerelease, use `scripts/package-macos.sh` instead of treating a raw Flutter output as a finished distribution. Native changes may require updating both the Xcode project and the Command Line Tools script. Do not assume a Swift runner change affects the separate local Objective-C host.
 
 ## Checks
 
@@ -139,8 +139,43 @@ It reports the app's notification authorization and pending/delivered notificati
 
 To regenerate the three built-in focus loops, inspect and run [generate_focus_music.py](../scripts/generate_focus_music.py). Its optional authoring dependency is Python 3 with NumPy; use a virtual environment for that tool. NumPy is not an app runtime dependency. Treat audio changes as user-visible asset changes: listen to the result, compare file size and loop boundaries, and document any new dependency or licensing source.
 
-## Preparing a release
+## Package a downloadable prerelease
 
-Source availability does not make a locally built debug bundle a distributable release. Before shipping a download, establish a tested release host, supported architecture/OS matrix, versioned artifact names, Developer ID signing and notarization, and a clean install/upgrade test. Include licenses for bundled material and publish checksums for the exact artifact. Keep signing credentials and private user data out of the repository.
+This path requires **full Xcode**, Flutter on `PATH` or in `.tooling/flutter`, Python 3, and the macOS tools included with Xcode and macOS. Command Line Tools alone are insufficient. The script reads the version from `pubspec.yaml`.
 
-These release tasks are not currently configured. Contributions that add them should document the exact commands and preserve the compatibility and data-protection rules in [CONTRIBUTING.md](../CONTRIBUTING.md).
+```sh
+bash scripts/package-macos.sh
+```
+
+The script configures the macOS release project through Flutter, then calls Xcode directly for both `arm64` and `x86_64`. This produces ahead-of-time compiled Dart code, without a debug kernel. The direct Xcode step preserves the checked-in release sandbox entitlements instead of allowing Flutter's CI development override to replace them.
+
+It copies the generated app to `build/package-stage/Stint.app`, includes project, font, Flutter, and engine license notices, applies an ad hoc signature, and creates these files for version 0.1.0:
+
+| Output in `build/distribution/` | Purpose |
+| --- | --- |
+| `Stint-0.1.0-macos-universal.dmg` | Disk image containing the app, an Applications shortcut, and installation text. |
+| `Stint-0.1.0-macos-universal.zip` | Archive containing the same app and installation text. |
+| `SHA256SUMS.txt` | SHA256 values for the DMG and ZIP. |
+| `entitlements.plist` | Entitlements extracted from the signed app for verification. |
+
+The versioned filenames change with `pubspec.yaml`. Repeating the command replaces generated packaging files; the script clears `build/package-stage/`. It does not install the app in Applications or launch it in your personal profile.
+
+The script checks the app's signature, both architecture slices in the executable and two framework binaries, absence of a debug Dart kernel, the version and macOS 12 minimum in the bundle, and release sandbox entitlements. It rejects debug JIT and debugger entitlements, verifies the disk image, and calculates archive checksums. These checks passed for v0.1.0; see [verification results and limits](testing.md#downloadable-package-verification).
+
+### Build in GitHub Actions
+
+The [Package macOS workflow](../.github/workflows/package-macos.yml) has a manual `workflow_dispatch` trigger. In GitHub, open **Actions → Package macOS → Run workflow**, select the intended branch, and start the run. It installs the pinned Flutter SDK and runs the same packaging script on a hosted Mac.
+
+On success, the run preserves a **stint-macos-preview** artifact containing the DMG, ZIP, checksums, entitlements, and bootstrap log for 14 days. This artifact is a CI download, not an automatically published GitHub release. Check the selected commit and run result before attaching files to a release.
+
+The workflow sets `STINT_PACKAGE_SMOKE_TEST=1` to run [smoke-release-macos.py](../scripts/smoke-release-macos.py) against the exact staged app before archiving it. The check requires a disposable GitHub runner with no existing Stint data folder. It confirms that the process remains alive and Flutter/native startup creates the expected sandbox data directory, then terminates the process. It refuses to run as a local profile test. Do not fake the runner environment to bypass that protection.
+
+This smoke check exercises only the runner's host architecture and startup. It does not prove the Intel slice on physical hardware, a full UI session, imported media, or Gatekeeper's downloaded-app experience.
+
+### Release verification and publication
+
+The [v0.1.0 package workflow](https://github.com/albert2704/stint/actions/runs/38019933799) passed on 10 October 2026 at source commit `1c2e3d3`, including universal architecture checks and startup on an Apple Silicon runner. The [release notes](releases/v0.1.0.md) and [installation guide](install.md) describe the downloads. Physical Intel and macOS 12 testing, the downloaded app's Gatekeeper flow, and a manual upgrade remain unverified.
+
+For later releases, check the exact artifacts and their checksums, review the bootstrap log, and document the install/upgrade checks actually performed before publishing. A successful CI run does not replace device testing or establish Apple approval.
+
+Ad hoc signing verifies bundle integrity but does not establish an Apple Developer ID. This workflow does not notarize or staple the app, and a downloaded build can trigger Gatekeeper. Publish it as a prerelease with that limitation stated clearly. A future trusted distribution route needs Developer ID signing and notarization; keep signing credentials out of the repository and preserve the compatibility rules in [CONTRIBUTING.md](../CONTRIBUTING.md).
