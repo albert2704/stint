@@ -13,7 +13,7 @@ app = pathlib.Path(sys.argv[1]).resolve()
 log = pathlib.Path(sys.argv[2])
 info = plistlib.loads((app / 'Contents/Info.plist').read_bytes())
 bundle_id = info['CFBundleIdentifier']
-support = pathlib.Path.home() / 'Library/Containers' / bundle_id / 'Data/Library/Application Support/Focus Desk'
+support = pathlib.Path.home() / 'Library/Containers' / bundle_id / 'Data/Library/Application Support/Stint'
 if support.exists():
     raise SystemExit('Expected a clean CI profile; the Stint data folder already exists.')
 with log.open('w') as output:

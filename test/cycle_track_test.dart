@@ -3,11 +3,11 @@ import 'dart:ui' show SemanticsAction;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:focus_desk/data/controller.dart';
-import 'package:focus_desk/data/store.dart';
-import 'package:focus_desk/main.dart';
-import 'package:focus_desk/ui/pomodoro.dart';
-import 'package:focus_desk/ui/theme.dart';
+import 'package:stint/data/controller.dart';
+import 'package:stint/data/store.dart';
+import 'package:stint/main.dart';
+import 'package:stint/ui/pomodoro.dart';
+import 'package:stint/ui/theme.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -21,14 +21,14 @@ void main() {
   testWidgets(
     'icon controls expose their label and tap action on one button node',
     (tester) async {
-      final c = DeskController(
+      final c = StintController(
         MemoryWorkspaceStore(),
         tickAutomatically: false,
       );
       addTearDown(c.dispose);
       final handle = tester.ensureSemantics();
       try {
-        await tester.pumpWidget(FocusDeskApp(controller: c));
+        await tester.pumpWidget(StintApp(controller: c));
         await tester.pumpAndSettle();
         for (final label in [
           'Settings',
@@ -54,7 +54,7 @@ void main() {
     'current cycle label and proportions reflect adjustment, not next defaults',
     (tester) async {
       var now = DateTime(2026, 10, 9, 12);
-      final c = DeskController(
+      final c = StintController(
         MemoryWorkspaceStore(),
         now: () => now,
         tickAutomatically: false,
@@ -62,7 +62,7 @@ void main() {
       addTearDown(c.dispose);
       await tester.pumpWidget(
         MaterialApp(
-          theme: deskTheme(Brightness.light),
+          theme: stintTheme(Brightness.light),
           home: Scaffold(
             body: Center(
               child: SizedBox(
@@ -121,7 +121,7 @@ void main() {
   testWidgets(
     'confirmation announces its title without making countdown a live region',
     (tester) async {
-      final c = DeskController(
+      final c = StintController(
         MemoryWorkspaceStore(),
         tickAutomatically: false,
       );
@@ -130,7 +130,7 @@ void main() {
       c.requestReset();
       await tester.pumpWidget(
         MaterialApp(
-          theme: deskTheme(Brightness.light),
+          theme: stintTheme(Brightness.light),
           home: Scaffold(
             body: SizedBox(width: 420, child: TimerConfirmBar(controller: c)),
           ),

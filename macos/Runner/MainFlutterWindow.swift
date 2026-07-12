@@ -3,8 +3,8 @@ import FlutterMacOS
 
 class MainFlutterWindow: NSWindow {
   private var filesChannel: FlutterMethodChannel?
-  private var menuBar: DeskMenuBar?
-  private var music: DeskMusic?
+  private var menuBar: StintMenuBar?
+  private var music: StintMusic?
 
   override func close() {
     menuBar?.windowWillClose()
@@ -21,7 +21,7 @@ class MainFlutterWindow: NSWindow {
     self.isReleasedWhenClosed = false
 
     RegisterGeneratedPlugins(registry: flutterViewController)
-    filesChannel = FlutterMethodChannel(name: "focus_desk/files", binaryMessenger: flutterViewController.engine.binaryMessenger)
+    filesChannel = FlutterMethodChannel(name: "stint/files", binaryMessenger: flutterViewController.engine.binaryMessenger)
     filesChannel?.setMethodCallHandler { [weak self] call, result in
       guard let self = self else {
         result(FlutterError(code: "closed", message: "Window closed.", details: nil))
@@ -37,8 +37,8 @@ class MainFlutterWindow: NSWindow {
       } catch { result(FlutterError(code: "storage_failed", message: error.localizedDescription, details: nil)) }
     }
 
-    menuBar = DeskMenuBar(window: self, messenger: flutterViewController.engine.binaryMessenger)
-    music = DeskMusic(window: self, messenger: flutterViewController.engine.binaryMessenger)
+    menuBar = StintMenuBar(window: self, messenger: flutterViewController.engine.binaryMessenger)
+    music = StintMusic(window: self, messenger: flutterViewController.engine.binaryMessenger)
     music?.youTubeViewChanged = { [weak self] view in
       self?.menuBar?.setYouTubeView(view)
     }
@@ -53,7 +53,7 @@ class MainFlutterWindow: NSWindow {
 
   private func dataDirectory() throws -> URL {
     let support = try FileManager.default.url(for: .applicationSupportDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
-    let directory = support.appendingPathComponent("Focus Desk", isDirectory: true)
+    let directory = support.appendingPathComponent("Stint", isDirectory: true)
     try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
     return directory
   }

@@ -2,13 +2,13 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:focus_desk/data/controller.dart';
-import 'package:focus_desk/data/store.dart';
-import 'package:focus_desk/keymap.dart';
-import 'package:focus_desk/main.dart';
-import 'package:focus_desk/ui/keymap_settings.dart';
-import 'package:focus_desk/ui/routines.dart';
-import 'package:focus_desk/ui/theme.dart';
+import 'package:stint/data/controller.dart';
+import 'package:stint/data/store.dart';
+import 'package:stint/keymap.dart';
+import 'package:stint/main.dart';
+import 'package:stint/ui/keymap_settings.dart';
+import 'package:stint/ui/routines.dart';
+import 'package:stint/ui/theme.dart';
 
 Map<String, Object?> chord(int keyCode, String label) => {
   'keyCode': keyCode,
@@ -93,7 +93,7 @@ Future<void> openEditor(WidgetTester tester) async {
   addTearDown(tester.view.resetDevicePixelRatio);
   await tester.pumpWidget(
     MaterialApp(
-      theme: deskTheme(Brightness.dark),
+      theme: stintTheme(Brightness.dark),
       home: Builder(
         builder: (context) => Scaffold(
           body: TextButton(
@@ -116,7 +116,7 @@ Future<void> tapVisible(WidgetTester tester, Finder finder) async {
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-  const channel = MethodChannel('focus_desk/timer');
+  const channel = MethodChannel('stint/timer');
   final messenger =
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
   late FakeKeymap native;
@@ -412,7 +412,7 @@ void main() {
   testWidgets(
     'settings shortcut save is separate from unsaved duration drafts',
     (tester) async {
-      final controller = DeskController(
+      final controller = StintController(
         MemoryWorkspaceStore(),
         tickAutomatically: false,
       );
@@ -421,7 +421,7 @@ void main() {
       tester.view.physicalSize = const Size(420, 600);
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
-      await tester.pumpWidget(FocusDeskApp(controller: controller));
+      await tester.pumpWidget(StintApp(controller: controller));
       await tester.pumpAndSettle();
       await tester.tap(find.byTooltip('Settings'));
       await tester.pumpAndSettle();

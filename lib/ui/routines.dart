@@ -17,7 +17,7 @@ class RhythmSelector extends StatelessWidget {
     required this.controller,
     required this.onEdit,
   });
-  final DeskController controller;
+  final StintController controller;
   final VoidCallback onEdit;
 
   @override
@@ -142,7 +142,7 @@ final _settingsNavigators = <NavigatorState>{};
 
 Future<void> showStintSettings(
   BuildContext context,
-  DeskController controller,
+  StintController controller,
 ) async {
   final navigator = Navigator.of(context);
   if (!_settingsNavigators.add(navigator)) return;
@@ -159,7 +159,7 @@ Future<void> showStintSettings(
 
 class StintSettings extends StatefulWidget {
   const StintSettings({super.key, required this.controller});
-  final DeskController controller;
+  final StintController controller;
   @override
   State<StintSettings> createState() => _StintSettingsState();
 }

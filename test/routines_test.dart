@@ -3,27 +3,27 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:focus_desk/data/controller.dart';
-import 'package:focus_desk/data/models.dart';
-import 'package:focus_desk/data/store.dart';
-import 'package:focus_desk/main.dart';
-import 'package:focus_desk/ui/routines.dart';
+import 'package:stint/data/controller.dart';
+import 'package:stint/data/models.dart';
+import 'package:stint/data/store.dart';
+import 'package:stint/main.dart';
+import 'package:stint/ui/routines.dart';
 
 Future<void> mountRoutines(
   WidgetTester tester,
-  DeskController controller,
+  StintController controller,
 ) async {
   tester.view.devicePixelRatio = 1;
   tester.view.physicalSize = const Size(420, 700);
   addTearDown(tester.view.resetPhysicalSize);
   addTearDown(tester.view.resetDevicePixelRatio);
-  await tester.pumpWidget(FocusDeskApp(controller: controller));
+  await tester.pumpWidget(StintApp(controller: controller));
   await tester.pumpAndSettle();
 }
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-  const alertChannel = MethodChannel('focus_desk/timer');
+  const alertChannel = MethodChannel('stint/timer');
   final messenger =
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
   setUpAll(() async {
@@ -40,7 +40,7 @@ void main() {
   });
   late DateTime now;
   late MemoryWorkspaceStore store;
-  late DeskController controller;
+  late StintController controller;
   setUp(() {
     messenger.setMockMethodCallHandler(alertChannel, (call) async {
       if (call.method == 'getAlertSoundSettings') {
@@ -53,7 +53,7 @@ void main() {
     });
     now = DateTime(2026, 10, 8, 10);
     store = MemoryWorkspaceStore();
-    controller = DeskController(
+    controller = StintController(
       store,
       now: () => now,
       tickAutomatically: false,
@@ -67,7 +67,7 @@ void main() {
   test('old saved data gains built-ins without changing legacy records', () {
     final legacy = Workspace.empty();
     legacy.notes.add(
-      DeskNote(
+      StintNote(
         id: 'legacy-note',
         projectId: legacy.projects.single.id,
         title: 'Keep this note',
@@ -76,7 +76,7 @@ void main() {
       ),
     );
     legacy.tasks.add(
-      DeskTask(
+      StintTask(
         id: 'legacy-task',
         projectId: legacy.projects.single.id,
         title: 'Keep this task',
@@ -88,7 +88,7 @@ void main() {
     (original['settings'] as Map).remove('customRoutines');
     (original['settings'] as Map).remove('preferredRoutineId');
     store.contents = jsonEncode(original);
-    final reopened = DeskController(
+    final reopened = StintController(
       store,
       now: () => now,
       tickAutomatically: false,
@@ -121,7 +121,7 @@ void main() {
       expect(controller.activeRoutineId, id);
       expect(controller.routines.last.name, 'My classic');
       controller.applyRoutine(id);
-      final reopened = DeskController(
+      final reopened = StintController(
         store,
         now: () => now,
         tickAutomatically: false,

@@ -4,7 +4,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 /// A visible YouTube IFrame API player. Call its methods on the main thread.
 /// Creating, selecting, and showing the player never start playback.
-@interface DeskYouTubePlayer : NSObject
+@interface StintYouTubePlayer : NSObject
 - (instancetype)initWithStateChanged:(void (^)(BOOL playing, BOOL starting,
                                                NSString *_Nullable error))stateChanged;
 @property(nonatomic, readonly) BOOL playing;

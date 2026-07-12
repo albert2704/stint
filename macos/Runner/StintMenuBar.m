@@ -1,26 +1,26 @@
-#import "DeskMenuBar.h"
-#import "DeskAlertSound.h"
-#import "DeskCompletionBanner.h"
-#import "DeskKeymap.h"
+#import "StintMenuBar.h"
+#import "StintAlertSound.h"
+#import "StintCompletionBanner.h"
+#import "StintKeymap.h"
 #import <UserNotifications/UserNotifications.h>
 #import <math.h>
 #import <CoreText/CoreText.h>
 #import <QuartzCore/QuartzCore.h>
 
-static NSString *const DeskTimerNotificationPrefix = @"focus-desk.timer-complete.";
-static NSString *const DeskAlertSoundPreference = @"FocusDeskAlertSound";
+static NSString *const StintTimerNotificationPrefix = @"stint.timer-complete.";
+static NSString *const StintAlertSoundPreference = @"StintAlertSound";
 
-static NSArray<NSString *> *DeskAlertSounds(void) {
+static NSArray<NSString *> *StintAlertSounds(void) {
   return @[@"Glass", @"Ping", @"Pop", @"Funk", @"Submarine", @"Basso"];
 }
 
-static NSString *DeskNotificationIdentifier(NSString *key) {
-  return [DeskTimerNotificationPrefix stringByAppendingString:key];
+static NSString *StintNotificationIdentifier(NSString *key) {
+  return [StintTimerNotificationPrefix stringByAppendingString:key];
 }
 
 // The native ticker and Dart's phase transition can arrive in either order.
 // Only an interval observed before its deadline is eligible for a live chime.
-@interface DeskCompletionGate : NSObject
+@interface StintCompletionGate : NSObject
 @property(nonatomic, copy) NSString *key;
 @property(nonatomic, strong) NSDate *deadline;
 @property(nonatomic, copy) NSString *phase;
@@ -31,7 +31,7 @@ static NSString *DeskNotificationIdentifier(NSString *key) {
 - (BOOL)consumeExpiryAtTime:(NSDate *)now;
 @end
 
-@implementation DeskCompletionGate
+@implementation StintCompletionGate
 - (BOOL)observeKey:(NSString *)key deadline:(NSDate *)deadline phase:(NSString *)phase
            routine:(NSString *)routine idle:(BOOL)idle atTime:(NSDate *)now {
   BOOL sameKey = self.key == key || [self.key isEqualToString:key];
@@ -62,7 +62,7 @@ static NSString *DeskNotificationIdentifier(NSString *key) {
 }
 @end
 
-static void DeskRegisterFonts(void) {
+static void StintRegisterFonts(void) {
   NSURL *assets = [NSBundle.mainBundle.privateFrameworksURL URLByAppendingPathComponent:@"App.framework/Resources/flutter_assets/assets/fonts"];
   NSArray *paths = @[@"MartianMono/MartianMono-Light.ttf", @"MartianMono/MartianMono-Regular.ttf", @"MartianMono/MartianMono-Medium.ttf", @"HankenGrotesk/HankenGrotesk-Regular.ttf", @"HankenGrotesk/HankenGrotesk-Medium.ttf", @"HankenGrotesk/HankenGrotesk-SemiBold.ttf", @"HankenGrotesk/HankenGrotesk-Bold.ttf"];
   for (NSString *path in paths) {
@@ -72,25 +72,25 @@ static void DeskRegisterFonts(void) {
   }
 }
 
-static NSFont *DeskFont(BOOL mono, CGFloat size, NSInteger weight) {
+static NSFont *StintFont(BOOL mono, CGFloat size, NSInteger weight) {
   NSString *name = mono ? (weight <= 300 ? @"MartianMono-SemiExpandedLight" : weight >= 500 ? @"MartianMono-SemiExpandedMedium" : @"MartianMono-SemiExpanded")
       : (weight >= 700 ? @"HankenGrotesk-Bold" : weight >= 600 ? @"HankenGrotesk-SemiBold" : weight >= 500 ? @"HankenGrotesk-Medium" : @"HankenGrotesk-Regular");
   NSFontWeight fallback = weight <= 300 ? NSFontWeightLight : weight >= 600 ? NSFontWeightSemibold : weight >= 500 ? NSFontWeightMedium : NSFontWeightRegular;
   return [NSFont fontWithName:name size:size] ?: (mono ? [NSFont monospacedDigitSystemFontOfSize:size weight:fallback] : [NSFont systemFontOfSize:size weight:fallback]);
 }
 
-static NSColor *DeskHex(NSUInteger rgb) {
+static NSColor *StintHex(NSUInteger rgb) {
   return [NSColor colorWithSRGBRed:((rgb >> 16) & 255) / 255.0 green:((rgb >> 8) & 255) / 255.0 blue:(rgb & 255) / 255.0 alpha:1];
 }
 
-@interface DeskPanelView : NSView
+@interface StintPanelView : NSView
 @property(nonatomic, copy) void (^appearanceChanged)(void);
 @end
-@implementation DeskPanelView
+@implementation StintPanelView
 - (void)viewDidChangeEffectiveAppearance { [super viewDidChangeEffectiveAppearance]; if (self.appearanceChanged) self.appearanceChanged(); }
 @end
 
-static NSString *DeskDurationLabel(NSInteger seconds) {
+static NSString *StintDurationLabel(NSInteger seconds) {
   NSInteger minutes = seconds / 60, remainder = seconds % 60;
   NSString *minuteText = [NSString stringWithFormat:@"%ld %@", (long)minutes, minutes == 1 ? @"minute" : @"minutes"];
   if (!remainder) return minuteText;
@@ -98,7 +98,7 @@ static NSString *DeskDurationLabel(NSInteger seconds) {
   return minutes ? [NSString stringWithFormat:@"%@ %@", minuteText, secondText] : secondText;
 }
 
-static void DeskUpdateFocusRing(NSControl *control, NSColor *accent, BOOL focused) {
+static void StintUpdateFocusRing(NSControl *control, NSColor *accent, BOOL focused) {
   if (!control.layer) return;
   CALayer *ring = nil;
   for (CALayer *layer in control.layer.sublayers) if ([layer.name isEqualToString:@"stint.focus-ring"]) { ring = layer; break; }
@@ -116,10 +116,10 @@ static void DeskUpdateFocusRing(NSControl *control, NSColor *accent, BOOL focuse
   [CATransaction commit];
 }
 
-@interface DeskPanelButton : NSButton
+@interface StintPanelButton : NSButton
 @property(nonatomic, strong) NSColor *focusAccent;
 @end
-@implementation DeskPanelButton
+@implementation StintPanelButton
 - (instancetype)initWithFrame:(NSRect)frame {
   self = [super initWithFrame:frame];
   if (self) { self.wantsLayer = YES; self.layer.masksToBounds = NO; self.focusRingType = NSFocusRingTypeNone; }
@@ -128,25 +128,25 @@ static void DeskUpdateFocusRing(NSControl *control, NSColor *accent, BOOL focuse
 - (BOOL)acceptsFirstResponder { return self.enabled && !self.hidden; }
 - (BOOL)becomeFirstResponder {
   BOOL accepted = [super becomeFirstResponder];
-  DeskUpdateFocusRing(self, self.focusAccent, accepted);
+  StintUpdateFocusRing(self, self.focusAccent, accepted);
   return accepted;
 }
 - (BOOL)resignFirstResponder {
   BOOL resigned = [super resignFirstResponder];
-  if (resigned) DeskUpdateFocusRing(self, self.focusAccent, NO);
+  if (resigned) StintUpdateFocusRing(self, self.focusAccent, NO);
   return resigned;
 }
-- (void)setFocusAccent:(NSColor *)color { _focusAccent = color; DeskUpdateFocusRing(self, color, self.window.firstResponder == self); }
-- (void)layout { [super layout]; DeskUpdateFocusRing(self, self.focusAccent, self.window.firstResponder == self); }
+- (void)setFocusAccent:(NSColor *)color { _focusAccent = color; StintUpdateFocusRing(self, color, self.window.firstResponder == self); }
+- (void)layout { [super layout]; StintUpdateFocusRing(self, self.focusAccent, self.window.firstResponder == self); }
 @end
 
-@interface DeskCycleButton : DeskPanelButton
+@interface StintCycleButton : StintPanelButton
 @property(nonatomic, strong) NSColor *trackColor;
 @property(nonatomic, strong) NSColor *fillColor;
 @property(nonatomic) double progress;
 @property(nonatomic) BOOL current;
 @end
-@implementation DeskCycleButton
+@implementation StintCycleButton
 - (void)drawRect:(NSRect)dirtyRect {
   CGFloat height = self.current ? 10 : 6;
   NSRect bar = NSMakeRect(0, (self.bounds.size.height - height) / 2, self.bounds.size.width, height);
@@ -161,24 +161,24 @@ static void DeskUpdateFocusRing(NSControl *control, NSColor *accent, BOOL focuse
 }
 @end
 
-@interface DeskMiniSlider : NSSlider
+@interface StintMiniSlider : NSSlider
 @property(nonatomic) BOOL tracking;
 @property(nonatomic, strong) NSColor *focusAccent;
 @end
-@implementation DeskMiniSlider
+@implementation StintMiniSlider
 - (BOOL)acceptsFirstResponder { return self.enabled && !self.hidden; }
 - (BOOL)becomeFirstResponder {
   BOOL accepted = [super becomeFirstResponder];
-  DeskUpdateFocusRing(self, self.focusAccent, accepted);
+  StintUpdateFocusRing(self, self.focusAccent, accepted);
   return accepted;
 }
 - (BOOL)resignFirstResponder {
   BOOL resigned = [super resignFirstResponder];
-  if (resigned) DeskUpdateFocusRing(self, self.focusAccent, NO);
+  if (resigned) StintUpdateFocusRing(self, self.focusAccent, NO);
   return resigned;
 }
-- (void)setFocusAccent:(NSColor *)color { _focusAccent = color; DeskUpdateFocusRing(self, color, self.window.firstResponder == self); }
-- (void)layout { [super layout]; DeskUpdateFocusRing(self, self.focusAccent, self.window.firstResponder == self); }
+- (void)setFocusAccent:(NSColor *)color { _focusAccent = color; StintUpdateFocusRing(self, color, self.window.firstResponder == self); }
+- (void)layout { [super layout]; StintUpdateFocusRing(self, self.focusAccent, self.window.firstResponder == self); }
 - (void)mouseDown:(NSEvent *)event {
   self.tracking = YES;
   [super mouseDown:event];
@@ -186,7 +186,7 @@ static void DeskUpdateFocusRing(NSControl *control, NSColor *accent, BOOL focuse
 }
 @end
 
-@interface DeskMenuBar () <NSMenuDelegate, NSPopoverDelegate, UNUserNotificationCenterDelegate, NSSoundDelegate>
+@interface StintMenuBar () <NSMenuDelegate, NSPopoverDelegate, UNUserNotificationCenterDelegate, NSSoundDelegate>
 @property(nonatomic, weak) NSWindow *window;
 @property(nonatomic, strong) FlutterMethodChannel *channel;
 @property(nonatomic, strong) NSStatusItem *statusItem;
@@ -199,11 +199,11 @@ static void DeskUpdateFocusRing(NSControl *control, NSColor *accent, BOOL focuse
 @property(nonatomic, strong) NSMenuItem *miniMenuItem;
 @property(nonatomic, strong) NSMenuItem *testSoundMenuItem;
 @property(nonatomic, strong) NSMenuItem *previewNotificationMenuItem;
-@property(nonatomic, strong) DeskCompletionBanner *completionBanner;
-@property(nonatomic, strong) DeskKeymap *keymap;
+@property(nonatomic, strong) StintCompletionBanner *completionBanner;
+@property(nonatomic, strong) StintKeymap *keymap;
 @property(nonatomic, strong) UNNotificationRequest *liveCompletionRequest;
 @property(nonatomic, copy) NSDictionary *completionCardContext;
-@property(nonatomic, strong) DeskCompletionGate *completionGate;
+@property(nonatomic, strong) StintCompletionGate *completionGate;
 @property(nonatomic, strong) NSSound *completionSound;
 @property(nonatomic, strong) NSUserDefaults *alertDefaults;
 @property(nonatomic) NSUInteger soundPlaybackGeneration;
@@ -222,7 +222,7 @@ static void DeskUpdateFocusRing(NSControl *control, NSColor *accent, BOOL focuse
 @property(nonatomic, strong) NSTextField *volumeValue;
 @property(nonatomic, strong) NSView *soundTile;
 @property(nonatomic, strong) NSArray<NSView *> *equalizerBars;
-@property(nonatomic, strong) NSArray<DeskCycleButton *> *cycleButtons;
+@property(nonatomic, strong) NSArray<StintCycleButton *> *cycleButtons;
 @property(nonatomic, strong) NSArray<NSLayoutConstraint *> *cycleWidthConstraints;
 @property(nonatomic, strong) NSStackView *timerActions;
 @property(nonatomic, strong) NSStackView *confirmBar;
@@ -249,7 +249,7 @@ static void DeskUpdateFocusRing(NSControl *control, NSColor *accent, BOOL focuse
 @property(nonatomic) NSInteger dailyGoal;
 @property(nonatomic, strong) NSNumber *completionCount;
 @property(nonatomic, strong) NSButton *musicButton;
-@property(nonatomic, strong) DeskMiniSlider *volumeSlider;
+@property(nonatomic, strong) StintMiniSlider *volumeSlider;
 @property(nonatomic, strong) NSTextField *musicError;
 @property(nonatomic, strong) NSView *youTubeContainer;
 @property(nonatomic, strong) NSView *embeddedYouTubeView;
@@ -277,7 +277,7 @@ static void DeskUpdateFocusRing(NSControl *control, NSColor *accent, BOOL focuse
 @property(nonatomic) BOOL terminating;
 @end
 
-@implementation DeskMenuBar
+@implementation StintMenuBar
 
 - (instancetype)initWithWindow:(NSWindow *)window messenger:(id<FlutterBinaryMessenger>)messenger {
   self = [super init];
@@ -286,25 +286,25 @@ static void DeskUpdateFocusRing(NSControl *control, NSColor *accent, BOOL focuse
   _phase = @"Focus";
   _focusMinutes = 25; _shortBreakMinutes = 5; _longBreakMinutes = 15;
   _dailyGoal = 8;
-  DeskRegisterFonts();
+  StintRegisterFonts();
   _routines = @[];
-  _completionGate = [[DeskCompletionGate alloc] init];
+  _completionGate = [[StintCompletionGate alloc] init];
   _alertDefaults = NSUserDefaults.standardUserDefaults;
   [self repeatedAlertSoundName];
   _trackingMenus = [NSMutableSet set];
   _notifications = UNUserNotificationCenter.currentNotificationCenter;
   // The host constructs this object before applicationDidFinishLaunching returns.
   _notifications.delegate = self;
-  _channel = [FlutterMethodChannel methodChannelWithName:@"focus_desk/timer" binaryMessenger:messenger];
-  __weak DeskMenuBar *weakSelf = self;
+  _channel = [FlutterMethodChannel methodChannelWithName:@"stint/timer" binaryMessenger:messenger];
+  __weak StintMenuBar *weakSelf = self;
   [_channel setMethodCallHandler:^(FlutterMethodCall *call, FlutterResult result) {
-    DeskMenuBar *self = weakSelf;
+    StintMenuBar *self = weakSelf;
     if (!self) { result(nil); return; }
     [self handleCall:call result:result];
   }];
 
   _statusItem = [NSStatusBar.systemStatusBar statusItemWithLength:NSVariableStatusItemLength];
-  _statusItem.button.font = DeskFont(YES, 12, 500);
+  _statusItem.button.font = StintFont(YES, 12, 500);
   NSImage *glyph = [NSImage imageNamed:@"StatusTemplate"];
   if (!glyph) glyph = [[NSImage alloc] initWithContentsOfURL:[NSBundle.mainBundle URLForResource:@"StatusTemplate" withExtension:@"png"]];
   glyph.template = YES;
@@ -341,7 +341,7 @@ static void DeskUpdateFocusRing(NSControl *control, NSColor *accent, BOOL focuse
   [NSWorkspace.sharedWorkspace.notificationCenter addObserver:self selector:@selector(refreshFromSystem:) name:NSWorkspaceDidWakeNotification object:nil];
   [self installMiniTimerMenuItem:nil];
   [self registerNotificationActions];
-  _keymap = [[DeskKeymap alloc] initWithDefaults:NSUserDefaults.standardUserDefaults action:^(NSString *action) {
+  _keymap = [[StintKeymap alloc] initWithDefaults:NSUserDefaults.standardUserDefaults action:^(NSString *action) {
     [weakSelf performShortcutAction:action];
   }];
   [self checkAuthorizationForGeneration:_generation];
@@ -349,13 +349,13 @@ static void DeskUpdateFocusRing(NSControl *control, NSColor *accent, BOOL focuse
 }
 
 - (NSDictionary *)alertSoundSettings {
-  id saved = [self.alertDefaults objectForKey:DeskAlertSoundPreference];
-  NSString *selected = [saved isKindOfClass:NSString.class] && [DeskAlertSounds() containsObject:saved] ? saved : @"Glass";
-  return @{@"selectedSound": selected, @"sounds": DeskAlertSounds()};
+  id saved = [self.alertDefaults objectForKey:StintAlertSoundPreference];
+  NSString *selected = [saved isKindOfClass:NSString.class] && [StintAlertSounds() containsObject:saved] ? saved : @"Glass";
+  return @{@"selectedSound": selected, @"sounds": StintAlertSounds()};
 }
 
 - (NSString *)repeatedAlertSoundName {
-  return DeskRepeatedAlertSoundName([self alertSoundSettings][@"selectedSound"]);
+  return StintRepeatedAlertSoundName([self alertSoundSettings][@"selectedSound"]);
 }
 
 - (void)handleCall:(FlutterMethodCall *)call result:(FlutterResult)result {
@@ -363,13 +363,13 @@ static void DeskUpdateFocusRing(NSControl *control, NSColor *accent, BOOL focuse
   if ([call.method isEqualToString:@"getAlertSoundSettings"]) {
     result([self alertSoundSettings]);
   } else if ([call.method isEqualToString:@"setAlertSound"] || [call.method isEqualToString:@"previewAlertSound"]) {
-    if (![call.arguments isKindOfClass:NSString.class] || ![DeskAlertSounds() containsObject:call.arguments]) {
+    if (![call.arguments isKindOfClass:NSString.class] || ![StintAlertSounds() containsObject:call.arguments]) {
       result([FlutterError errorWithCode:@"invalid_alert_sound" message:@"Choose one of the available alert sounds." details:nil]);
       return;
     }
     if ([call.method isEqualToString:@"setAlertSound"]) {
       BOOL changed = ![[self alertSoundSettings][@"selectedSound"] isEqualToString:call.arguments];
-      [self.alertDefaults setObject:call.arguments forKey:DeskAlertSoundPreference];
+      [self.alertDefaults setObject:call.arguments forKey:StintAlertSoundPreference];
       [self repeatedAlertSoundName];
       if (changed) [self refreshScheduledNotification];
       result([self alertSoundSettings]);
@@ -399,18 +399,18 @@ static void DeskUpdateFocusRing(NSControl *control, NSColor *accent, BOOL focuse
 
 - (NSTextField *)label:(NSString *)text size:(CGFloat)size weight:(NSFontWeight)weight {
   NSTextField *label = [NSTextField labelWithString:text];
-  label.font = DeskFont(NO, size, weight >= NSFontWeightSemibold ? 600 : weight >= NSFontWeightMedium ? 500 : 400);
+  label.font = StintFont(NO, size, weight >= NSFontWeightSemibold ? 600 : weight >= NSFontWeightMedium ? 500 : 400);
   label.translatesAutoresizingMaskIntoConstraints = NO;
   label.lineBreakMode = NSLineBreakByTruncatingTail;
   return label;
 }
 
 - (NSButton *)button:(NSString *)title action:(SEL)action {
-  NSButton *button = [DeskPanelButton buttonWithTitle:title target:self action:action];
+  NSButton *button = [StintPanelButton buttonWithTitle:title target:self action:action];
   button.bordered = NO;
   button.wantsLayer = YES;
   button.layer.cornerRadius = 18;
-  button.font = DeskFont(NO, 12, 600);
+  button.font = StintFont(NO, 12, 600);
   button.translatesAutoresizingMaskIntoConstraints = NO;
   button.accessibilityLabel = title;
   button.toolTip = title;
@@ -437,7 +437,7 @@ static void DeskUpdateFocusRing(NSControl *control, NSColor *accent, BOOL focuse
 
 - (void)createPopover {
   NSViewController *controller = [[NSViewController alloc] init];
-  DeskPanelView *panel = [[DeskPanelView alloc] initWithFrame:NSMakeRect(0, 0, 340, 428)];
+  StintPanelView *panel = [[StintPanelView alloc] initWithFrame:NSMakeRect(0, 0, 340, 428)];
   panel.wantsLayer = YES;
   panel.layer.cornerRadius = 14;
   panel.layer.borderWidth = 1;
@@ -449,7 +449,7 @@ static void DeskUpdateFocusRing(NSControl *control, NSColor *accent, BOOL focuse
   self.popover.delegate = self;
   self.popover.contentViewController = controller;
   self.popover.contentSize = NSMakeSize(340, 428);
-  __weak DeskMenuBar *weakSelf = self;
+  __weak StintMenuBar *weakSelf = self;
   panel.appearanceChanged = ^{ [weakSelf render]; };
 
   self.miniPhase = [self label:@"●  Focus · 1 of 4" size:11 weight:NSFontWeightSemibold];
@@ -457,7 +457,7 @@ static void DeskUpdateFocusRing(NSControl *control, NSColor *accent, BOOL focuse
   self.rhythmButton = [self button:@"Classic ⌄" action:@selector(showRhythms:)];
   self.rhythmButton.alignment = NSTextAlignmentRight;
   self.rhythmDigits = [self label:@"25·5·15" size:10 weight:NSFontWeightRegular];
-  self.rhythmDigits.font = DeskFont(YES, 10, 400);
+  self.rhythmDigits.font = StintFont(YES, 10, 400);
   self.rhythmDigits.alignment = NSTextAlignmentRight;
   NSStackView *rhythm = [NSStackView stackViewWithViews:@[self.rhythmButton, self.rhythmDigits]];
   rhythm.orientation = NSUserInterfaceLayoutOrientationVertical;
@@ -469,11 +469,11 @@ static void DeskUpdateFocusRing(NSControl *control, NSColor *accent, BOOL focuse
   [rhythm.widthAnchor constraintLessThanOrEqualToConstant:155].active = YES;
 
   self.miniTime = [self label:@"--:--" size:52 weight:NSFontWeightLight];
-  self.miniTime.font = DeskFont(YES, 52, 300);
+  self.miniTime.font = StintFont(YES, 52, 300);
   self.miniTime.accessibilityLabel = @"Time remaining";
   [self.miniTime setContentCompressionResistancePriority:NSLayoutPriorityRequired forOrientation:NSLayoutConstraintOrientationHorizontal];
   self.miniStatus = [NSTextField wrappingLabelWithString:@"Ready"];
-  self.miniStatus.font = DeskFont(NO, 12, 400);
+  self.miniStatus.font = StintFont(NO, 12, 400);
   self.miniStatus.alignment = NSTextAlignmentRight;
   self.miniStatus.maximumNumberOfLines = 3;
   NSStackView *clock = [self row:@[self.miniTime, self.miniStatus]];
@@ -481,7 +481,7 @@ static void DeskUpdateFocusRing(NSControl *control, NSColor *accent, BOOL focuse
 
   NSMutableArray *segments = [NSMutableArray array];
   for (NSInteger i = 0; i < 8; i++) {
-    DeskCycleButton *segment = [[DeskCycleButton alloc] init];
+    StintCycleButton *segment = [[StintCycleButton alloc] init];
     segment.bordered = NO;
     segment.title = @"";
     segment.target = self;
@@ -497,7 +497,7 @@ static void DeskUpdateFocusRing(NSControl *control, NSColor *accent, BOOL focuse
   [cycle.heightAnchor constraintEqualToConstant:24].active = YES;
 
   self.miniToggle = [self button:@"Start focus" action:@selector(toggleTimer:)];
-  self.miniToggle.font = DeskFont(NO, 14, 600);
+  self.miniToggle.font = StintFont(NO, 14, 600);
   self.miniReset = [self button:@"" action:@selector(resetTimer:)];
   self.miniReset.image = [NSImage imageWithSystemSymbolName:@"arrow.counterclockwise" accessibilityDescription:@"Reset"];
   self.miniReset.accessibilityLabel = self.miniReset.toolTip = @"Reset";
@@ -561,7 +561,7 @@ static void DeskUpdateFocusRing(NSControl *control, NSColor *accent, BOOL focuse
   NSStackView *sound = [self row:@[self.soundTile, soundText, self.musicButton]];
   [sound.heightAnchor constraintEqualToConstant:40].active = YES;
   [self.soundTitle.widthAnchor constraintLessThanOrEqualToConstant:212].active = YES;
-  self.volumeSlider = [[DeskMiniSlider alloc] init];
+  self.volumeSlider = [[StintMiniSlider alloc] init];
   self.volumeSlider.wantsLayer = YES;
   self.volumeSlider.layer.masksToBounds = NO;
   self.volumeSlider.layer.cornerRadius = 4;
@@ -573,7 +573,7 @@ static void DeskUpdateFocusRing(NSControl *control, NSColor *accent, BOOL focuse
   self.volumeSlider.action = @selector(changeVolume:);
   self.volumeSlider.accessibilityLabel = self.volumeSlider.toolTip = @"Volume";
   self.volumeValue = [self label:@"35%" size:11 weight:NSFontWeightRegular];
-  self.volumeValue.font = DeskFont(YES, 11, 400);
+  self.volumeValue.font = StintFont(YES, 11, 400);
   self.volumeValue.alignment = NSTextAlignmentRight;
   [self.volumeValue.widthAnchor constraintEqualToConstant:42].active = YES;
   NSTextField *volumeLabel = [self label:@"Volume" size:11 weight:NSFontWeightRegular];
@@ -585,7 +585,7 @@ static void DeskUpdateFocusRing(NSControl *control, NSColor *accent, BOOL focuse
   // The player's 38-point status row leaves a 200-point video viewport.
   [self.youTubeContainer.heightAnchor constraintEqualToConstant:238].active = YES;
   self.musicError = [NSTextField wrappingLabelWithString:@""];
-  self.musicError.font = DeskFont(NO, 11, 400);
+  self.musicError.font = StintFont(NO, 11, 400);
   self.musicError.maximumNumberOfLines = 2;
   self.musicError.hidden = YES;
   self.openButton = [self button:@"Open Stint  ⌘⇧M" action:@selector(openWindow:)];
@@ -671,12 +671,12 @@ static void DeskUpdateFocusRing(NSControl *control, NSColor *accent, BOOL focuse
   if (!appMenu) return;
   for (NSMenuItem *item in appMenu.itemArray) {
     if ([item.keyEquivalent isEqualToString:@","]) { self.settingsMenuItem = item; item.title = @"Settings…"; item.target = self; item.action = @selector(openSettings:); }
-    if ([item.identifier isEqualToString:@"focus-desk.show-mini-timer"]) {
+    if ([item.identifier isEqualToString:@"stint.show-mini-timer"]) {
       self.miniMenuItem = item;
       item.target = self;
       item.title = @"Open Stint";
       item.action = @selector(openWindow:);
-    } else if ([item.identifier isEqualToString:@"focus-desk.test-alert-sound"]) {
+    } else if ([item.identifier isEqualToString:@"stint.test-alert-sound"]) {
       self.testSoundMenuItem = item;
       item.target = self;
       item.action = @selector(testAlertSound:);
@@ -684,7 +684,7 @@ static void DeskUpdateFocusRing(NSControl *control, NSColor *accent, BOOL focuse
   }
   if (self.miniMenuItem.menu != appMenu) {
     NSMenuItem *item = [[NSMenuItem alloc] initWithTitle:@"Open Stint" action:@selector(openWindow:) keyEquivalent:@"m"];
-    item.identifier = @"focus-desk.show-mini-timer";
+    item.identifier = @"stint.show-mini-timer";
     item.keyEquivalentModifierMask = NSEventModifierFlagCommand | NSEventModifierFlagShift;
     item.target = self;
     [appMenu insertItem:item atIndex:MIN(2, appMenu.numberOfItems)];
@@ -692,7 +692,7 @@ static void DeskUpdateFocusRing(NSControl *control, NSColor *accent, BOOL focuse
   }
   if (self.testSoundMenuItem.menu != appMenu) {
     NSMenuItem *item = [[NSMenuItem alloc] initWithTitle:@"Test alert sound" action:@selector(testAlertSound:) keyEquivalent:@""];
-    item.identifier = @"focus-desk.test-alert-sound";
+    item.identifier = @"stint.test-alert-sound";
     item.target = self;
     [appMenu insertItem:item atIndex:[appMenu indexOfItem:self.miniMenuItem] + 1];
     self.testSoundMenuItem = item;
@@ -725,14 +725,14 @@ static void DeskUpdateFocusRing(NSControl *control, NSColor *accent, BOOL focuse
   NSDictionary *colors = dark
       ? @{@"surface": @0x1A1B1F, @"raised": @0x222429, @"line": @0x2C2F35, @"line2": @0x3A3D44, @"track": @0x2C2F35, @"ink": @0xEDEBE6, @"ink2": @0xC9C8C3, @"muted": @0x9C9FA6, @"focus": @0xF2893B, @"focusText": @0xF2893B, @"break": @0x6CB4EE, @"breakText": @0x6CB4EE, @"onAccent": @0x16110C, @"error": @0xFF8A80}
       : @{@"surface": @0xFFFFFF, @"raised": @0xECEBE7, @"line": @0xDEDCD6, @"line2": @0xC9C7C0, @"track": @0xE2E0DA, @"ink": @0x17181B, @"ink2": @0x3A3C41, @"muted": @0x5E6168, @"focus": @0xEE7F2D, @"focusText": @0xA84E0B, @"break": @0x4A9FE0, @"breakText": @0x1F5F94, @"onAccent": @0x1A0F05, @"error": @0xB3261E};
-  return DeskHex([colors[token] unsignedIntegerValue]);
+  return StintHex([colors[token] unsignedIntegerValue]);
 }
 
 - (void)styleButton:(NSButton *)button fill:(NSColor *)fill text:(NSColor *)text {
   button.layer.backgroundColor = fill.CGColor;
-  if ([button isKindOfClass:DeskPanelButton.class]) ((DeskPanelButton *)button).focusAccent = [self color:[self.phase isEqualToString:@"Focus"] ? @"focus" : @"break"];
+  if ([button isKindOfClass:StintPanelButton.class]) ((StintPanelButton *)button).focusAccent = [self color:[self.phase isEqualToString:@"Focus"] ? @"focus" : @"break"];
   button.contentTintColor = text;
-  NSDictionary *attributes = @{NSFontAttributeName: button.font ?: DeskFont(NO, 12, 600), NSForegroundColorAttributeName: text};
+  NSDictionary *attributes = @{NSFontAttributeName: button.font ?: StintFont(NO, 12, 600), NSForegroundColorAttributeName: text};
   NSAttributedString *title = [[NSAttributedString alloc] initWithString:button.title attributes:attributes];
   if (button == self.miniToggle && button.image) {
     // One attributed title keeps the symbol and label centered as a unit.
@@ -841,7 +841,7 @@ static void DeskUpdateFocusRing(NSControl *control, NSColor *accent, BOOL focuse
   [NSLayoutConstraint deactivateConstraints:self.cycleWidthConstraints ?: @[]];
   NSMutableArray *widthConstraints = [NSMutableArray array];
   for (NSInteger i = 0; i < (NSInteger)self.cycleButtons.count; i++) {
-    DeskCycleButton *button = self.cycleButtons[i];
+    StintCycleButton *button = self.cycleButtons[i];
     if (!fixed[i]) widths[i] = total > 0 ? available * durations[i] / total : available / 8;
     [widthConstraints addObject:[button.widthAnchor constraintEqualToConstant:widths[i]]];
     BOOL isFocus = i % 2 == 0;
@@ -853,7 +853,7 @@ static void DeskUpdateFocusRing(NSControl *control, NSColor *accent, BOOL focuse
     button.fillColor = i < self.cycleStep ? [color colorWithAlphaComponent:0.45] : color;
     NSInteger remaining = self.deadline ? MIN(self.totalSeconds, MAX(0, (NSInteger)ceil(self.deadline.timeIntervalSinceNow))) : self.remaining;
     button.progress = i < self.cycleStep ? 1 : i == self.cycleStep && self.totalSeconds > 0 ? 1 - remaining / (double)self.totalSeconds : 0;
-    button.accessibilityLabel = button.toolTip = [NSString stringWithFormat:@"%@, %@%@", phase, DeskDurationLabel(durations[i]), button.current ? @", current" : @""];
+    button.accessibilityLabel = button.toolTip = [NSString stringWithFormat:@"%@, %@%@", phase, StintDurationLabel(durations[i]), button.current ? @", current" : @""];
     button.focusAccent = accent;
     button.accessibilityValue = button.current ? @"Current" : @"";
     button.accessibilitySelected = button.current;
@@ -925,7 +925,7 @@ static void DeskUpdateFocusRing(NSControl *control, NSColor *accent, BOOL focuse
 - (void)toggleMusic:(id)sender { [self.channel invokeMethod:@"musicToggle" arguments:nil]; }
 - (void)changeVolume:(NSSlider *)sender {
   self.volumePending = YES;
-  __weak DeskMenuBar *weakSelf = self;
+  __weak StintMenuBar *weakSelf = self;
   [self.channel invokeMethod:@"musicVolume" arguments:@(sender.doubleValue) result:^(__unused id result) {
     weakSelf.volumePending = NO;
     [weakSelf render];
@@ -993,7 +993,7 @@ static void DeskUpdateFocusRing(NSControl *control, NSColor *accent, BOOL focuse
     self.scheduledKey = nil;
     // Completion changes Dart's state to the next phase. Keep its just-due alert.
     if (previousKey && previousDeadline.timeIntervalSinceNow > 0) {
-      [self.notifications removePendingNotificationRequestsWithIdentifiers:@[DeskNotificationIdentifier(previousKey)]];
+      [self.notifications removePendingNotificationRequestsWithIdentifiers:@[StintNotificationIdentifier(previousKey)]];
     }
     if (self.notificationKey || firstUpdate) [self checkAuthorizationForGeneration:self.generation];
     if (!self.notificationKey && firstUpdate) [self removeFutureOrphanForGeneration:self.generation];
@@ -1047,8 +1047,8 @@ static void DeskUpdateFocusRing(NSControl *control, NSColor *accent, BOOL focuse
 }
 
 - (void)windowWillClose {
-  if ([self.alertDefaults boolForKey:@"menuBarHintShown"]) return;
-  [self.alertDefaults setBool:YES forKey:@"menuBarHintShown"];
+  if ([self.alertDefaults boolForKey:@"StintMenuBarHintShown"]) return;
+  [self.alertDefaults setBool:YES forKey:@"StintMenuBarHintShown"];
   [self presentMenuBarHint];
 }
 
@@ -1067,8 +1067,8 @@ static void DeskUpdateFocusRing(NSControl *control, NSColor *accent, BOOL focuse
 
 - (void)ensureCompletionBanner {
   if (self.completionBanner) return;
-  self.completionBanner = [[DeskCompletionBanner alloc] init];
-  __weak DeskMenuBar *weakSelf = self;
+  self.completionBanner = [[StintCompletionBanner alloc] init];
+  __weak StintMenuBar *weakSelf = self;
   self.completionBanner.dismissedHandler = ^{ weakSelf.completionCardContext = nil; };
 }
 
@@ -1117,7 +1117,7 @@ static void DeskUpdateFocusRing(NSControl *control, NSColor *accent, BOOL focuse
   card[@"body"] = content.body;
   card[@"detail"] = content.subtitle;
   NSDictionary *context = content.userInfo;
-  __weak DeskMenuBar *weakSelf = self;
+  __weak StintMenuBar *weakSelf = self;
   [self.completionBanner setTemporarilyHidden:self.popover.shown];
   [self.completionBanner showContent:card colors:[self completionColors]
       screen:self.statusItem.button.window.screen ?: self.window.screen anchor:[self completionAnchor]
@@ -1144,7 +1144,7 @@ static void DeskUpdateFocusRing(NSControl *control, NSColor *accent, BOOL focuse
   return [[NSSound alloc] initWithContentsOfFile:path byReference:NO];
 }
 - (void)playAlertSound:(NSString *)name {
-  if (![DeskAlertSounds() containsObject:name]) return;
+  if (![StintAlertSounds() containsObject:name]) return;
   self.soundPlaybackGeneration++;
   self.remainingAlertPlays = 1;
   self.completionSound.delegate = nil;
@@ -1178,9 +1178,9 @@ static void DeskUpdateFocusRing(NSControl *control, NSColor *accent, BOOL focuse
     if (self.remainingAlertPlays == 0) return;
     self.remainingAlertPlays--;
     NSUInteger generation = self.soundPlaybackGeneration;
-    __weak DeskMenuBar *weakSelf = self;
+    __weak StintMenuBar *weakSelf = self;
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.25 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-      DeskMenuBar *self = weakSelf;
+      StintMenuBar *self = weakSelf;
       if (!self || generation != self.soundPlaybackGeneration || sound != self.completionSound) return;
       [self startCurrentAlertSound];
     });
@@ -1225,10 +1225,10 @@ static void DeskUpdateFocusRing(NSControl *control, NSColor *accent, BOOL focuse
 }
 
 - (void)checkAuthorizationForGeneration:(NSUInteger)generation {
-  __weak DeskMenuBar *weakSelf = self;
+  __weak StintMenuBar *weakSelf = self;
   [self.notifications getNotificationSettingsWithCompletionHandler:^(UNNotificationSettings *settings) {
     dispatch_async(dispatch_get_main_queue(), ^{
-      DeskMenuBar *self = weakSelf;
+      StintMenuBar *self = weakSelf;
       if (!self || generation != self.generation) return;
       self.authorizationKnown = YES;
       self.authorizationStatus = settings.authorizationStatus;
@@ -1250,10 +1250,10 @@ static void DeskUpdateFocusRing(NSControl *control, NSColor *accent, BOOL focuse
   if (self.requestingAuthorization) return;
   self.requestingAuthorization = YES;
   [self render];
-  __weak DeskMenuBar *weakSelf = self;
+  __weak StintMenuBar *weakSelf = self;
   [self.notifications requestAuthorizationWithOptions:UNAuthorizationOptionAlert | UNAuthorizationOptionSound completionHandler:^(BOOL granted, NSError *error) {
     dispatch_async(dispatch_get_main_queue(), ^{
-      DeskMenuBar *self = weakSelf;
+      StintMenuBar *self = weakSelf;
       if (!self) return;
       self.requestingAuthorization = NO;
       if (error) {
@@ -1287,13 +1287,13 @@ static void DeskUpdateFocusRing(NSControl *control, NSColor *accent, BOOL focuse
   if (delay <= 0) return;
   NSString *key = self.notificationKey;
   NSDate *deadline = self.deadline;
-  NSString *identifier = DeskNotificationIdentifier(key);
+  NSString *identifier = StintNotificationIdentifier(key);
   self.scheduledKey = key;
   UNNotificationRequest *request = [self notificationForKey:key deadline:deadline audible:NO];
-  __weak DeskMenuBar *weakSelf = self;
+  __weak StintMenuBar *weakSelf = self;
   [self.notifications addNotificationRequest:request withCompletionHandler:^(NSError *error) {
     dispatch_async(dispatch_get_main_queue(), ^{
-      DeskMenuBar *self = weakSelf;
+      StintMenuBar *self = weakSelf;
       if (!self) return;
       if (generation != self.generation || ![key isEqualToString:self.notificationKey]) {
         // A pending add may finish after pause/replacement canceled it. Its
@@ -1335,7 +1335,7 @@ static void DeskUpdateFocusRing(NSControl *control, NSColor *accent, BOOL focuse
     content.body = focus ? @"Your short break is ready."
         : [NSString stringWithFormat:@"Focus %ld of 4 is ready when you are.", (long)(nextStep / 2 + 1)];
   }
-  content.categoryIdentifier = longBreak ? @"focus-desk.start-long-break" : focus ? @"focus-desk.start-break" : @"focus-desk.start-focus";
+  content.categoryIdentifier = longBreak ? @"stint.start-long-break" : focus ? @"stint.start-break" : @"stint.start-focus";
   // Use the deadline's local Gregorian date, including sessions across midnight.
   NSCalendar *calendar = [[NSCalendar alloc] initWithCalendarIdentifier:NSCalendarIdentifierGregorian];
   calendar.timeZone = NSTimeZone.localTimeZone;
@@ -1362,21 +1362,21 @@ static void DeskUpdateFocusRing(NSControl *control, NSColor *accent, BOOL focuse
     @"routineMinutes": @[@(self.focusMinutes), @(self.shortBreakMinutes), @(self.longBreakMinutes)]
   };
   UNTimeIntervalNotificationTrigger *trigger = [UNTimeIntervalNotificationTrigger triggerWithTimeInterval:MAX(0.1, deadline.timeIntervalSinceNow) repeats:NO];
-  return [UNNotificationRequest requestWithIdentifier:DeskNotificationIdentifier(key) content:content trigger:trigger];
+  return [UNNotificationRequest requestWithIdentifier:StintNotificationIdentifier(key) content:content trigger:trigger];
 }
 
 - (void)registerNotificationActions {
   NSMutableSet *categories = [NSMutableSet set];
   NSDictionary *titles = @{@"break": @"Start break", @"long-break": @"Start long break", @"focus": @"Start focus"};
   for (NSString *phase in @[@"break", @"long-break", @"focus"]) {
-    UNNotificationAction *action = [UNNotificationAction actionWithIdentifier:@"focus-desk.start-next" title:titles[phase] options:UNNotificationActionOptionForeground];
-    [categories addObject:[UNNotificationCategory categoryWithIdentifier:[@"focus-desk.start-" stringByAppendingString:phase] actions:@[action] intentIdentifiers:@[] options:UNNotificationCategoryOptionNone]];
+    UNNotificationAction *action = [UNNotificationAction actionWithIdentifier:@"stint.start-next" title:titles[phase] options:UNNotificationActionOptionForeground];
+    [categories addObject:[UNNotificationCategory categoryWithIdentifier:[@"stint.start-" stringByAppendingString:phase] actions:@[action] intentIdentifiers:@[] options:UNNotificationCategoryOptionNone]];
   }
   [self.notifications setNotificationCategories:categories];
 }
 
 - (void)handleNotificationAction:(NSString *)identifier userInfo:(NSDictionary *)userInfo {
-  if ([identifier isEqualToString:@"focus-desk.start-next"] && [userInfo[@"sessionId"] isKindOfClass:NSString.class]
+  if ([identifier isEqualToString:@"stint.start-next"] && [userInfo[@"sessionId"] isKindOfClass:NSString.class]
       && [userInfo[@"sessionId"] length] > 0 && [userInfo[@"cycleStep"] isKindOfClass:NSNumber.class]
       && [userInfo[@"cycleStep"] integerValue] >= 0 && [userInfo[@"cycleStep"] integerValue] <= 7) {
     NSDictionary *action = @{@"sessionId": userInfo[@"sessionId"], @"cycleStep": userInfo[@"cycleStep"]};
@@ -1407,19 +1407,19 @@ static void DeskUpdateFocusRing(NSControl *control, NSColor *accent, BOOL focuse
     dispatch_semaphore_signal(scheduled);
   }];
   long timedOut = dispatch_semaphore_wait(scheduled, dispatch_time(DISPATCH_TIME_NOW, 2 * NSEC_PER_SEC));
-  if (timedOut) NSLog(@"Focus Desk could not confirm its exit notification: scheduling timed out");
-  else if (failure) NSLog(@"Focus Desk could not confirm its exit notification: %@", failure.localizedDescription);
+  if (timedOut) NSLog(@"Stint could not confirm its exit notification: scheduling timed out");
+  else if (failure) NSLog(@"Stint could not confirm its exit notification: %@", failure.localizedDescription);
 }
 
 - (void)removeFutureOrphanForGeneration:(NSUInteger)generation {
-  __weak DeskMenuBar *weakSelf = self;
+  __weak StintMenuBar *weakSelf = self;
   [self.notifications getPendingNotificationRequestsWithCompletionHandler:^(NSArray<UNNotificationRequest *> *requests) {
     dispatch_async(dispatch_get_main_queue(), ^{
-      DeskMenuBar *self = weakSelf;
+      StintMenuBar *self = weakSelf;
       if (!self || generation != self.generation || self.notificationKey) return;
       for (UNNotificationRequest *request in requests) {
         UNTimeIntervalNotificationTrigger *trigger = [request.trigger isKindOfClass:UNTimeIntervalNotificationTrigger.class] ? (UNTimeIntervalNotificationTrigger *)request.trigger : nil;
-        if ([request.identifier hasPrefix:DeskTimerNotificationPrefix] && trigger.nextTriggerDate.timeIntervalSinceNow > 0) {
+        if ([request.identifier hasPrefix:StintTimerNotificationPrefix] && trigger.nextTriggerDate.timeIntervalSinceNow > 0) {
           [self.notifications removePendingNotificationRequestsWithIdentifiers:@[request.identifier]];
         }
       }
@@ -1442,7 +1442,7 @@ static void DeskUpdateFocusRing(NSControl *control, NSColor *accent, BOOL focuse
 
 - (void)userNotificationCenter:(UNUserNotificationCenter *)center willPresentNotification:(UNNotification *)notification withCompletionHandler:(void (^)(UNNotificationPresentationOptions))completionHandler {
   dispatch_async(dispatch_get_main_queue(), ^{
-    BOOL liveTimer = !self.terminating && [notification.request.identifier hasPrefix:DeskTimerNotificationPrefix];
+    BOOL liveTimer = !self.terminating && [notification.request.identifier hasPrefix:StintTimerNotificationPrefix];
     UNNotificationPresentationOptions options = UNNotificationPresentationOptionList;
     if (!liveTimer) options |= UNNotificationPresentationOptionBanner | UNNotificationPresentationOptionSound;
     completionHandler(options);

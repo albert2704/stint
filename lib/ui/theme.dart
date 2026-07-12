@@ -67,7 +67,7 @@ class StintColors {
   Color accentText(bool isFocus) => isFocus ? focusText : breakText;
 }
 
-ThemeData deskTheme(Brightness brightness) {
+ThemeData stintTheme(Brightness brightness) {
   final c = brightness == Brightness.dark
       ? StintColors.dark
       : StintColors.light;
@@ -238,8 +238,8 @@ ThemeData deskTheme(Brightness brightness) {
   );
 }
 
-class DeskPanel extends StatelessWidget {
-  const DeskPanel({
+class StintPanel extends StatelessWidget {
+  const StintPanel({
     super.key,
     required this.child,
     this.padding = const EdgeInsets.all(24),

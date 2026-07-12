@@ -15,13 +15,13 @@ class NativeTimerBridge {
     this.onProgress,
     this.music,
     MethodChannel? channel,
-  }) : channel = channel ?? const MethodChannel('focus_desk/timer') {
+  }) : channel = channel ?? const MethodChannel('stint/timer') {
     this.channel.setMethodCallHandler(_handle);
     controller.addListener(_sync);
     music?.addListener(_sync);
     _sync();
   }
-  final DeskController controller;
+  final StintController controller;
   final Future<void> Function()? onSettings;
   final Future<void> Function()? onAdjust;
   final Future<void> Function()? onProgress;

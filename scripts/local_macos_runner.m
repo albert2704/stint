@@ -3,45 +3,45 @@
 #import <Cocoa/Cocoa.h>
 #import <FlutterMacOS/FlutterMacOS.h>
 #import <UserNotifications/UserNotifications.h>
-#import "../macos/Runner/DeskMenuBar.h"
-#import "../macos/Runner/DeskMusic.h"
+#import "../macos/Runner/StintMenuBar.h"
+#import "../macos/Runner/StintMusic.h"
 
-static NSURL *DeskDirectory(NSError **error) {
+static NSURL *StintDirectory(NSError **error) {
   NSURL *support = [NSFileManager.defaultManager URLForDirectory:NSApplicationSupportDirectory
       inDomain:NSUserDomainMask appropriateForURL:nil create:YES error:error];
   if (!support) return nil;
-  NSURL *directory = [support URLByAppendingPathComponent:@"Focus Desk" isDirectory:YES];
+  NSURL *directory = [support URLByAppendingPathComponent:@"Stint" isDirectory:YES];
   if (![NSFileManager.defaultManager createDirectoryAtURL:directory withIntermediateDirectories:YES attributes:nil error:error]) return nil;
   return directory;
 }
 
-static FlutterError *DeskError(NSString *code, NSError *error) {
+static FlutterError *StintError(NSString *code, NSError *error) {
   return [FlutterError errorWithCode:code message:error.localizedDescription details:nil];
 }
 
-static NSImage *DeskIcon(void) {
+static NSImage *StintIcon(void) {
   return [[NSImage alloc] initWithContentsOfURL:[NSBundle.mainBundle URLForResource:@"AppIcon" withExtension:@"icns"]];
 }
 
-@interface DeskWindow : NSWindow
-@property(nonatomic, weak) DeskMenuBar *menuBar;
+@interface StintWindow : NSWindow
+@property(nonatomic, weak) StintMenuBar *menuBar;
 @end
-@implementation DeskWindow
+@implementation StintWindow
 - (void)close { [self.menuBar windowWillClose]; [self orderOut:nil]; }
 @end
 
-@interface DeskDelegate : NSObject <NSApplicationDelegate>
+@interface StintDelegate : NSObject <NSApplicationDelegate>
 @property(nonatomic, strong) NSWindow *window;
 @property(nonatomic, strong) FlutterViewController *controller;
 @property(nonatomic, strong) FlutterMethodChannel *files;
-@property(nonatomic, strong) DeskMenuBar *menuBar;
-@property(nonatomic, strong) DeskMusic *music;
+@property(nonatomic, strong) StintMenuBar *menuBar;
+@property(nonatomic, strong) StintMusic *music;
 @end
 
-@implementation DeskDelegate
+@implementation StintDelegate
 - (void)applicationDidFinishLaunching:(NSNotification *)notification {
   self.controller = [[FlutterViewController alloc] initWithProject:nil];
-  self.window = [[DeskWindow alloc] initWithContentRect:NSMakeRect(0, 0, 480, 758)
+  self.window = [[StintWindow alloc] initWithContentRect:NSMakeRect(0, 0, 480, 758)
       styleMask:NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskMiniaturizable | NSWindowStyleMaskResizable
       backing:NSBackingStoreBuffered defer:NO];
   self.window.title = @"Stint";
@@ -49,15 +49,15 @@ static NSImage *DeskIcon(void) {
   self.window.releasedWhenClosed = NO;
   self.window.contentViewController = self.controller;
   [self.window center];
-  self.files = [FlutterMethodChannel methodChannelWithName:@"focus_desk/files" binaryMessenger:self.controller.engine.binaryMessenger];
-  __weak DeskDelegate *weakSelf = self;
+  self.files = [FlutterMethodChannel methodChannelWithName:@"stint/files" binaryMessenger:self.controller.engine.binaryMessenger];
+  __weak StintDelegate *weakSelf = self;
   [self.files setMethodCallHandler:^(FlutterMethodCall *call, FlutterResult result) {
-    DeskDelegate *self = weakSelf;
+    StintDelegate *self = weakSelf;
     if (!self) { result([FlutterError errorWithCode:@"closed" message:@"Window closed." details:nil]); return; }
     NSError *error = nil;
     if ([call.method isEqualToString:@"dataDirectory"]) {
-      NSURL *directory = DeskDirectory(&error);
-      if (!directory) { result(DeskError(@"storage_failed", error)); return; }
+      NSURL *directory = StintDirectory(&error);
+      if (!directory) { result(StintError(@"storage_failed", error)); return; }
       result(directory.path);
     } else { result(FlutterMethodNotImplemented); }
   }];
@@ -80,10 +80,10 @@ static NSImage *DeskIcon(void) {
   [edit addItemWithTitle:@"Select All" action:@selector(selectAll:) keyEquivalent:@"a"];
   editItem.submenu = edit;
   NSApp.mainMenu = menu;
-  NSApp.applicationIconImage = DeskIcon();
-  self.menuBar = [[DeskMenuBar alloc] initWithWindow:self.window messenger:self.controller.engine.binaryMessenger];
-  ((DeskWindow *)self.window).menuBar = self.menuBar;
-  self.music = [[DeskMusic alloc] initWithWindow:self.window messenger:self.controller.engine.binaryMessenger];
+  NSApp.applicationIconImage = StintIcon();
+  self.menuBar = [[StintMenuBar alloc] initWithWindow:self.window messenger:self.controller.engine.binaryMessenger];
+  ((StintWindow *)self.window).menuBar = self.menuBar;
+  self.music = [[StintMusic alloc] initWithWindow:self.window messenger:self.controller.engine.binaryMessenger];
   self.music.youTubeViewChanged = ^(NSView *view) {
     [weakSelf.menuBar setYouTubeView:view];
   };
@@ -128,7 +128,7 @@ int main(int argc, const char *argv[]) {
       return complete ? 0 : 1;
     }
     [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
-    DeskDelegate *delegate = [[DeskDelegate alloc] init];
+    StintDelegate *delegate = [[StintDelegate alloc] init];
     NSApp.delegate = delegate;
     [NSApp run];
   }

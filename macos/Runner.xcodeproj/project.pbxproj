@@ -21,17 +21,17 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
-		FD0000090000000000000001 /* DeskKeymap.m in Sources */ = {isa = PBXBuildFile; fileRef = FD0000090000000000000002 /* DeskKeymap.m */; };
+		FD0000090000000000000001 /* StintKeymap.m in Sources */ = {isa = PBXBuildFile; fileRef = FD0000090000000000000002 /* StintKeymap.m */; };
 		FD0000090000000000000004 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FD0000090000000000000005 /* Carbon.framework */; };
-		FD0000080000000000000001 /* DeskCompletionBanner.m in Sources */ = {isa = PBXBuildFile; fileRef = FD0000080000000000000002 /* DeskCompletionBanner.m */; };
+		FD0000080000000000000001 /* StintCompletionBanner.m in Sources */ = {isa = PBXBuildFile; fileRef = FD0000080000000000000002 /* StintCompletionBanner.m */; };
 		FD0000070000000000000001 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FD0000070000000000000002 /* QuartzCore.framework */; };
 		FD0000060000000000000001 /* CoreText.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FD0000060000000000000002 /* CoreText.framework */; };
-		FD0000050000000000000001 /* DeskAlertSound.m in Sources */ = {isa = PBXBuildFile; fileRef = FD0000050000000000000002 /* DeskAlertSound.m */; };
-		FD0000040000000000000001 /* DeskYouTubePlayer.m in Sources */ = {isa = PBXBuildFile; fileRef = FD0000040000000000000002 /* DeskYouTubePlayer.m */; };
+		FD0000050000000000000001 /* StintAlertSound.m in Sources */ = {isa = PBXBuildFile; fileRef = FD0000050000000000000002 /* StintAlertSound.m */; };
+		FD0000040000000000000001 /* StintYouTubePlayer.m in Sources */ = {isa = PBXBuildFile; fileRef = FD0000040000000000000002 /* StintYouTubePlayer.m */; };
 		FD0000040000000000000004 /* WebKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FD0000040000000000000005 /* WebKit.framework */; };
-		FD0000030000000000000001 /* DeskMusic.m in Sources */ = {isa = PBXBuildFile; fileRef = FD0000030000000000000002 /* DeskMusic.m */; };
+		FD0000030000000000000001 /* StintMusic.m in Sources */ = {isa = PBXBuildFile; fileRef = FD0000030000000000000002 /* StintMusic.m */; };
 		FD0000030000000000000004 /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FD0000030000000000000005 /* AVFoundation.framework */; };
-		FD0000010000000000000001 /* DeskMenuBar.m in Sources */ = {isa = PBXBuildFile; fileRef = FD0000010000000000000002 /* DeskMenuBar.m */; };
+		FD0000010000000000000001 /* StintMenuBar.m in Sources */ = {isa = PBXBuildFile; fileRef = FD0000010000000000000002 /* StintMenuBar.m */; };
 		331C80D8294CF71000263BE5 /* RunnerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 331C80D7294CF71000263BE5 /* RunnerTests.swift */; };
 		335BBD1B22A9A15E00E9071D /* GeneratedPluginRegistrant.swift in Sources */ = {isa = PBXBuildFile; fileRef = 335BBD1A22A9A15E00E9071D /* GeneratedPluginRegistrant.swift */; };
 		33CC10F12044A3C60003C045 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33CC10F02044A3C60003C045 /* AppDelegate.swift */; };
@@ -72,23 +72,23 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		FD0000090000000000000002 /* DeskKeymap.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DeskKeymap.m; sourceTree = "<group>"; };
-		FD0000090000000000000003 /* DeskKeymap.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DeskKeymap.h; sourceTree = "<group>"; };
+		FD0000090000000000000002 /* StintKeymap.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = StintKeymap.m; sourceTree = "<group>"; };
+		FD0000090000000000000003 /* StintKeymap.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = StintKeymap.h; sourceTree = "<group>"; };
 		FD0000090000000000000005 /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = System/Library/Frameworks/Carbon.framework; sourceTree = SDKROOT; };
-		FD0000080000000000000002 /* DeskCompletionBanner.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DeskCompletionBanner.m; sourceTree = "<group>"; };
-		FD0000080000000000000003 /* DeskCompletionBanner.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DeskCompletionBanner.h; sourceTree = "<group>"; };
+		FD0000080000000000000002 /* StintCompletionBanner.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = StintCompletionBanner.m; sourceTree = "<group>"; };
+		FD0000080000000000000003 /* StintCompletionBanner.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = StintCompletionBanner.h; sourceTree = "<group>"; };
 		FD0000070000000000000002 /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
 		FD0000060000000000000002 /* CoreText.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreText.framework; path = System/Library/Frameworks/CoreText.framework; sourceTree = SDKROOT; };
-		FD0000050000000000000002 /* DeskAlertSound.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DeskAlertSound.m; sourceTree = "<group>"; };
-		FD0000050000000000000003 /* DeskAlertSound.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DeskAlertSound.h; sourceTree = "<group>"; };
-		FD0000040000000000000002 /* DeskYouTubePlayer.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DeskYouTubePlayer.m; sourceTree = "<group>"; };
-		FD0000040000000000000003 /* DeskYouTubePlayer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DeskYouTubePlayer.h; sourceTree = "<group>"; };
+		FD0000050000000000000002 /* StintAlertSound.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = StintAlertSound.m; sourceTree = "<group>"; };
+		FD0000050000000000000003 /* StintAlertSound.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = StintAlertSound.h; sourceTree = "<group>"; };
+		FD0000040000000000000002 /* StintYouTubePlayer.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = StintYouTubePlayer.m; sourceTree = "<group>"; };
+		FD0000040000000000000003 /* StintYouTubePlayer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = StintYouTubePlayer.h; sourceTree = "<group>"; };
 		FD0000040000000000000005 /* WebKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WebKit.framework; path = System/Library/Frameworks/WebKit.framework; sourceTree = SDKROOT; };
-		FD0000030000000000000002 /* DeskMusic.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DeskMusic.m; sourceTree = "<group>"; };
-		FD0000030000000000000003 /* DeskMusic.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DeskMusic.h; sourceTree = "<group>"; };
+		FD0000030000000000000002 /* StintMusic.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = StintMusic.m; sourceTree = "<group>"; };
+		FD0000030000000000000003 /* StintMusic.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = StintMusic.h; sourceTree = "<group>"; };
 		FD0000030000000000000005 /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
-		FD0000010000000000000002 /* DeskMenuBar.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DeskMenuBar.m; sourceTree = "<group>"; };
-		FD0000010000000000000003 /* DeskMenuBar.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DeskMenuBar.h; sourceTree = "<group>"; };
+		FD0000010000000000000002 /* StintMenuBar.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = StintMenuBar.m; sourceTree = "<group>"; };
+		FD0000010000000000000003 /* StintMenuBar.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = StintMenuBar.h; sourceTree = "<group>"; };
 		FD0000010000000000000004 /* Runner-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Runner-Bridging-Header.h"; sourceTree = "<group>"; };
 		331C80D5294CF71000263BE5 /* RunnerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RunnerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		331C80D7294CF71000263BE5 /* RunnerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunnerTests.swift; sourceTree = "<group>"; };
@@ -200,19 +200,19 @@
 		33FAB671232836740065AC1E /* Runner */ = {
 			isa = PBXGroup;
 			children = (
-				FD0000090000000000000002 /* DeskKeymap.m */,
-				FD0000090000000000000003 /* DeskKeymap.h */,
-				FD0000080000000000000002 /* DeskCompletionBanner.m */,
-				FD0000080000000000000003 /* DeskCompletionBanner.h */,
-				FD0000050000000000000002 /* DeskAlertSound.m */,
-				FD0000050000000000000003 /* DeskAlertSound.h */,
-				FD0000040000000000000002 /* DeskYouTubePlayer.m */,
-				FD0000040000000000000003 /* DeskYouTubePlayer.h */,
-				FD0000030000000000000002 /* DeskMusic.m */,
-				FD0000030000000000000003 /* DeskMusic.h */,
+				FD0000090000000000000002 /* StintKeymap.m */,
+				FD0000090000000000000003 /* StintKeymap.h */,
+				FD0000080000000000000002 /* StintCompletionBanner.m */,
+				FD0000080000000000000003 /* StintCompletionBanner.h */,
+				FD0000050000000000000002 /* StintAlertSound.m */,
+				FD0000050000000000000003 /* StintAlertSound.h */,
+				FD0000040000000000000002 /* StintYouTubePlayer.m */,
+				FD0000040000000000000003 /* StintYouTubePlayer.h */,
+				FD0000030000000000000002 /* StintMusic.m */,
+				FD0000030000000000000003 /* StintMusic.h */,
 				33CC10F02044A3C60003C045 /* AppDelegate.swift */,
-				FD0000010000000000000002 /* DeskMenuBar.m */,
-				FD0000010000000000000003 /* DeskMenuBar.h */,
+				FD0000010000000000000002 /* StintMenuBar.m */,
+				FD0000010000000000000003 /* StintMenuBar.h */,
 				FD0000010000000000000004 /* Runner-Bridging-Header.h */,
 				33CC11122044BFA00003C045 /* MainFlutterWindow.swift */,
 				33E51913231747F40026EE4D /* DebugProfile.entitlements */,
@@ -406,13 +406,13 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				FD0000090000000000000001 /* DeskKeymap.m in Sources */,
-				FD0000080000000000000001 /* DeskCompletionBanner.m in Sources */,
-				FD0000050000000000000001 /* DeskAlertSound.m in Sources */,
-				FD0000040000000000000001 /* DeskYouTubePlayer.m in Sources */,
-				FD0000030000000000000001 /* DeskMusic.m in Sources */,
+				FD0000090000000000000001 /* StintKeymap.m in Sources */,
+				FD0000080000000000000001 /* StintCompletionBanner.m in Sources */,
+				FD0000050000000000000001 /* StintAlertSound.m in Sources */,
+				FD0000040000000000000001 /* StintYouTubePlayer.m in Sources */,
+				FD0000030000000000000001 /* StintMusic.m in Sources */,
 				33CC11132044BFA00003C045 /* MainFlutterWindow.swift in Sources */,
-				FD0000010000000000000001 /* DeskMenuBar.m in Sources */,
+				FD0000010000000000000001 /* StintMenuBar.m in Sources */,
 				33CC10F12044A3C60003C045 /* AppDelegate.swift in Sources */,
 				335BBD1B22A9A15E00E9071D /* GeneratedPluginRegistrant.swift in Sources */,
 			);
@@ -453,7 +453,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.focusdesk.focusDesk.RunnerTests;
+				PRODUCT_BUNDLE_IDENTIFIER = io.github.albert2704.stint.RunnerTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Stint.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Stint";
@@ -467,7 +467,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.focusdesk.focusDesk.RunnerTests;
+				PRODUCT_BUNDLE_IDENTIFIER = io.github.albert2704.stint.RunnerTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Stint.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Stint";
@@ -481,7 +481,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.focusdesk.focusDesk.RunnerTests;
+				PRODUCT_BUNDLE_IDENTIFIER = io.github.albert2704.stint.RunnerTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Stint.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Stint";

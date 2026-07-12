@@ -5,12 +5,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:focus_desk/data/controller.dart';
-import 'package:focus_desk/data/store.dart';
-import 'package:focus_desk/main.dart';
-import 'package:focus_desk/music.dart';
-import 'package:focus_desk/ui/music_panel.dart';
-import 'package:focus_desk/ui/theme.dart';
+import 'package:stint/data/controller.dart';
+import 'package:stint/data/store.dart';
+import 'package:stint/main.dart';
+import 'package:stint/music.dart';
+import 'package:stint/ui/music_panel.dart';
+import 'package:stint/ui/theme.dart';
 
 class FakeMusicAssets extends CachingAssetBundle {
   final loaded = <String>[];
@@ -118,7 +118,7 @@ Future<void> captureMusic(WidgetTester tester, String name) async {
 
 Future<void> mountMusicScreen(
   WidgetTester tester,
-  DeskController controller,
+  StintController controller,
   FocusMusic music, {
   Size size = const Size(520, 820),
 }) async {
@@ -129,7 +129,7 @@ Future<void> mountMusicScreen(
   await tester.pumpWidget(
     RepaintBoundary(
       key: musicCaptureKey,
-      child: FocusDeskApp(controller: controller, music: music),
+      child: StintApp(controller: controller, music: music),
     ),
   );
   await tester.pumpAndSettle();
@@ -137,7 +137,7 @@ Future<void> mountMusicScreen(
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-  const channel = MethodChannel('focus_desk/music-test');
+  const channel = MethodChannel('stint/music-test');
   final messenger =
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
   late FakeMusicAssets assets;
@@ -361,7 +361,7 @@ void main() {
       await music.load();
       await tester.pumpWidget(
         MaterialApp(
-          theme: deskTheme(Brightness.light),
+          theme: stintTheme(Brightness.light),
           home: Scaffold(
             body: Center(
               child: SizedBox(width: 400, child: MusicPanel(music: music)),
@@ -433,7 +433,7 @@ void main() {
   testWidgets('Pomodoro and music playback remain independently controllable', (
     tester,
   ) async {
-    final controller = DeskController(
+    final controller = StintController(
       MemoryWorkspaceStore(),
       tickAutomatically: false,
     );
@@ -463,7 +463,7 @@ void main() {
     tester,
   ) async {
     var now = DateTime(2026, 10, 8, 10);
-    final controller = DeskController(
+    final controller = StintController(
       MemoryWorkspaceStore(),
       now: () => now,
       tickAutomatically: false,

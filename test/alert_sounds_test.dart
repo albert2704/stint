@@ -3,11 +3,11 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:focus_desk/alert_sounds.dart';
-import 'package:focus_desk/data/controller.dart';
-import 'package:focus_desk/data/store.dart';
-import 'package:focus_desk/main.dart';
-import 'package:focus_desk/ui/routines.dart';
+import 'package:stint/alert_sounds.dart';
+import 'package:stint/data/controller.dart';
+import 'package:stint/data/store.dart';
+import 'package:stint/main.dart';
+import 'package:stint/ui/routines.dart';
 import 'controller_test.dart' show FailingStore;
 
 class FakeAlertSounds {
@@ -53,14 +53,14 @@ class FakeAlertSounds {
 
 Future<void> openSoundSettings(
   WidgetTester tester,
-  DeskController controller, {
+  StintController controller, {
   Size size = const Size(520, 820),
 }) async {
   tester.view.devicePixelRatio = 1;
   tester.view.physicalSize = size;
   addTearDown(tester.view.resetPhysicalSize);
   addTearDown(tester.view.resetDevicePixelRatio);
-  await tester.pumpWidget(FocusDeskApp(controller: controller));
+  await tester.pumpWidget(StintApp(controller: controller));
   await tester.pumpAndSettle();
   await tester.tap(find.byTooltip('Settings'));
   // This also supports tests that deliberately leave the native load pending.
@@ -76,11 +76,11 @@ Future<void> chooseSound(WidgetTester tester, String sound) async {
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-  const channel = MethodChannel('focus_desk/timer');
+  const channel = MethodChannel('stint/timer');
   final messenger =
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
   late FakeAlertSounds native;
-  late DeskController controller;
+  late StintController controller;
 
   setUpAll(() async {
     await (FontLoader(
@@ -98,7 +98,7 @@ void main() {
   setUp(() {
     native = FakeAlertSounds();
     messenger.setMockMethodCallHandler(channel, native.handle);
-    controller = DeskController(
+    controller = StintController(
       MemoryWorkspaceStore(),
       tickAutomatically: false,
     );
@@ -300,7 +300,7 @@ void main() {
     (tester) async {
       controller.dispose();
       final store = FailingStore();
-      controller = DeskController(store, tickAutomatically: false);
+      controller = StintController(store, tickAutomatically: false);
       controller.startTimer();
       final deadline = controller.timer.endsAt;
       store.fail = true;
@@ -343,7 +343,7 @@ void main() {
     (tester) async {
       controller.dispose();
       final store = FailingStore()..fail = true;
-      controller = DeskController(store, tickAutomatically: false);
+      controller = StintController(store, tickAutomatically: false);
       await openSoundSettings(tester, controller);
       await tester.pumpAndSettle();
       await tester.enterText(find.byKey(const Key('duration-focus')), '40');

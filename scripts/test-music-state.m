@@ -1,26 +1,26 @@
 // Exercise the production snapshot and Flutter codec without opening windows,
 // loading audio, contacting YouTube, or reading/writing user preferences.
-#import "../macos/Runner/DeskMusic.m"
+#import "../macos/Runner/StintMusic.m"
 
-@interface DeskMusicAudioProbe : NSObject
+@interface StintMusicAudioProbe : NSObject
 @property(nonatomic) BOOL playing;
 @property(nonatomic) float volume;
 @property(nonatomic, weak) id delegate;
 - (BOOL)isPlaying;
 - (void)stop;
 @end
-@implementation DeskMusicAudioProbe
+@implementation StintMusicAudioProbe
 - (BOOL)isPlaying { return self.playing; }
 - (void)stop { self.playing = NO; }
 @end
 
-@interface DeskMusicYouTubeProbe : NSObject
+@interface StintMusicYouTubeProbe : NSObject
 @property(nonatomic, copy) NSString *videoId;
 @property(nonatomic) BOOL playing;
 @property(nonatomic) BOOL starting;
 - (void)stop;
 @end
-@implementation DeskMusicYouTubeProbe
+@implementation StintMusicYouTubeProbe
 - (void)stop { self.playing = NO; self.starting = NO; }
 @end
 
@@ -39,7 +39,7 @@ static void CheckBoolean(NSDictionary *state, NSString *key, BOOL expected, NSSt
   checks++;
 }
 
-static void CheckState(DeskMusic *music, BOOL playing, BOOL starting, BOOL follows, NSString *context) {
+static void CheckState(StintMusic *music, BOOL playing, BOOL starting, BOOL follows, NSString *context) {
   NSDictionary *state = [music state];
   // The native snapshot must contain genuine booleans before encoding, and the
   // values reaching Dart must retain that type; Dart compares them to `true`.
@@ -56,7 +56,7 @@ int main(void) {
   @autoreleasepool {
     // Bypass the app initializer deliberately: it reads preferences and installs
     // a live channel. Only the production state builder is under test here.
-    DeskMusic *music = [[DeskMusic alloc] init];
+    StintMusic *music = [[StintMusic alloc] init];
     music.tracks = [NSMutableArray array];
     music.youTubeTracks = [NSMutableArray arrayWithObject:@{
       @"id": @"youtube_M7lc1UVf-VE", @"title": @"Test video",
@@ -66,10 +66,10 @@ int main(void) {
     music.volume = 0.35;
     CheckState(music, NO, NO, NO, @"initial state");
 
-    DeskMusicAudioProbe *audio = [[DeskMusicAudioProbe alloc] init];
-    DeskMusicYouTubeProbe *youTube = [[DeskMusicYouTubeProbe alloc] init];
+    StintMusicAudioProbe *audio = [[StintMusicAudioProbe alloc] init];
+    StintMusicYouTubeProbe *youTube = [[StintMusicYouTubeProbe alloc] init];
     music.player = (AVAudioPlayer *)audio;
-    music.youTubePlayer = (DeskYouTubePlayer *)youTube;
+    music.youTubePlayer = (StintYouTubePlayer *)youTube;
     for (NSNumber *follow in @[@NO, @YES]) {
       music.followTimer = follow.boolValue;
       audio.playing = YES;

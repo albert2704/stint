@@ -9,7 +9,7 @@ PRODUCT_NAME = Stint
 SWIFT_OBJC_BRIDGING_HEADER = Runner/Runner-Bridging-Header.h
 
 // The application's bundle identifier
-PRODUCT_BUNDLE_IDENTIFIER = com.focusdesk.focusDesk
+PRODUCT_BUNDLE_IDENTIFIER = io.github.albert2704.stint
 
 // The copyright displayed in application information
 PRODUCT_COPYRIGHT = Copyright © 2026 Nguyen Viet and Stint contributors. MIT License.

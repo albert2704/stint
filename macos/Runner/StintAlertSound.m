@@ -1,19 +1,19 @@
-#import "DeskAlertSound.h"
+#import "StintAlertSound.h"
 #import <AVFoundation/AVFoundation.h>
 #import <math.h>
 #import <stdio.h>
 #import <string.h>
 
-static NSString *const DeskAlertCacheVersion = @"v1";
-static NSTimeInterval const DeskAlertGapSeconds = 0.25;
-static NSTimeInterval const DeskAlertMaximumSeconds = 29.5;
+static NSString *const StintAlertCacheVersion = @"v1";
+static NSTimeInterval const StintAlertGapSeconds = 0.25;
+static NSTimeInterval const StintAlertMaximumSeconds = 29.5;
 
-static BOOL DeskAllowedAlertSound(NSString *name) {
+static BOOL StintAllowedAlertSound(NSString *name) {
   return [name isKindOfClass:NSString.class] &&
       [@[@"Glass", @"Ping", @"Pop", @"Funk", @"Submarine", @"Basso"] containsObject:name];
 }
 
-static BOOL DeskValidRepeatedSound(NSURL *url, AVAudioFramePosition frames,
+static BOOL StintValidRepeatedSound(NSURL *url, AVAudioFramePosition frames,
                                    AVAudioFormat *format) {
   NSDictionary *attributes = [url resourceValuesForKeys:@[NSURLIsRegularFileKey, NSURLFileSizeKey]
                                                  error:NULL];
@@ -30,8 +30,8 @@ static BOOL DeskValidRepeatedSound(NSURL *url, AVAudioFramePosition frames,
 
 // The explicit directory keeps generation testable without touching preferences
 // or the real app container. Production callers always use the public function.
-static NSString *DeskRepeatedAlertSoundInDirectory(NSString *name, NSURL *directory) {
-  if (!DeskAllowedAlertSound(name) || !directory.isFileURL) return nil;
+static NSString *StintRepeatedAlertSoundInDirectory(NSString *name, NSURL *directory) {
+  if (!StintAllowedAlertSound(name) || !directory.isFileURL) return nil;
   NSURL *sourceURL = [NSURL fileURLWithPath:
       [NSString stringWithFormat:@"/System/Library/Sounds/%@.aiff", name]];
   AVAudioFile *source = [[AVAudioFile alloc] initForReading:sourceURL
@@ -41,14 +41,14 @@ static NSString *DeskRepeatedAlertSoundInDirectory(NSString *name, NSURL *direct
   AVAudioFramePosition sourceFrames = source.length;
   if (!source || !isfinite(sampleRate) || sampleRate < 8000 || sampleRate > 192000 ||
       format.channelCount < 1 || format.channelCount > 2 || sourceFrames <= 0 ||
-      (double)sourceFrames / sampleRate > (DeskAlertMaximumSeconds - DeskAlertGapSeconds) / 2) return nil;
-  AVAudioFrameCount gapFrames = (AVAudioFrameCount)llround(sampleRate * DeskAlertGapSeconds);
+      (double)sourceFrames / sampleRate > (StintAlertMaximumSeconds - StintAlertGapSeconds) / 2) return nil;
+  AVAudioFrameCount gapFrames = (AVAudioFrameCount)llround(sampleRate * StintAlertGapSeconds);
   AVAudioFramePosition totalFrames = sourceFrames * 2 + gapFrames;
   if (totalFrames > UINT32_MAX || (double)totalFrames / sampleRate >= 30.0) return nil;
 
-  NSString *filename = [NSString stringWithFormat:@"FocusDesk-%@-%@-twice.wav", DeskAlertCacheVersion, name];
+  NSString *filename = [NSString stringWithFormat:@"Stint-%@-%@-twice.wav", StintAlertCacheVersion, name];
   NSURL *destination = [directory URLByAppendingPathComponent:filename];
-  if (DeskValidRepeatedSound(destination, totalFrames, format)) return filename;
+  if (StintValidRepeatedSound(destination, totalFrames, format)) return filename;
   if (![NSFileManager.defaultManager createDirectoryAtURL:directory
       withIntermediateDirectories:YES attributes:nil error:NULL]) return nil;
 
@@ -69,7 +69,7 @@ static NSString *DeskRepeatedAlertSoundInDirectory(NSString *name, NSURL *direct
   }
 
   NSURL *temporary = [directory URLByAppendingPathComponent:
-      [NSString stringWithFormat:@".FocusDesk-%@.wav", NSUUID.UUID.UUIDString]];
+      [NSString stringWithFormat:@".Stint-%@.wav", NSUUID.UUID.UUIDString]];
   NSDictionary *settings = @{
     AVFormatIDKey: @(kAudioFormatLinearPCM), AVSampleRateKey: @(sampleRate),
     AVNumberOfChannelsKey: @(format.channelCount), AVLinearPCMBitDepthKey: @16,
@@ -85,7 +85,7 @@ static NSString *DeskRepeatedAlertSoundInDirectory(NSString *name, NSURL *direct
     // AVAudioFile.close is macOS 15+, while this app also supports macOS 12.
     writer = nil;
   }
-  if (!written || !DeskValidRepeatedSound(temporary, totalFrames, format) ||
+  if (!written || !StintValidRepeatedSound(temporary, totalFrames, format) ||
       rename(temporary.fileSystemRepresentation, destination.fileSystemRepresentation) != 0) {
     [NSFileManager.defaultManager removeItemAtURL:temporary error:NULL];
     return nil;
@@ -93,8 +93,8 @@ static NSString *DeskRepeatedAlertSoundInDirectory(NSString *name, NSURL *direct
   return filename;
 }
 
-NSString *DeskRepeatedAlertSoundName(NSString *soundName) {
-  if (!DeskAllowedAlertSound(soundName)) return nil;
+NSString *StintRepeatedAlertSoundName(NSString *soundName) {
+  if (!StintAllowedAlertSound(soundName)) return nil;
   static NSObject *cacheLock;
   static dispatch_once_t onceToken;
   dispatch_once(&onceToken, ^{ cacheLock = [[NSObject alloc] init]; });
@@ -102,7 +102,7 @@ NSString *DeskRepeatedAlertSoundName(NSString *soundName) {
     NSURL *library = [NSFileManager.defaultManager URLForDirectory:NSLibraryDirectory
         inDomain:NSUserDomainMask appropriateForURL:nil create:YES error:NULL];
     if (!library) return nil;
-    return DeskRepeatedAlertSoundInDirectory(soundName,
+    return StintRepeatedAlertSoundInDirectory(soundName,
         [library URLByAppendingPathComponent:@"Sounds" isDirectory:YES]);
   }
 }

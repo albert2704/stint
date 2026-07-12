@@ -1,9 +1,9 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:focus_desk/data/controller.dart';
-import 'package:focus_desk/data/models.dart';
-import 'package:focus_desk/data/store.dart';
+import 'package:stint/data/controller.dart';
+import 'package:stint/data/models.dart';
+import 'package:stint/data/store.dart';
 
 class FailingStore extends MemoryWorkspaceStore {
   bool fail = false;
@@ -26,7 +26,7 @@ Workspace legacyWorkspace(DateTime now) => Workspace(
     ),
   ],
   tasks: [
-    DeskTask(
+    StintTask(
       id: 'legacy-task',
       projectId: 'legacy-project',
       title: 'Original task',
@@ -39,7 +39,7 @@ Workspace legacyWorkspace(DateTime now) => Workspace(
     ),
   ],
   notes: [
-    DeskNote(
+    StintNote(
       id: 'legacy-note',
       projectId: 'legacy-project',
       title: 'Original note',
@@ -57,7 +57,7 @@ Workspace legacyWorkspace(DateTime now) => Workspace(
       finishedAt: now.subtract(const Duration(hours: 1)),
     ),
   ],
-  settings: DeskSettings(),
+  settings: StintPreferences(),
   timer: FocusTimer(
     remaining: 1200,
     totalSeconds: 1500,
@@ -72,11 +72,11 @@ Workspace legacyWorkspace(DateTime now) => Workspace(
 void main() {
   late DateTime now;
   late MemoryWorkspaceStore store;
-  late DeskController controller;
+  late StintController controller;
   setUp(() {
     now = DateTime(2026, 10, 8, 10);
     store = MemoryWorkspaceStore();
-    controller = DeskController(
+    controller = StintController(
       store,
       now: () => now,
       tickAutomatically: false,
@@ -93,7 +93,7 @@ void main() {
       final originalNotes = legacy.notes.map((n) => n.toJson()).toList();
       final originalSession = legacy.sessions.single.toJson();
       store.save(legacy);
-      final c = DeskController(store, now: () => now, tickAutomatically: false);
+      final c = StintController(store, now: () => now, tickAutomatically: false);
       addTearDown(c.dispose);
       c.startTimer();
       now = now.add(const Duration(minutes: 1));
@@ -127,7 +127,7 @@ void main() {
   test('deadline survives relaunch and completion records once', () {
     controller.startFocus();
     now = now.add(const Duration(minutes: 30));
-    final reopened = DeskController(
+    final reopened = StintController(
       store,
       now: () => now,
       tickAutomatically: false,
@@ -143,7 +143,7 @@ void main() {
     reopened.tick();
     reopened.tick();
     expect(reopened.workspace.sessions, hasLength(1));
-    final twice = DeskController(
+    final twice = StintController(
       store,
       now: () => now,
       tickAutomatically: false,
@@ -197,7 +197,7 @@ void main() {
     'selecting a phase stops the interval and clears legacy task context',
     () {
       store.save(legacyWorkspace(now));
-      final c = DeskController(store, now: () => now, tickAutomatically: false);
+      final c = StintController(store, now: () => now, tickAutomatically: false);
       addTearDown(c.dispose);
       c.startTimer();
       c.selectPhase(TimerPhase.longBreak);
@@ -229,7 +229,7 @@ void main() {
 
   test('failed write is visible and retry persists pending changes', () {
     final failing = FailingStore();
-    final c = DeskController(failing, tickAutomatically: false);
+    final c = StintController(failing, tickAutomatically: false);
     addTearDown(c.dispose);
     failing.fail = true;
     c.setTimerMinutes(40);
@@ -279,7 +279,7 @@ void main() {
   test(
     'atomic local storage survives corrupt main file and preserves evidence',
     () {
-      final dir = Directory.systemTemp.createTempSync('focus-desk-test-');
+      final dir = Directory.systemTemp.createTempSync('stint-test-');
       addTearDown(() => dir.deleteSync(recursive: true));
       final files = FileWorkspaceStore(dir);
       files.save(Workspace.empty());

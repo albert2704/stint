@@ -3,7 +3,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 /// A Stint card that can appear without activating the main app.
-@interface DeskCompletionBanner : NSObject
+@interface StintCompletionBanner : NSObject
 @property(nonatomic, readonly, getter=isVisible) BOOL visible;
 @property(nonatomic, readonly) BOOL hasContent;
 @property(nonatomic, readonly, getter=isHint) BOOL hint;

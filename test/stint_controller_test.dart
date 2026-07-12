@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:focus_desk/data/controller.dart';
-import 'package:focus_desk/data/models.dart';
-import 'package:focus_desk/data/store.dart';
+import 'package:stint/data/controller.dart';
+import 'package:stint/data/models.dart';
+import 'package:stint/data/store.dart';
 
 class SettingsFailingStore extends MemoryWorkspaceStore {
   bool fail = false;
@@ -16,11 +16,11 @@ class SettingsFailingStore extends MemoryWorkspaceStore {
 void main() {
   late DateTime now;
   late MemoryWorkspaceStore store;
-  late DeskController controller;
+  late StintController controller;
   setUp(() {
     now = DateTime(2026, 10, 9, 9);
     store = MemoryWorkspaceStore();
-    controller = DeskController(
+    controller = StintController(
       store,
       now: () => now,
       tickAutomatically: false,
@@ -32,7 +32,7 @@ void main() {
     'failed Settings save rolls back preferences only and keeps the draft retryable',
     () {
       final disk = SettingsFailingStore();
-      final c = DeskController(disk, now: () => now, tickAutomatically: false);
+      final c = StintController(disk, now: () => now, tickAutomatically: false);
       addTearDown(c.dispose);
       c.startTimer();
       now = now.add(const Duration(minutes: 2));
@@ -274,7 +274,7 @@ void main() {
       expect(controller.pendingAction?.kind, 'reset');
       expect(store.contents, saved);
       expect(store.load()!.timer.endsAt, deadline);
-      final reopened = DeskController(
+      final reopened = StintController(
         store,
         now: () => now,
         tickAutomatically: false,
@@ -439,7 +439,7 @@ void main() {
       final session = controller.timer.sessionId!;
       now = controller.timer.endsAt!;
       controller.tick();
-      final restored = DeskController(
+      final restored = StintController(
         store,
         now: () => now,
         tickAutomatically: false,

@@ -66,6 +66,8 @@ assert entitlements.get('com.apple.security.network.client') is True
 assert not entitlements.get('com.apple.security.get-task-allow')
 assert not entitlements.get('com.apple.security.cs.allow-jit')
 info = plistlib.loads((pathlib.Path(sys.argv[2])/'Contents/Info.plist').read_bytes())
+assert info['CFBundleIdentifier'] == 'io.github.albert2704.stint'
+assert info['CFBundleExecutable'] == 'Stint'
 assert info['CFBundleShortVersionString'] == sys.argv[3]
 assert info['LSMinimumSystemVersion'] == '12.0'
 PY

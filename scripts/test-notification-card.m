@@ -1,6 +1,6 @@
 // Exercises production card lifetime and placement without opening an AppKit window.
 #import <Cocoa/Cocoa.h>
-#import "../macos/Runner/DeskCompletionBanner.m"
+#import "../macos/Runner/StintCompletionBanner.m"
 
 static NSInteger checks;
 static void Check(BOOL value, NSString *message) {
@@ -22,7 +22,7 @@ static void Check(BOOL value, NSString *message) {
 - (void)orderFrontRegardless { self.visible = YES; self.shows++; }
 @end
 
-@interface CardProbe : DeskCompletionBanner
+@interface CardProbe : StintCompletionBanner
 @end
 @implementation CardProbe
 - (void)refreshHoverState { self.hovered = NO; }
@@ -32,7 +32,7 @@ static CardProbe *NewCard(BOOL hint) {
   CardProbe *card = [CardProbe new];
   CardPanelProbe *panel = [CardPanelProbe new];
   panel.visible = YES;
-  card.panel = (DeskBannerPanel *)(id)panel;
+  card.panel = (StintBannerPanel *)(id)panel;
   card.hasContent = YES;
   card.hint = hint;
   card.presentation = 1;
@@ -43,23 +43,23 @@ int main(void) {
   @autoreleasepool {
     NSRect screen = NSMakeRect(0, 0, 1440, 876);
     NSRect anchor = NSMakeRect(1210, 876, 60, 24);
-    NSRect frame = DeskBannerFrame(screen, anchor, 214);
+    NSRect frame = StintBannerFrame(screen, anchor, 214);
     Check(NSWidth(frame) == 340, @"card is 340 pixels wide");
     Check(NSMaxX(frame) == NSMaxX(anchor), @"right edge follows status item");
     Check(NSMaxY(frame) == NSMaxY(screen) - 12, @"top respects visible-frame clamp");
-    frame = DeskBannerFrame(screen, NSMakeRect(1210, 820, 60, 24), 214);
+    frame = StintBannerFrame(screen, NSMakeRect(1210, 820, 60, 24), 214);
     Check(NSMaxY(frame) == 812, @"unclamped anchor leaves eight pixels below item");
-    frame = DeskBannerFrame(screen, NSMakeRect(0, 820, 30, 24), 214);
+    frame = StintBannerFrame(screen, NSMakeRect(0, 820, 30, 24), 214);
     Check(NSMinX(frame) == 12, @"left edge clamps twelve pixels inside screen");
-    frame = DeskBannerFrame(screen, NSMakeRect(1430, 820, 30, 24), 214);
+    frame = StintBannerFrame(screen, NSMakeRect(1430, 820, 30, 24), 214);
     Check(NSMaxX(frame) == 1428, @"right edge clamps twelve pixels inside screen");
-    frame = DeskBannerFrame(screen, NSMakeRect(800, 10, 30, 24), 214);
+    frame = StintBannerFrame(screen, NSMakeRect(800, 10, 30, 24), 214);
     Check(NSMinY(frame) == 12, @"bottom edge clamps twelve pixels inside screen");
-    frame = DeskBannerFrame(screen, NSZeroRect, 214);
+    frame = StintBannerFrame(screen, NSZeroRect, 214);
     Check(NSMaxX(frame) == 1424 && NSMaxY(frame) == 860, @"missing status item uses sixteen-pixel fallback");
-    frame = DeskBannerFrame(NSMakeRect(-1728, 100, 1728, 1077), NSMakeRect(-200, 1177, 60, 24), 198);
+    frame = StintBannerFrame(NSMakeRect(-1728, 100, 1728, 1077), NSMakeRect(-200, 1177, 60, 24), 198);
     Check(NSMaxX(frame) == -140 && NSMaxY(frame) == 1165, @"secondary screens retain global coordinates");
-    Check([DeskBannerAnnouncement(@"Focus complete", @"Your short break is ready.")
+    Check([StintBannerAnnouncement(@"Focus complete", @"Your short break is ready.")
         isEqualToString:@"Stint, Focus complete. Your short break is ready."], @"announcement and dialog label include app, title and body");
 
     CardProbe *card = NewCard(NO);

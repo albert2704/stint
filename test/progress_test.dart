@@ -4,10 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:focus_desk/data/controller.dart';
-import 'package:focus_desk/data/models.dart';
-import 'package:focus_desk/data/store.dart';
-import 'package:focus_desk/main.dart';
+import 'package:stint/data/controller.dart';
+import 'package:stint/data/models.dart';
+import 'package:stint/data/store.dart';
+import 'package:stint/main.dart';
 
 FocusSession stint(DateTime end, {int minutes = 25, String? id}) =>
     FocusSession(
@@ -20,7 +20,7 @@ FocusSession stint(DateTime end, {int minutes = 25, String? id}) =>
 
 Future<void> mount(
   WidgetTester tester,
-  DeskController c, {
+  StintController c, {
   Size size = const Size(480, 790),
 }) async {
   tester.view.devicePixelRatio = 1;
@@ -30,7 +30,7 @@ Future<void> mount(
   await tester.pumpWidget(
     RepaintBoundary(
       key: const Key('capture'),
-      child: FocusDeskApp(controller: c),
+      child: StintApp(controller: c),
     ),
   );
   await tester.pumpAndSettle();
@@ -57,7 +57,7 @@ void main() {
 
   group('Progress sheet', () {
     TestWidgetsFlutterBinding.ensureInitialized();
-    const timerChannel = MethodChannel('focus_desk/timer');
+    const timerChannel = MethodChannel('stint/timer');
     final messenger =
         TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
     setUp(() {
@@ -83,8 +83,8 @@ void main() {
       }
     });
 
-    DeskController seeded({String appearance = 'dark'}) {
-      final c = DeskController(
+    StintController seeded({String appearance = 'dark'}) {
+      final c = StintController(
         MemoryWorkspaceStore(),
         now: () => friday,
         tickAutomatically: false,
@@ -201,7 +201,7 @@ void main() {
     });
 
     testWidgets('empty history and light theme', (tester) async {
-      final c = DeskController(
+      final c = StintController(
         MemoryWorkspaceStore(),
         now: () => friday,
         tickAutomatically: false,

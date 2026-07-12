@@ -4,7 +4,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 /// Native countdown, mini controls, and alert sounds shared by both macOS hosts.
-@interface DeskMenuBar : NSObject
+@interface StintMenuBar : NSObject
 - (instancetype)initWithWindow:(NSWindow *)window
                      messenger:(id<FlutterBinaryMessenger>)messenger;
 - (void)showWindow;
