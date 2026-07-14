@@ -1,18 +1,18 @@
 # Install Stint
 
-Stint v0.1.0 targets macOS 12 or later and includes Apple Silicon and Intel code in one universal app. The package build and Apple Silicon startup check passed. Physical Intel and macOS 12 testing have not been completed; see [verification details](testing.md#downloadable-package-verification).
+Stint v0.1.1 targets macOS 12 or later, with a universal app for Apple Silicon and Intel. Its CI, package, and runner startup checks passed. Physical Intel and macOS 12 testing have not been completed; see [verification details](testing.md#downloadable-package-verification).
 
 The download includes the app and its runtime. You do not need Flutter, Xcode, or developer tools to use it. See [build from source](development.md) if you want to build Stint yourself.
 
 ## Choose a download
 
-You can find these files under **Assets** on the [Stint v0.1.0 release page](https://github.com/albert2704/stint/releases/tag/v0.1.0):
+You can find these files under **Assets** on the [Stint v0.1.1 release page](https://github.com/albert2704/stint/releases/tag/v0.1.1):
 
 | File | Use |
 | --- | --- |
-| [Stint-0.1.0-macos-universal.dmg](https://github.com/albert2704/stint/releases/download/v0.1.0/Stint-0.1.0-macos-universal.dmg) | Recommended. Open the disk image, then copy Stint to Applications. |
-| [Stint-0.1.0-macos-universal.zip](https://github.com/albert2704/stint/releases/download/v0.1.0/Stint-0.1.0-macos-universal.zip) | Alternative archive containing the same app. |
-| [SHA256SUMS.txt](https://github.com/albert2704/stint/releases/download/v0.1.0/SHA256SUMS.txt) | Checksums for checking the downloaded archives. |
+| [Stint-0.1.1-macos-universal.dmg](https://github.com/albert2704/stint/releases/download/v0.1.1/Stint-0.1.1-macos-universal.dmg) | Recommended. Open the disk image, then copy Stint to Applications. |
+| [Stint-0.1.1-macos-universal.zip](https://github.com/albert2704/stint/releases/download/v0.1.1/Stint-0.1.1-macos-universal.zip) | Alternative archive containing the same app. |
+| [SHA256SUMS.txt](https://github.com/albert2704/stint/releases/download/v0.1.1/SHA256SUMS.txt) | Checksums for checking the downloaded archives. |
 
 The GitHub **Source code** archives contain the project source, not an app ready to open.
 
@@ -26,7 +26,7 @@ The GitHub **Source code** archives contain the project source, not an app ready
 
 If you prefer the ZIP, double click it in Finder to extract **Stint.app**, then move the app into Applications and open it there.
 
-If Stint is already running, choose **Stint → Quit Stint** before replacing it. Closing the window alone keeps the app running in the menu bar. Keep one copy open at a time, because all copies use the same local data identity.
+If an earlier Stint is running, choose **Stint → Quit Stint** before replacing it or opening version 0.1.1. Closing the window alone keeps the app running in the menu bar. Keep one copy open at a time to avoid duplicate timers and shortcut conflicts.
 
 ## First launch and Gatekeeper
 
@@ -41,13 +41,13 @@ A warning about damage or malware is different from an unidentified developer wa
 You can download `SHA256SUMS.txt` alongside your chosen archive and compare its listed SHA256 value with Terminal's output. For example, from the folder containing the DMG:
 
 ```sh
-shasum -a 256 Stint-0.1.0-macos-universal.dmg
+shasum -a 256 Stint-0.1.1-macos-universal.dmg
 ```
 
 For the ZIP:
 
 ```sh
-shasum -a 256 Stint-0.1.0-macos-universal.zip
+shasum -a 256 Stint-0.1.1-macos-universal.zip
 ```
 
 The complete 64-character value should match the line for that filename in `SHA256SUMS.txt`. If it does not, download the archive again before opening it.
@@ -62,6 +62,8 @@ Your timer, progress, and imported music stay local. YouTube links need an inter
 
 Stint does not yet have an automatic updater. You can check the [release page](https://github.com/albert2704/stint/releases), quit the running app, and replace it in Applications with the newer version. Review that version's release notes first.
 
-The app retains the earlier `com.focusdesk.focusDesk` identity and `Focus Desk` data folder. Replacing the app bundle is intended to preserve existing local settings and history, but a manual upgrade has not yet been verified for this package. A copy of your local data is useful before trying a prerelease; see [data storage](architecture.md#persistence-and-compatibility).
+**Version 0.1.1 starts fresh when replacing 0.1.0.** Its new identity is `io.github.albert2704.stint`, with a `Stint` data folder and Stint preferences. Your timer/history, custom rhythms, music imports and saved YouTube links, settings, shortcuts, and permissions are not carried over. The previous saved data is left untouched and is not imported automatically. There is no migration action in the app.
+
+After installation, choose your rhythm and music again and allow notifications when prompted. A manual upgrade has not yet been verified for this package. You can keep a copy of your previous data before replacing the app; see [data storage](architecture.md#persistence-and-compatibility).
 
 To remove Stint, quit it and move the app from Applications to the Trash. Saved data may remain in its macOS container and preferences. Removing the app is not an erase-all-data action; see [privacy and local data](privacy.md#removing-data).

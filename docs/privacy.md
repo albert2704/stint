@@ -6,9 +6,11 @@ Stint has no account system, app backend, advertising SDK, or app analytics serv
 
 The workspace stores your current timer, interval settings, saved rhythms, daily goal, appearance, and completed focus sessions. The native preferences store music settings, alert selection, and keyboard shortcuts. Imported audio is copied into a local music library. Saved YouTube sources contain a video ID and the name you provided.
 
-Stint retains the earlier `com.focusdesk.focusDesk` bundle identity and `Focus Desk` Application Support directory for compatibility. macOS decides the actual Application Support location; a sandboxed app may use its container. The workspace uses a temporary file, an atomic replacement, and a previous valid backup. Unreadable files are retained for recovery instead of silently overwritten.
+Version 0.1.1 uses the `io.github.albert2704.stint` bundle identity, `Stint` Application Support directory, and Stint native preference keys. It starts with fresh settings, history, music library, and permissions when you upgrade from 0.1.0. The previous data is left untouched and is not read or imported automatically.
 
-Older workspace files may still contain task and note records from the earlier prototype. Those features are no longer exposed in the interface, but migration preserves their data. Review backups before sharing them.
+macOS decides the actual Application Support location; a sandboxed app may use its container. The workspace uses a temporary file, an atomic replacement, and a previous valid backup. Unreadable files are retained for recovery instead of silently overwritten.
+
+The workspace schema can still contain task and note records, although those features are no longer exposed in the interface. Keeping those record types compatible does not migrate data from the earlier app identity. Review backups before sharing them.
 
 ## Network behavior
 

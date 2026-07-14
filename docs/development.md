@@ -1,6 +1,6 @@
 # Developing Stint
 
-Stint combines a Flutter interface with small native macOS services. The verified local development route builds an Apple Silicon debug app using Apple's Command Line Tools. A separate full Xcode workflow builds a universal release app and downloadable DMG and ZIP files. Its package checks and Apple Silicon bootstrap passed in the [v0.1.0 packaging run](https://github.com/albert2704/stint/actions/runs/38019933799).
+Stint combines a Flutter interface with small native macOS services. The local development route builds an Apple Silicon debug app using Apple's Command Line Tools. A separate full Xcode workflow builds a universal release app and downloadable DMG and ZIP files. Version 0.1.1 passed the [packaging workflow](https://github.com/albert2704/stint/actions/runs/38021166173) and [CI checks](https://github.com/albert2704/stint/actions/runs/38021166305).
 
 [Architecture](architecture.md) · [Contributing](../CONTRIBUTING.md) · [Troubleshooting](troubleshooting.md) · [README](../README.md)
 
@@ -9,11 +9,11 @@ Stint combines a Flutter interface with small native macOS services. The verifie
 | Item | Current status |
 | --- | --- |
 | Runtime target | macOS 12.0 or later in the native build configuration. |
-| Verified local architecture | Apple Silicon (`arm64`). |
+| Local development architecture | Apple Silicon (`arm64`); the 0.1.1 local build and strict signature check passed. |
 | Development toolchain | Flutter, Dart, Apple's Command Line Tools, and the macOS SDK. |
 | Last recorded Flutter toolchain | Flutter 3.47.6 / Dart 3.13.5. |
-| Xcode release packaging | `scripts/package-macos.sh` builds both `arm64` and `x86_64`; package checks and Apple Silicon bootstrap passed for v0.1.0. |
-| Intel Mac | The release contains a verified Intel slice, but no physical Intel run has been verified. The local debug helper remains arm64 only. |
+| Xcode release packaging | `scripts/package-macos.sh` builds `arm64` and `x86_64`; package and CI bootstrap checks passed for 0.1.1. |
+| Intel Mac | The universal workflow targets an Intel slice, but no physical Intel run has been verified. The local debug helper remains arm64 only. |
 | Android / iOS / Windows / Linux / web | Not implemented or supported by this repository's native services. |
 | Distribution | The prerelease workflow uses ad hoc signing. Developer ID signing, notarization, an updater, and an App Store release are not configured. |
 
@@ -51,7 +51,7 @@ open 'build/local/Stint.app'
 
 The script fetches dependencies, precaches the macOS engine, assembles Flutter debug assets, compiles the Objective-C host and native services, installs the supplied icon resources, and signs the result locally with an ad hoc signature. It verifies that signature before reporting success. This signature supports local development; it is not Developer ID distribution signing.
 
-The output is `build/local/Stint.app`. Its executable retains the name `FocusDesk`, and its bundle identifier remains `com.focusdesk.focusDesk` for compatibility.
+The output is `build/local/Stint.app`, with executable `Stint` and bundle identifier `io.github.albert2704.stint`. The Dart package and channel prefix are `stint`. Version 0.1.1 uses a fresh `Stint` data folder and native preference keys; it does not read, migrate, or delete data belonging to 0.1.0.
 
 Do not overwrite an app bundle while that copy is running. Build beside it with `STINT_APP_DIR`:
 
@@ -61,7 +61,7 @@ codesign --verify --deep --strict 'build/verified/Stint.app'
 open 'build/verified/Stint.app'
 ```
 
-Quit the earlier app first before opening the alternate bundle. Both bundles use the same application identity and local data; they are not isolated test profiles. Use controlled fixtures for destructive tests instead of a personal workspace.
+Quit any earlier app first before opening the alternate bundle. Current local and verified 0.1.1 bundles share the same application identity and local data; they are not isolated test profiles. Version 0.1.0 has a different identity and its data is left untouched. Use controlled fixtures for destructive tests instead of a personal workspace.
 
 The helper packages a debug engine for Apple Silicon. Rebuild and relaunch this bundle after source changes. Use the standard Flutter route below for Flutter's normal `run` workflow, or [release packaging](#package-a-downloadable-prerelease) for a universal app, with a suitable full Xcode installation.
 
@@ -132,7 +132,7 @@ Report which checks were actually performed. Do not treat successful registratio
 The local host accepts a read-only notification diagnostic:
 
 ```sh
-'build/local/Stint.app/Contents/MacOS/FocusDesk' --notification-status
+'build/local/Stint.app/Contents/MacOS/Stint' --notification-status
 ```
 
 It reports the app's notification authorization and pending/delivered notification state. Review output before posting it publicly: notification metadata can include personal session information. Build logs, framework caches, and generated binaries belong under `build/`, not in source commits.
@@ -149,18 +149,18 @@ bash scripts/package-macos.sh
 
 The script configures the macOS release project through Flutter, then calls Xcode directly for both `arm64` and `x86_64`. This produces ahead-of-time compiled Dart code, without a debug kernel. The direct Xcode step preserves the checked-in release sandbox entitlements instead of allowing Flutter's CI development override to replace them.
 
-It copies the generated app to `build/package-stage/Stint.app`, includes project, font, Flutter, and engine license notices, applies an ad hoc signature, and creates these files for version 0.1.0:
+It copies the generated app to `build/package-stage/Stint.app`, includes project, font, Flutter, and engine license notices, applies an ad hoc signature, and creates these files for version 0.1.1:
 
 | Output in `build/distribution/` | Purpose |
 | --- | --- |
-| `Stint-0.1.0-macos-universal.dmg` | Disk image containing the app, an Applications shortcut, and installation text. |
-| `Stint-0.1.0-macos-universal.zip` | Archive containing the same app and installation text. |
+| `Stint-0.1.1-macos-universal.dmg` | Disk image containing the app, an Applications shortcut, and installation text. |
+| `Stint-0.1.1-macos-universal.zip` | Archive containing the same app and installation text. |
 | `SHA256SUMS.txt` | SHA256 values for the DMG and ZIP. |
 | `entitlements.plist` | Entitlements extracted from the signed app for verification. |
 
 The versioned filenames change with `pubspec.yaml`. Repeating the command replaces generated packaging files; the script clears `build/package-stage/`. It does not install the app in Applications or launch it in your personal profile.
 
-The script checks the app's signature, both architecture slices in the executable and two framework binaries, absence of a debug Dart kernel, the version and macOS 12 minimum in the bundle, and release sandbox entitlements. It rejects debug JIT and debugger entitlements, verifies the disk image, and calculates archive checksums. These checks passed for v0.1.0; see [verification results and limits](testing.md#downloadable-package-verification).
+The script checks the app's signature, both architecture slices in the executable and two framework binaries, absence of a debug Dart kernel, the version and macOS 12 minimum in the bundle, and release sandbox entitlements. It rejects debug JIT and debugger entitlements, verifies the disk image, and calculates archive checksums. These checks passed for v0.1.1; see [verification results and limits](testing.md#downloadable-package-verification).
 
 ### Build in GitHub Actions
 
@@ -174,7 +174,7 @@ This smoke check exercises only the runner's host architecture and startup. It d
 
 ### Release verification and publication
 
-The [v0.1.0 package workflow](https://github.com/albert2704/stint/actions/runs/38019933799) passed on 10 October 2026 at source commit `1c2e3d3`, including universal architecture checks and startup on an Apple Silicon runner. The [release notes](releases/v0.1.0.md) and [installation guide](install.md) describe the downloads. Physical Intel and macOS 12 testing, the downloaded app's Gatekeeper flow, and a manual upgrade remain unverified.
+Version 0.1.1 passed [CI checks](https://github.com/albert2704/stint/actions/runs/38021166305) and the [Xcode package workflow](https://github.com/albert2704/stint/actions/runs/38021166173) on 10 October 2026 at source commit `82623f1`, including release bootstrap under the new identity. The [release notes](releases/v0.1.1.md) and [installation guide](install.md) describe its fresh app identity and downloads. Physical Intel and macOS 12 testing, the downloaded app's Gatekeeper flow, and a manual upgrade remain unverified.
 
 For later releases, check the exact artifacts and their checksums, review the bootstrap log, and document the install/upgrade checks actually performed before publishing. A successful CI run does not replace device testing or establish Apple approval.
 

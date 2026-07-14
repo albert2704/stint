@@ -89,9 +89,15 @@ For a save error, keep the app open and retry after checking free disk space and
 
 If startup cannot decode the workspace, it shows the error and the resolved data location. Use **Try again** for a temporary problem. If a valid backup exists, **Recover previous save** loads the preceding saved workspace. That may roll back the most recent timer/settings/history change; it is not a complete backup history.
 
-Before manual recovery, quit Stint and make a copy of the complete resolved **Focus Desk** data folder and its native preferences. The workspace JSON alone does not contain imported audio, music selections, shortcut settings, or WebKit data. Preserve `workspace.backup.json` and any `workspace.json.damaged-*` files. Do not delete them merely to make an error disappear.
+Before manual recovery, quit Stint and make a copy of the complete resolved **Stint** data folder and its native preferences. The workspace JSON alone does not contain imported audio, music selections, shortcut settings, or WebKit data. Preserve `workspace.backup.json` and any `workspace.json.damaged-*` files. Do not delete them merely to make an error disappear.
 
-Data is stored in macOS's Application Support location for this app, potentially inside its sandbox container. The **Focus Desk** folder name and `com.focusdesk.focusDesk` identity are deliberate compatibility choices. See [persistence details](architecture.md#persistence-and-compatibility).
+Data is stored in macOS's Application Support location for this app, potentially inside its sandbox container. Version 0.1.1 uses the **Stint** folder and `io.github.albert2704.stint` identity. See [persistence details](architecture.md#persistence-and-compatibility).
+
+## My settings or history disappeared after updating to 0.1.1
+
+Version 0.1.1 deliberately starts fresh with a new application identity. It does not read or import 0.1.0 settings, history, music library, shortcuts, or permissions. Your previous data was not deleted; it remains under the previous app identity. The new app has no automatic migration or import action for that workspace.
+
+Quit the old app before running the new one, then choose your rhythm and music again and allow notifications when prompted. The current app's **Recover previous save** only restores a backup from its own workspace. It does not retrieve the previous app's data.
 
 ## Build or test failures
 
@@ -99,7 +105,7 @@ Data is stored in macOS's Application Support location for this app, potentially
 | --- | --- |
 | “Install Flutter and add it to PATH” | Install Flutter, or provide `.tooling/flutter/bin/flutter`. Confirm `bash scripts/flutter.sh --version` works. |
 | `xcrun` cannot locate the macOS SDK | Install/configure Command Line Tools or full Xcode, then check `xcode-select -p` and `xcrun --sdk macosx --show-sdk-path`. |
-| Local helper rejects the architecture | The debug helper targets Apple Silicon. The separate full Xcode package includes both architectures and passed its build checks; physical Intel testing remains unverified. |
+| Local helper rejects the architecture | The debug helper targets Apple Silicon. The separate full Xcode package includes both architectures and passed v0.1.1 package checks; physical Intel testing remains unverified. |
 | Flutter framework missing for a native test | Run the development build or macOS precache first, and check which SDK the scripts resolve. |
 | First build fails while fetching dependencies | Check network access and retry. Dependencies and engine artifacts are needed before an offline build. |
 | Missing native channel / plugin response | Use one of the supplied Mac hosts. A generic Flutter host or another platform does not provide these services. |

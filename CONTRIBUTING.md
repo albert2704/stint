@@ -27,9 +27,9 @@ Use Dart's formatter and existing analyzer rules. Keep native builds warning-cle
 
 The Dart controller owns the persistent timer and completion history. Native UI routes commands back through the bridge. Preserve the safeguards against duplicate completion, stale notification actions, delayed Pause becoming Start, and confirmations applying to a replaced interval.
 
-Both hosts matter: `macos/Runner/MainFlutterWindow.swift` is the standard Xcode runner, while `scripts/local_macos_runner.m` is the verified Command Line Tools host. If you add a native source or framework, update the appropriate build script, test harness, and Xcode project integration.
+Both hosts matter: `macos/Runner/MainFlutterWindow.swift` is the standard Xcode runner, while `scripts/local_macos_runner.m` is the Command Line Tools host. If you add a native source or framework, update the appropriate build script, test harness, and Xcode project integration.
 
-Compatibility identities are intentional. Do not rename `com.focusdesk.focusDesk`, `focus_desk` method channels, native preference keys, or the `Focus Desk` support folder just to match the display name. Schema changes need a migration and tests with older saves. Preserve legacy task/note records that still round-trip in the workspace even though the product no longer exposes those interfaces.
+Version 0.1.1 establishes the Stint identity: `io.github.albert2704.stint`, the `stint` Dart package and method channels, `Stint` native preferences, and the `Stint` support folder. It deliberately starts fresh without reading, migrating, or deleting previous app data. Do not reintroduce automatic imports or old identity fallbacks. Schema compatibility is separate: the workspace format remains version 1 and still round-trips task/note records even though those interfaces are not exposed. Any later schema change needs an explicit migration plan and tests.
 
 Settings sheets use drafts until Save, except the immediate daily goal and the independently saved shortcut editor. Failed persistence or registration must remain visible and must not silently discard a valid saved configuration.
 
@@ -56,7 +56,7 @@ Use meaningful behavior tests: timer transitions, save failures, stale callbacks
 
 For UI changes, check Light, Dark, and the 420 × 600 minimum window. Ensure controls have accessible names, keyboard focus is visible, and long content scrolls. For native media or keyboard changes, also perform the real-app check that the harness cannot establish.
 
-Record the exact checks run and their outcome. Distinguish automated logic coverage from live OS behavior. Current limitations include unverified full Xcode release packaging, physical global keyboard delivery across devices, and audible notification delivery after Quit. Do not turn those into support claims without evidence.
+Record the exact checks run and their outcome. Distinguish automated logic coverage from live OS behavior. Version 0.1.1 passes local analysis, Flutter tests, native harnesses, CI checks, and the Xcode package/bootstrap workflow; see [verification results](docs/testing.md). Physical global keyboard delivery across devices and audible notification delivery after Quit remain live-check limits. Do not turn those into support claims without evidence.
 
 ## Documentation and media
 

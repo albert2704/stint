@@ -120,7 +120,7 @@ Click the daily count in the main header, or **Progress** in the menu bar panel.
 - A stint belongs to the local day on which it finished. The week follows the app locale. Changes of day or timezone refresh the totals.
 - A streak means consecutive days with at least one stint, ending today or yesterday if today has none yet.
 - Past goal days are compared with your **current** daily goal. Stint does not store a separate goal for each historical day.
-- Older compatible focus records are included. The current app does not expose the former task board or note-taking features.
+- Compatible focus records in the current workspace are included. Version 0.1.1 does not import the previous app's history. The current app does not expose the former task board or note-taking features.
 
 ## Keyboard shortcuts
 
@@ -147,4 +147,4 @@ Reset and Skip show the existing confirmation if the interval has progress. A sh
 
 Stint stores timer state, settings, custom rhythms, and completed sessions on your Mac. There is no Stint account or cloud synchronization. YouTube playback connects to YouTube and uses WebKit's web storage.
 
-The internal bundle ID and data folder retain the old **Focus Desk** name so earlier saves remain compatible. This does not mean the removed task or note interfaces are still part of the app. For backup and recovery details, see [data storage](architecture.md#persistence-and-compatibility) and [troubleshooting](troubleshooting.md#stint-cannot-load-or-save-data).
+Version 0.1.1 uses its own Stint bundle identity, preference keys, and data folder. When upgrading from 0.1.0, quit the old app before opening the new one. Settings, history, the music library, shortcuts, and notification permissions start fresh. Your previous data stays untouched and is not imported automatically. For backup and recovery details, see [data storage](architecture.md#persistence-and-compatibility) and [troubleshooting](troubleshooting.md#stint-cannot-load-or-save-data).
