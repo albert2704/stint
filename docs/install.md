@@ -6,6 +6,8 @@ The download includes the app and its runtime. You do not need Flutter, Xcode, o
 
 ## Choose a download
 
+Choose **Download for Mac** on the [Stint website](https://stint-focus.vercel.app/#download) to download the DMG from GitHub Releases. The website also links to the first launch guide and the release page for ZIP downloads and checksums.
+
 You can find these files under **Assets** on the [Stint v0.1.1 release page](https://github.com/albert2704/stint/releases/tag/v0.1.1):
 
 | File | Use |

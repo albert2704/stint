@@ -142,6 +142,14 @@ Entitlements enable sandboxing, user-selected file access, and network client ac
 
 Although much Dart logic can be reused on another platform, the filesystem channel, menu panel, alerts, audio import/playback, YouTube host, and keymap need platform implementations. Android is an architectural possibility, not an implemented feature.
 
+## Public website
+
+The [Stint website](https://stint-focus.vercel.app/) is a separate static HTML, CSS, and JavaScript site hosted on Vercel. It presents the app's features, illustrative animations, FAQs, and links to GitHub release downloads. It is not a Flutter web build or a browser client for the timer.
+
+Its countdown and sound bars are visual demonstrations. The only saved browser preference is the light/dark selection, stored as `stint-theme`; it does not share settings, music, or history with the Mac app. Theme selection starts from the system preference, and decorative motion respects Reduce Motion. See [website privacy](privacy.md#public-website).
+
+Website deployment and Mac release packaging are separate. Publishing an app release does not automatically update the website's download URL or displayed version; see [release website maintenance](development.md#keep-the-website-in-sync-with-a-release).
+
 ## Verification boundaries
 
 [Testing and verification](testing.md) distinguishes source/harness coverage, actual app UI checks, and unverified behavior. Keep that distinction when extending the app, especially for full Xcode packaging, post-Quit system sound, physical Mac-wide shortcuts, and external YouTube behavior.
