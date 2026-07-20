@@ -2,6 +2,8 @@
 
 Stint combines a Flutter interface with small native macOS services. The local development route builds an Apple Silicon debug app using Apple's Command Line Tools. A separate full Xcode workflow builds a universal release app and downloadable DMG and ZIP files. Version 0.1.1 passed the [packaging workflow](https://github.com/albert2704/stint/actions/runs/38021166173) and [CI checks](https://github.com/albert2704/stint/actions/runs/38021166305).
 
+The upcoming 0.2.0 source build adds app and website blocking. These source changes are not included in the published 0.1.1 downloads. Build the current checkout to try the feature; do not infer a published release from the source version. See [blocker setup](blocking.md).
+
 [Architecture](architecture.md) · [Contributing](../CONTRIBUTING.md) · [Troubleshooting](troubleshooting.md) · [README](../README.md)
 
 ## Requirements and supported routes
@@ -11,11 +13,12 @@ Stint combines a Flutter interface with small native macOS services. The local d
 | Runtime target | macOS 12.0 or later in the native build configuration. |
 | Local development architecture | Apple Silicon (`arm64`); the 0.1.1 local build and strict signature check passed. |
 | Development toolchain | Flutter, Dart, Apple's Command Line Tools, and the macOS SDK. |
+| Website blocker development | Command Line Tools compile/test the helper without privileges. Live setup requires the user’s administrator approval, not an Apple membership. |
 | Last recorded Flutter toolchain | Flutter 3.47.6 / Dart 3.13.5. |
 | Xcode release packaging | `scripts/package-macos.sh` builds `arm64` and `x86_64`; package and CI bootstrap checks passed for 0.1.1. |
 | Intel Mac | The universal workflow targets an Intel slice, but no physical Intel run has been verified. The local debug helper remains arm64 only. |
 | Android / iOS / Windows / Linux / web | Not implemented or supported by this repository's native services. |
-| Distribution | The prerelease workflow uses ad hoc signing. Developer ID signing, notarization, an updater, and an App Store release are not configured. |
+| Distribution | The prerelease workflow uses ad hoc signing. Website blocking works with the ad hoc route after local administrator setup. Notarization, an updater and an App Store release are not configured. |
 
 The Dart SDK constraint is declared in [pubspec.yaml](../pubspec.yaml); it is not a promise that every Flutter version satisfying that constraint has been tested. `pubspec.lock` records package resolution. There are no third-party runtime packages; development dependencies include Flutter's test framework and lint rules.
 
@@ -95,6 +98,10 @@ bash scripts/test-notification-card.sh
 bash scripts/test-keymap.sh
 bash scripts/test-music-state.sh
 bash scripts/test-youtube-presentation.sh
+bash scripts/test-blocker.sh
+bash scripts/test-hosts-blocker.sh
+bash scripts/test-local-proxy.sh
+bash scripts/test-proxy-preferences.sh
 ```
 
 | Check | Main coverage |
@@ -105,12 +112,34 @@ bash scripts/test-youtube-presentation.sh
 | Keymap harness | Validation, registration rollback, saved settings, recording lifecycle, repeat suppression, and event dispatch. |
 | Music harness | Native state, Boolean codec values, selection, playing/starting/paused state, and timer-follow preferences. |
 | YouTube harness | Visibility, WebKit suspension pairing, delayed events, cancellation, and stale playback intent. |
+| Blocker harness | Protected app selection, cooperative hiding, focus screen, deadline/lease release and confirmations. |
+| Local proxy harness | Loopback health authentication, request validation, blocked names, transport and tunnel closure with local fixtures. |
+| Proxy preferences harness | Fake SystemConfiguration backend, durable journal ordering, exact restoration and concurrent edits. No real network mutation. |
+| Legacy hosts and helper harness | Exact file restoration, aliases, malformed markers, policy expiry/restart, symlink/hardlink/ownership checks, metadata preservation and staged helper identity. Temporary files only. |
 
 The native framework locator checks an explicit `STINT_FLUTTER_FRAMEWORK_DIR`, assembled `build/local/frameworks`, the checkout-local SDK cache, `FLUTTER_ROOT`, then the Flutter executable on `PATH`. The override must name the directory containing `FlutterMacOS.framework`; an invalid explicit override fails instead of silently using another SDK. The locator itself does not download anything.
 
-Native harnesses use fake effects and do not play audio or register real system-wide shortcuts. They compile production code with warnings treated as errors. They establish logic correctness; a fake WebKit or registration test cannot establish real network playback or physical keyboard delivery.
+The native harnesses above use fake effects and do not play audio, hide personal apps, or register real system-wide shortcuts. They compile production code with warnings treated as errors. They establish logic correctness; a fake WebKit or registration test cannot establish real network playback or physical keyboard delivery.
 
 For a focused Dart change, run its relevant tests first, then the full suite if it affects shared timer or bridge behavior. Do not update screenshot fixtures merely to hide a regression. See [testing and verification](testing.md) for recorded results and explicit live limits.
+
+## Develop and test the blocker
+
+The Flutter bridge lives in `lib/blocker.dart`; validation/storage is in `lib/blocking/`. `StintBlocker` retains app hiding and focus-panel behavior. `StintWebsiteBlocker` publishes focus policy, reads verified helper status, and reveals explicit setup/removal commands in Finder. `macos/HostsBlocker` contains the privileged CLI, legacy hosts cleanup and shared lease parser. `macos/ProxyBlocker` contains the unprivileged socket proxy and SystemConfiguration routing/recovery module.
+
+Both Xcode and the local route call `scripts/build-hosts-helper.sh`, embedding the helper and commands in `Contents/Resources/WebsiteBlocker`. Building does not install software or change network settings. `scripts/package-macos.sh` retains ad hoc signing and verifies helper architecture and resources; no Developer ID profiles or paid entitlements are required.
+
+The host has one home-relative sandbox file exception for `/Library/Application Support/Stint Website Blocker/`. Its real-home path comes from `getpwuid`, not sandbox `NSHomeDirectory`. The app creates a user-owned 0700 directory and atomically writes a 0600 policy file. The root daemon independently validates ownership and every ancestor. Do not broaden the exception or accept arbitrary paths from the policy.
+
+Run `scripts/test-hosts-blocker.sh`, `scripts/test-local-proxy.sh` and `scripts/test-proxy-preferences.sh` for controlled fixtures. The socket tests require loopback access. No test installs a daemon or edits real hosts or system proxy settings. Preserve the 30-second maximum lease, monotonic expiry, restart cleanup, owner checks, strict marker handling and exact restoration. Root installation verifies its staged code against the running helper’s designated requirement, preventing a swapped source executable from being promoted after approval. Privileged operations accept only fixed install/uninstall/release/serve actions.
+
+For a live setup, build and open Stint, choose **Set up website blocker**, then let the user open the highlighted command in Finder, confirm and enter their own administrator password in Terminal. `activateFileViewerSelectingURLs` reveals the command without executing it; sending executable documents directly to Terminal is blocked by the sandbox. The helper installs under `/Library/PrivilegedHelperTools/io.github.albert2704.stint.hosts`, with its LaunchDaemon plist and a root-owned UID configuration. It polls the dedicated user directory and has no listening socket. One owning Mac account is supported. [Apple’s launchd guide](https://developer.apple.com/library/archive/documentation/MacOSX/Conceptual/BPSystemStartup/Chapters/CreatingLaunchdJobs.html) explains job installation; the [sandbox exception reference](https://developer.apple.com/library/archive/documentation/Miscellaneous/Reference/EntitlementKeyReference/Chapters/AppSandboxTemporaryExceptionEntitlements.html) describes the scoped file entitlement.
+
+Before live testing, record the existing timer, blocklist and proxy settings. Test a blocked and allowed destination with Chrome and Edge already open, then pause, confirmed unblock, app exit, lease expiry and helper restart. Verify exact restoration of network settings, including error cases. Keep personal tabs and data untouched. Real installation and browser checks must be recorded separately from unit tests.
+
+Use **Remove helper…** or the bundled removal command to stop the daemon and restore Stint proxy changes. Emergency release is documented in [recovery](blocking.md#remove-or-recover-the-helper). Do not delete the helper while its proxy settings remain active. No migration deletes user data; obsolete companion extensions are removed manually by their owner.
+
+The optional `bash scripts/test-blocker-smoke.sh` checks app hiding with a separate sandboxed probe and temporary fixture app. It briefly changes focus and restores the preceding foreground app; run only when desktop interaction is acceptable. It does not test website enforcement.
 
 ## Manual checks before sharing a build
 
@@ -124,6 +153,7 @@ Use a disposable or backed-up workspace and note the initial timer, phase, music
 6. Record and save a shortcut. Try the physical keyboard from another foreground app. Reset and Skip must retain confirmation. Cancel recording with Escape and by changing apps.
 7. Review Light, Dark, and the minimum 420 × 600 window. Check scrolling and keyboard focus in Settings, Progress, and Keyboard shortcuts.
 8. Quit and relaunch. Confirm saved settings/history remain and music stays silent.
+9. In the blocker source build, use a controlled app and website list. Verify focus start, pause, break, confirmed unblock, and a new stint. Confirm a cancelled blocklist edit leaves protection unchanged. Before installation, ad hoc builds must show **Setup needed** without opening Terminal automatically. After explicit administrator setup, verify selected websites are blocked while browsers remain visible, pauses restore network settings, and an unavailable helper does not disable app hiding.
 
 Report which checks were actually performed. Do not treat successful registration as proof of physical global keyboard delivery, or notification scheduling as proof of later audible system delivery.
 
@@ -149,24 +179,24 @@ bash scripts/package-macos.sh
 
 The script configures the macOS release project through Flutter, then calls Xcode directly for both `arm64` and `x86_64`. This produces ahead-of-time compiled Dart code, without a debug kernel. The direct Xcode step preserves the checked-in release sandbox entitlements instead of allowing Flutter's CI development override to replace them.
 
-It copies the generated app to `build/package-stage/Stint.app`, includes project, font, Flutter, and engine license notices, applies an ad hoc signature, and creates these files for version 0.1.1:
+It copies the generated app to `build/package-stage/Stint.app`, includes project, font, Flutter, and engine license notices, applies an ad hoc signature, and creates files named from the source version. For the upcoming 0.2.0 build, these are:
 
 | Output in `build/distribution/` | Purpose |
 | --- | --- |
-| `Stint-0.1.1-macos-universal.dmg` | Disk image containing the app, an Applications shortcut, and installation text. |
-| `Stint-0.1.1-macos-universal.zip` | Archive containing the same app and installation text. |
-| `SHA256SUMS.txt` | SHA256 values for the DMG and ZIP. |
+| `Stint-0.2.0-macos-universal.dmg` | Disk image containing the app, an Applications shortcut, and installation text. |
+| `Stint-0.2.0-macos-universal.zip` | Archive containing the same app and installation text. |
+| `SHA256SUMS.txt` | SHA256 values for the DMG and app ZIP. |
 | `entitlements.plist` | Entitlements extracted from the signed app for verification. |
 
-The versioned filenames change with `pubspec.yaml`. Repeating the command replaces generated packaging files; the script clears `build/package-stage/`. It does not install the app in Applications or launch it in your personal profile.
+The versioned filenames change with `pubspec.yaml`. Creating them does not publish a release; the current public download remains 0.1.1 until a later release is explicitly published. Repeating the command replaces generated packaging files; the script clears `build/package-stage/`. It does not install the app in Applications or launch it in your personal profile.
 
-The script checks the app's signature, both architecture slices in the executable and two framework binaries, absence of a debug Dart kernel, the version and macOS 12 minimum in the bundle, and release sandbox entitlements. It rejects debug JIT and debugger entitlements, verifies the disk image, and calculates archive checksums. These checks passed for v0.1.1; see [verification results and limits](testing.md#downloadable-package-verification).
+The script checks the app's signature, both architecture slices in the executable, embedded routing helper and two framework binaries, absence of a debug Dart kernel, the version and macOS 12 minimum in the bundle, and release sandbox entitlements. It rejects debug JIT and debugger entitlements, verifies the disk image, and calculates archive checksums. These checks passed for v0.1.1; see [verification results and limits](testing.md#downloadable-package-verification).
 
 ### Build in GitHub Actions
 
 The [Package macOS workflow](../.github/workflows/package-macos.yml) has a manual `workflow_dispatch` trigger. In GitHub, open **Actions → Package macOS → Run workflow**, select the intended branch, and start the run. It installs the pinned Flutter SDK and runs the same packaging script on a hosted Mac.
 
-On success, the run preserves a **stint-macos-preview** artifact containing the DMG, ZIP, checksums, entitlements, and bootstrap log for 14 days. This artifact is a CI download, not an automatically published GitHub release. Check the selected commit and run result before attaching files to a release.
+On success, the run preserves a **stint-macos-preview** artifact containing the DMG, app ZIP, checksums, entitlements, and bootstrap log for 14 days. This artifact is a CI download, not an automatically published GitHub release. Check the selected commit and run result before attaching files to a release.
 
 The workflow sets `STINT_PACKAGE_SMOKE_TEST=1` to run [smoke-release-macos.py](../scripts/smoke-release-macos.py) against the exact staged app before archiving it. The check requires a disposable GitHub runner with no existing Stint data folder. It confirms that the process remains alive and Flutter/native startup creates the expected sandbox data directory, then terminates the process. It refuses to run as a local profile test. Do not fake the runner environment to bypass that protection.
 
@@ -178,7 +208,7 @@ Version 0.1.1 passed [CI checks](https://github.com/albert2704/stint/actions/run
 
 For later releases, check the exact artifacts and their checksums, review the bootstrap log, and document the install/upgrade checks actually performed before publishing. A successful CI run does not replace device testing or establish Apple approval.
 
-Ad hoc signing verifies bundle integrity but does not establish an Apple Developer ID. This workflow does not notarize or staple the app, and a downloaded build can trigger Gatekeeper. Publish it as a prerelease with that limitation stated clearly. A future trusted distribution route needs Developer ID signing and notarization; keep signing credentials out of the repository and preserve the compatibility rules in [CONTRIBUTING.md](../CONTRIBUTING.md).
+Ad hoc signing verifies bundle integrity but does not establish an Apple Developer ID. This workflow does not notarize or staple the app, and a downloaded build can trigger Gatekeeper. Publish it as a prerelease with that limitation stated clearly. Website blocking does not require Developer ID, but a future notarized distribution route does; keep signing credentials out of the repository and preserve the compatibility rules in [CONTRIBUTING.md](../CONTRIBUTING.md).
 
 ### Keep the website in sync with a release
 

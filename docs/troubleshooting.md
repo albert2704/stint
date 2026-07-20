@@ -83,6 +83,32 @@ The streak counts consecutive days with at least one stint. The daily goal is a 
 
 If a saved goal reports an error, keep Progress open and use **Retry save**. Do not infer that an onscreen edit is durable while a save error remains.
 
+## Distraction blocking is not working
+
+First check your build. The blocker is in the upcoming 0.2.0 source build; it is not present in the published 0.1.1 download. [Build the current source](development.md), then follow the [setup guide](blocking.md).
+
+In **Block distractions**, turn on **Block during focus**, choose apps or websites, and use **Save blocklist**. Blocking runs only during an unexpired focus timer. It deliberately releases on pause, breaks, reset, skip or completion. If you chose **Unblock this stint**, it stays released through pause/resume of that interval and returns for the next focus interval. Closing the main window keeps Stint running; quitting it stops protection.
+
+For websites:
+
+1. **Setup needed** means no recent root-owned helper status is available. Choose **Set up website blocker**, double-click the command revealed in Finder, read its Terminal explanation and complete administrator approval yourself, then refresh. No Apple subscription is needed.
+2. **Helper ready** reports recent helper health; its message distinguishes active blocking from idle. Check that a focus timer is running, the feature is enabled and your saved list is nonempty.
+3. Each domain covers its subdomains. Enter a normal domain, without a wildcard. An existing custom proxy or unsupported exception list prevents activation and is reported without being overwritten.
+4. Cached pages and buffered video can remain visible. Apps that ignore macOS proxy settings are outside protection. Test a fresh navigation and reload after release.
+5. Proxy settings affect all accounts using the network services. If YouTube music fails while YouTube is blocked, select built-in or local music.
+
+App hiding works independently. Choose an actual app bundle; Stint, browsers and recovery utilities are protected. Apps that refuse to hide report an error and remain running.
+
+### YouTube still opens during focus
+
+Check Block distractions: the new proxy needs the updated helper installed and a running focus session. A helper from the earlier hosts preview is deliberately shown as needing an upgrade. Choose Set up website blocker, open the highlighted command in Finder, finish its administrator prompts, then Refresh.
+
+Use a fresh navigation or reload to test access. Loaded pages and buffered video can remain visible. Chrome and Edge must use macOS proxy settings; custom proxies, VPNs and apps that ignore those settings are unsupported. Stint refuses existing enabled proxies rather than overwriting them. If the status reports a conflict, resolve it and start a new focus.
+
+The previous hosts implementation let an existing Edge session load YouTube even when macOS and Edge resolved it to loopback; a fresh InPrivate session failed. That observation motivated this proxy replacement. Do not treat a DNS lookup alone as proof of browser blocking.
+
+If allowed websites stop loading after Stint exits, use the [proxy recovery steps](blocking.md#remove-or-recover-the-helper). Disable only Stint's 127.0.0.1:48197 HTTP/HTTPS settings if the helper cannot restore them.
+
 ## Stint cannot load or save data
 
 For a save error, keep the app open and retry after checking free disk space and access to its local data. Timer actions can update the onscreen state even if writing it fails; quitting before a successful save may lose those changes.

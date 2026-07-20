@@ -47,3 +47,7 @@ jobs:
           bash scripts/test-notification-card.sh
           bash scripts/test-music-state.sh
           bash scripts/test-youtube-presentation.sh
+          bash scripts/test-blocker.sh
+          bash scripts/test-hosts-blocker.sh
+          bash scripts/test-local-proxy.sh
+          bash scripts/test-proxy-preferences.sh

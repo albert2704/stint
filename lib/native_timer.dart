@@ -13,6 +13,7 @@ class NativeTimerBridge {
     this.onSettings,
     this.onAdjust,
     this.onProgress,
+    this.onBlocker,
     this.music,
     MethodChannel? channel,
   }) : channel = channel ?? const MethodChannel('stint/timer') {
@@ -25,6 +26,7 @@ class NativeTimerBridge {
   final Future<void> Function()? onSettings;
   final Future<void> Function()? onAdjust;
   final Future<void> Function()? onProgress;
+  final Future<void> Function()? onBlocker;
   final MethodChannel channel;
   final FocusMusic? music;
   String? _previous;
@@ -135,6 +137,9 @@ class NativeTimerBridge {
       case 'settings':
         controller.tick();
         await (onSettings ?? onAdjust)?.call();
+      case 'blocker':
+        controller.tick();
+        await onBlocker?.call();
       case 'progress':
         controller.tick();
         await onProgress?.call();

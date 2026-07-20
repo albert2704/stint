@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../data/controller.dart';
 import '../data/models.dart';
 import '../music.dart';
+import '../blocker.dart';
+import 'blocker_settings.dart';
 import 'components.dart';
 import 'music_panel.dart';
 import 'progress.dart';
@@ -10,9 +12,15 @@ import 'routines.dart';
 import 'theme.dart';
 
 class PomodoroScreen extends StatelessWidget {
-  const PomodoroScreen({super.key, required this.controller, this.music});
+  const PomodoroScreen({
+    super.key,
+    required this.controller,
+    this.music,
+    this.blocker,
+  });
   final StintController controller;
   final FocusMusic? music;
+  final BlockerController? blocker;
 
   String status(BuildContext context) {
     final timer = controller.timer;
@@ -74,13 +82,18 @@ class PomodoroScreen extends StatelessWidget {
                               children: [
                                 ProgressButton(
                                   controller: c,
-                                  onPressed: () => showStintProgress(context, c),
+                                  onPressed: () =>
+                                      showStintProgress(context, c),
                                 ),
                                 const SizedBox(width: 4),
                                 Flexible(
                                   child: RhythmSelector(
                                     controller: c,
-                                    onEdit: () => showStintSettings(context, c),
+                                    onEdit: () => showStintSettings(
+                                      context,
+                                      c,
+                                      blocker: blocker,
+                                    ),
                                   ),
                                 ),
                               ],
@@ -95,7 +108,11 @@ class PomodoroScreen extends StatelessWidget {
                               message: 'Settings',
                               excludeFromSemantics: true,
                               child: IconButton(
-                                onPressed: () => showStintSettings(context, c),
+                                onPressed: () => showStintSettings(
+                                  context,
+                                  c,
+                                  blocker: blocker,
+                                ),
                                 icon: const Icon(Icons.tune_rounded, size: 20),
                               ),
                             ),
@@ -288,6 +305,24 @@ class PomodoroScreen extends StatelessWidget {
                                   ],
                                 ),
                               ),
+                              if (blocker != null) ...[
+                                const SizedBox(height: 12),
+                                ListenableBuilder(
+                                  listenable: blocker!,
+                                  builder: (context, _) => TextButton.icon(
+                                    key: const Key('open-blocker'),
+                                    onPressed: () =>
+                                        showBlockerSettings(context, blocker!),
+                                    icon: Icon(
+                                      blocker!.active
+                                          ? Icons.shield
+                                          : Icons.shield_outlined,
+                                      size: 17,
+                                    ),
+                                    label: Text(blocker!.statusLabel),
+                                  ),
+                                ),
+                              ],
                               if (music != null) ...[
                                 const SizedBox(height: 20),
                                 Padding(

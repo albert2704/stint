@@ -27,7 +27,7 @@ STINT_EXECUTABLE_DIR="$(mktemp -d "$PROJECT_DIR/build/local/stint-executable.XXX
 trap 'rm -rf "$STINT_EXECUTABLE_DIR"' EXIT
 xcrun clang -arch arm64 -fobjc-arc -fmodules -fmodules-cache-path=build/local/clang-module-cache -mmacosx-version-min=12.0 -isysroot "$SDK_DIR" \
   -Fbuild/local/frameworks -framework Cocoa -framework Carbon -framework QuartzCore -framework CoreText -framework FlutterMacOS -framework UserNotifications -framework AVFoundation -framework UniformTypeIdentifiers -framework WebKit \
-  -Wl,-rpath,@executable_path/../Frameworks scripts/local_macos_runner.m macos/Runner/StintMenuBar.m macos/Runner/StintAlertSound.m macos/Runner/StintCompletionBanner.m macos/Runner/StintKeymap.m macos/Runner/StintMusic.m macos/Runner/StintYouTubePlayer.m -o "$STINT_EXECUTABLE_DIR/Stint"
+  -Wl,-rpath,@executable_path/../Frameworks scripts/local_macos_runner.m macos/Runner/StintMenuBar.m macos/Runner/StintAlertSound.m macos/Runner/StintCompletionBanner.m macos/Runner/StintKeymap.m macos/Runner/StintMusic.m macos/Runner/StintYouTubePlayer.m macos/Runner/StintBlocker.m macos/Runner/StintWebsiteBlocker.m macos/ProxyBlocker/StintLocalProxy.m macos/HostsBlocker/StintBlockerPolicy.m macos/HostsBlocker/StintHostsFile.m -o "$STINT_EXECUTABLE_DIR/Stint"
 rsync -a --delete "$STINT_EXECUTABLE_DIR/" "$APP_DIR/Contents/MacOS/"
 cat > "$APP_DIR/Contents/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
@@ -57,6 +57,10 @@ for side in 16 32 128 256 512; do
 done
 iconutil -c icns "$ICONSET" -o "$APP_DIR/Contents/Resources/AppIcon.icns"
 cp "$STINT_ASSET_CATALOG/StatusTemplate.imageset/StatusTemplate.png" "$STINT_ASSET_CATALOG/StatusTemplate.imageset/StatusTemplate@2x.png" "$APP_DIR/Contents/Resources/"
+# Remove only the obsolete bundled extension when rebuilding an older preview.
+rm -rf "$APP_DIR/Contents/Resources/stint-blocker"
+rm -rf "$APP_DIR/Contents/Library/SystemExtensions/io.github.albert2704.stint.networkfilter.systemextension"
+bash scripts/build-hosts-helper.sh "$APP_DIR" arm64
 codesign --force --sign - "$APP_DIR/Contents/Frameworks/FlutterMacOS.framework"
 codesign --force --sign - "$APP_DIR/Contents/Frameworks/App.framework"
 codesign --force --sign - --entitlements macos/Runner/DebugProfile.entitlements "$APP_DIR"

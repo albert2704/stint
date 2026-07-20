@@ -47,8 +47,11 @@ Open the DMG, drag **Stint.app** to **Applications**, then open it there. Flutte
 | Progress | See today's count, weekly activity, streaks, goal days, and total focus time. Set a daily goal from 1 to 16. |
 | Keyboard shortcuts | Record your own Start/Pause, Reset, Skip, and Show panel keys. Choose Mac-wide or app-only scope. |
 | Appearance | Use System, Light, or Dark with the same compact interface. |
+| Distraction blocker (source preview) | Hide chosen Mac apps and block selected website names through a free administrator-installed helper. Browsers stay open; early unblock needs confirmation. |
 
-YouTube stays inside the menu bar panel and pauses when that panel hides. It needs internet access and a video that allows embedding. Local music works offline. [Read the music behavior details](docs/user-guide.md).
+**Blocker availability:** the upcoming 0.2.0 build adds app hiding and a local website proxy. It is not in the published 0.1.1 download. Setup installs or upgrades a small helper with administrator approval; no Apple Developer subscription or browser extension is needed. Chrome and Edge stay open, and HTTPS stays encrypted. See [setup, recovery and limits](docs/blocking.md).
+
+The local proxy replaces an unreliable hosts implementation. It is still under verification and has not been published. Loaded pages and buffered video can remain visible; apps that ignore macOS proxy settings are outside its protection.
 
 ## Build and run
 
@@ -92,6 +95,7 @@ Change them in **Settings → Keyboard shortcuts**. Stint must be running. Confl
 | --- | --- |
 | [Install](docs/install.md) | Downloads, first launch, checksums, updates, and removal |
 | [User guide](docs/user-guide.md) | Timers, rhythms, music, alerts, shortcuts, and progress |
+| [Block distractions](docs/blocking.md) | App selection, website helper setup, focus-only behavior, and early unblock |
 | [Development](docs/development.md) | Toolchain setup, commands, local builds, and debugging |
 | [Architecture](docs/architecture.md) | Flutter state, native bridges, audio, persistence, and lifecycle |
 | [Testing](docs/testing.md) | Test coverage, commands, and current verification limits |
@@ -109,7 +113,7 @@ bash scripts/flutter.sh analyze lib test
 bash scripts/flutter.sh test --reporter expanded
 ```
 
-Native macOS harnesses cover the menu panel, completion alerts, hotkeys, music state, and YouTube lifecycle. See [testing](docs/testing.md) for the full list. CI runs Flutter and native checks on macOS.
+Native macOS harnesses cover the menu panel, completion alerts, hotkeys, music state, YouTube lifecycle, and blocker logic. Hosts tests use temporary files and exercise byte preservation, filesystem safeguards and short leases. Administrator installation and real browser behavior need separate live checks. See [testing](docs/testing.md) for the full list and current limits. CI runs Flutter and native checks on macOS.
 
 ## License
 
