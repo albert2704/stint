@@ -1,0 +1,56 @@
+{
+  "generated": "2026-10-10",
+  "source": "tooling/video",
+  "checks": {
+    "hyperframes": "0 lint, runtime, layout, and motion findings",
+    "contrast": "59/59 WCAG AA text checks passed",
+    "visual": "All five rendered scenes inspected; automated layout checked at 15 timestamps",
+    "privateData": "Only synthetic widget-test data; no personal desktop captures",
+    "audio": "AAC stereo verified; decoded amplitude ratios confirm fade-in, 0.7 middle gain, and fade-out",
+    "audioComposition": "0 findings after adding music; 58/58 text contrast checks at five scene midpoints"
+  },
+  "video": {
+    "file": "demo.mp4",
+    "width": 1280,
+    "height": 720,
+    "fps": 30,
+    "durationSeconds": 25,
+    "audio": {
+      "track": "Quiet Keys",
+      "source": ".media/audio/bgm/bgm_001.wav",
+      "codec": "aac",
+      "sampleRate": 48000,
+      "channels": 2,
+      "durationSeconds": 25,
+      "amplitude": 0.7,
+      "fadeInSeconds": 0.8,
+      "fadeOutSeconds": 1.3,
+      "meanDbfs": -26.7,
+      "peakDbfs": -11.4
+    }
+  },
+  "gif": {
+    "file": "demo.gif",
+    "width": 800,
+    "height": 450,
+    "fps": 8,
+    "frames": 200,
+    "durationSeconds": 25.01,
+    "loop": 0
+  },
+  "assets": {
+    "demo.mp4": {
+      "bytes": 6763127,
+      "sha256": "253d27925adf4040b63a04c8ac92aff47fddf276678a4cf5577a5fd955ce83f2"
+    },
+    "demo.gif": {
+      "bytes": 4212324,
+      "sha256": "359a05028c8ac2d8295c4900565c5bdcdf37f937366ae27e1b33a0ecca98a5a6"
+    },
+    "stint-overview.png": {
+      "bytes": 82340,
+      "sha256": "8300b44f484b36f43741ddddd546bf271e0367d08a754bced21264759bc92fca"
+    }
+  },
+  "revision": "animated-overview-with-music"
+}
