@@ -14,7 +14,7 @@ The animated countdown is an illustration. It does not run or record your focus 
 
 The workspace stores your current timer, interval settings, saved rhythms, daily goal, appearance, and completed focus sessions. The native preferences store music settings, alert selection, and keyboard shortcuts. Imported audio is copied into a local music library. Saved YouTube sources contain a video ID and the name you provided.
 
-The upcoming 0.2.0 source build adds `blocker.json` for the enabled setting, selected app names and bundle identifiers, website domains, and current-stint override. It is separate from `workspace.json` and its previous-save backup. Stint does not store visited URLs. Stint does not encrypt local files itself.
+Version 0.2.0 beta adds `blocker.json` for the enabled setting, selected app names and bundle identifiers, website domains, and current-stint override. It is separate from `workspace.json` and its previous-save backup. Stint does not store visited URLs. Stint does not encrypt local files itself.
 
 Version 0.1.1 uses the `io.github.albert2704.stint` bundle identity, `Stint` Application Support directory, and Stint native preference keys. It starts with fresh settings, history, music library, and permissions when you upgrade from 0.1.0. The previous data is left untouched and is not read or imported automatically.
 
@@ -32,7 +32,7 @@ Flutter tooling, package downloads, and the optional video editor may access the
 
 ## App and website blocking
 
-This feature requires the upcoming 0.2.0 source build; the published 0.1.1 package does not include it. See [setup and behavior](blocking.md).
+This feature is included in version 0.2.0 beta; the earlier 0.1.1 package does not include it. See [setup and behavior](blocking.md).
 
 App blocking observes which application becomes active and compares its bundle identifier with your saved list. It attempts to hide a selected app without terminating it or reading its documents. It does not request Accessibility access or install a keyboard event tap.
 

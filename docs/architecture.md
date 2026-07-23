@@ -116,7 +116,7 @@ The Flutter editor owns a draft and saves independently of parent Settings draft
 
 ## App and website blocking
 
-The blocker is part of the upcoming 0.2.0 source build, not the published 0.1.1 package. [The setup guide](blocking.md) covers the user-facing flow.
+The blocker is included in version 0.2.0 beta. The older 0.1.1 package does not include it. [The setup guide](blocking.md) covers the user-facing flow.
 
 `BlockerController` listens to the existing timer. Effective protection requires a loaded, enabled blocklist, a running focus interval, a future deadline, and a session ID that has not been bypassed. Breaks, pauses, reset, skip and expiry release protection. A confirmed early override is stored against the current session ID, so it survives pause/resume without affecting the next session. A stale native or dialog confirmation cannot unblock a newer session.
 
