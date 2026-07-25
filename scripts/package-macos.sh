@@ -30,6 +30,9 @@ xcodebuild -workspace macos/Runner.xcworkspace -scheme Runner \
   DEVELOPMENT_TEAM= COMPILER_INDEX_STORE_ENABLE=NO build
 
 ditto "$PROJECT_DIR/build/macos/Build/Products/Release/Stint.app" "$APP"
+# An incremental Xcode build can retain a resource removed from the project.
+rm -rf "$APP/Contents/Resources/stint-blocker"
+rm -f "$OUTPUT/Stint-$VERSION-browser-extension.zip"
 # Ship original and bundled dependency licenses inside the application.
 LICENSES="$APP/Contents/Resources/Licenses"
 mkdir -p "$LICENSES"
@@ -42,7 +45,7 @@ cp "$STINT_SDK/LICENSE" "$LICENSES/Flutter-LICENSE.txt"
 cp "$STINT_SDK/bin/cache/artifacts/engine/darwin-x64-release/LICENSE.artifacts.md" "$LICENSES/Flutter-Engine-NOTICES.md"
 cp "$STINT_SDK/bin/cache/pkg/sky_engine/LICENSE" "$LICENSES/Flutter-Engine-LICENSE.txt"
 
-# The preview has an integrity signature, not Apple Developer ID signing.
+# Integrity-only ad hoc signing. The ordinary local proxy needs no Network Extension entitlement.
 while IFS= read -r -d '' framework; do
   codesign --force --sign - "$framework"
 done < <(find "$APP/Contents/Frameworks" -depth -type d -name '*.framework' -print0)
@@ -50,7 +53,8 @@ codesign --force --sign - --entitlements macos/Runner/Release.entitlements "$APP
 codesign --verify --deep --strict --verbose=2 "$APP"
 for binary in "$APP/Contents/MacOS/Stint" \
   "$APP/Contents/Frameworks/App.framework/App" \
-  "$APP/Contents/Frameworks/FlutterMacOS.framework/FlutterMacOS"; do
+  "$APP/Contents/Frameworks/FlutterMacOS.framework/FlutterMacOS" \
+  "$APP/Contents/Resources/WebsiteBlocker/StintHostsHelper"; do
   lipo "$binary" -verify_arch arm64 x86_64
 done
 if find "$APP" -name kernel_blob.bin -print | grep -q .; then
@@ -63,13 +67,26 @@ import pathlib, plistlib, sys
 entitlements = plistlib.loads(pathlib.Path(sys.argv[1]).read_bytes())
 assert entitlements.get('com.apple.security.app-sandbox') is True
 assert entitlements.get('com.apple.security.network.client') is True
+assert entitlements.get('com.apple.security.network.server') is True
+assert not entitlements.get('com.apple.security.automation.apple-events')
+assert not entitlements.get('com.apple.security.temporary-exception.apple-events')
+assert not entitlements.get('com.apple.developer.system-extension.install')
+assert not entitlements.get('com.apple.developer.networking.networkextension')
+assert entitlements.get('com.apple.security.temporary-exception.files.home-relative-path.read-write') == ['/Library/Application Support/Stint Website Blocker/']
 assert not entitlements.get('com.apple.security.get-task-allow')
 assert not entitlements.get('com.apple.security.cs.allow-jit')
+assert not (pathlib.Path(sys.argv[2])/'Contents/Resources/stint-blocker').exists()
 info = plistlib.loads((pathlib.Path(sys.argv[2])/'Contents/Info.plist').read_bytes())
 assert info['CFBundleIdentifier'] == 'io.github.albert2704.stint'
+assert not info.get('NSAppleEventsUsageDescription')
+assert not info.get('NSSystemExtensionUsageDescription')
 assert info['CFBundleExecutable'] == 'Stint'
 assert info['CFBundleShortVersionString'] == sys.argv[3]
 assert info['LSMinimumSystemVersion'] == '12.0'
+resources = pathlib.Path(sys.argv[2])/'Contents/Resources/WebsiteBlocker'
+for name in ('StintHostsHelper', 'Install Website Blocker.command', 'Remove Website Blocker.command'):
+    assert (resources/name).is_file()
+assert not (pathlib.Path(sys.argv[2])/'Contents/Library/SystemExtensions/io.github.albert2704.stint.networkfilter.systemextension').exists()
 PY
 if [ "${STINT_PACKAGE_SMOKE_TEST:-0}" = 1 ]; then
   python3 scripts/smoke-release-macos.py "$APP" "$OUTPUT/bootstrap.log"
@@ -80,14 +97,24 @@ Stint for macOS 12 or later (Apple Silicon and Intel)
 Drag Stint.app to Applications, then open it from Applications.
 Quit an older copy of Stint before replacing it.
 
-This preview is ad hoc signed and is not notarized by Apple.
-macOS may block its first launch. Only if you trust this download,
+Check the release notes for its signing and notarization status.
+macOS may block the first launch of an unnotarized preview. Only if you trust this download,
 follow Apple's Open Anyway guidance in System Settings > Privacy & Security:
 https://support.apple.com/en-us/102445
 
 Downloads and source: https://github.com/albert2704/stint
 Install guide: https://github.com/albert2704/stint/blob/main/docs/install.md
 Licenses are in Stint.app/Contents/Resources/Licenses.
+Website blocking: Settings > Block distractions > Set up website blocker.
+Double-click the setup command revealed in Finder. It opens in Terminal and asks
+for administrator approval once to install the free helper.
+No Apple Developer subscription, network extension or browser extension is needed.
+During focus, macOS HTTP/HTTPS traffic uses Stint's local proxy. Browsers stay open.
+HTTPS stays encrypted. Apps that ignore system proxies are outside its protection.
+The helper restores your previous proxy settings after focus. Existing proxy setups
+are unsupported. Setup upgrades the older hosts helper if it is installed.
+Use Remove helper in Stint to uninstall it. See the setup guide for recovery.
+Setup guide: https://github.com/albert2704/stint/blob/main/docs/blocking.md
 TEXT
 ZIP="$OUTPUT/Stint-$VERSION-macos-universal.zip"
 DMG="$OUTPUT/Stint-$VERSION-macos-universal.dmg"

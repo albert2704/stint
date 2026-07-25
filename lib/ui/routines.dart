@@ -7,6 +7,9 @@ import '../data/models.dart';
 import 'theme.dart';
 import 'menu_focus.dart';
 import 'keymap_settings.dart';
+import '../blocker.dart';
+import 'blocker_settings.dart';
+import 'single_dialog.dart';
 
 String rhythmDigits(FocusRoutine rhythm) =>
     '${rhythm.focusMinutes}·${rhythm.shortBreakMinutes}·${rhythm.longBreakMinutes}';
@@ -138,27 +141,20 @@ class RhythmSelector extends StatelessWidget {
   );
 }
 
-final _settingsNavigators = <NavigatorState>{};
+final _settingsDialog = SingleStintDialog();
 
 Future<void> showStintSettings(
   BuildContext context,
-  StintController controller,
-) async {
-  final navigator = Navigator.of(context);
-  if (!_settingsNavigators.add(navigator)) return;
-  try {
-    await showDialog<void>(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => StintSettings(controller: controller),
-    );
-  } finally {
-    _settingsNavigators.remove(navigator);
-  }
-}
+  StintController controller, {
+  BlockerController? blocker,
+}) => _settingsDialog.show(
+  context,
+  (_) => StintSettings(controller: controller, blocker: blocker),
+);
 
 class StintSettings extends StatefulWidget {
-  const StintSettings({super.key, required this.controller});
+  const StintSettings({super.key, required this.controller, this.blocker});
+  final BlockerController? blocker;
   final StintController controller;
   @override
   State<StintSettings> createState() => _StintSettingsState();
@@ -693,6 +689,20 @@ class _StintSettingsState extends State<StintSettings> {
                             child: const Text('Retry alert sounds'),
                           ),
                         const SizedBox(height: 26),
+                        if (widget.blocker != null) ...[
+                          heading('Distractions'),
+                          OutlinedButton.icon(
+                            onPressed: saving
+                                ? null
+                                : () => showBlockerSettings(
+                                    context,
+                                    widget.blocker!,
+                                  ),
+                            icon: const Icon(Icons.shield_outlined, size: 18),
+                            label: const Text('Block distractions…'),
+                          ),
+                          const SizedBox(height: 24),
+                        ],
                         heading('Keyboard shortcuts'),
                         OutlinedButton.icon(
                           key: const Key('open-keyboard-shortcuts'),

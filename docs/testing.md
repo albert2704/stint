@@ -21,6 +21,10 @@ bash scripts/test-completion-alert.sh
 bash scripts/test-notification-card.sh
 bash scripts/test-music-state.sh
 bash scripts/test-youtube-presentation.sh
+bash scripts/test-blocker.sh
+bash scripts/test-hosts-blocker.sh
+bash scripts/test-local-proxy.sh
+bash scripts/test-proxy-preferences.sh
 ```
 
 The framework locator supports the local build output, the repository SDK, `FLUTTER_ROOT`, and a Flutter executable on `PATH`. For custom SDK layouts, set `STINT_FLUTTER_FRAMEWORK_DIR` to the directory containing `FlutterMacOS.framework`. See [development](development.md).
@@ -38,8 +42,45 @@ The framework locator supports the local build output, the repository SDK, `FLUT
 | Completion card | Geometry, screen anchoring, keyboard actions, persistent card lifecycle, and first-close hint timing |
 | Native music | Playback snapshots, codec types, settings, and source state |
 | YouTube | Embedded panel visibility, suspension pairing, pending playback cancellation, and stale callbacks |
+| Blocker policy and UI | App/domain validation, saved drafts, focus-only transitions, confirmed session override, helper setup status, and explicit setup/removal controls |
+| Native blocker | Cooperative app hiding, deadline/lease release and confirmed override |
+| Legacy hosts cleanup and helper bridge | Byte preservation, malformed markers, ownership, links, staged executable verification and version 2 policy publication using temporary fixtures |
+| Local HTTP/CONNECT proxy | HTTP forwarding, verified encrypted TLS, health under load, domain changes, malformed requests, queued DNS, lease expiry and shutdown |
+| Proxy preferences and recovery | Original values, commit/apply failures, journal safety, restart recovery, external edits and network service changes |
 
-The native harnesses compile production source with warnings treated as errors. They replace operating-system side effects with fakes. The Carbon routing test delivers in-process events to the real application event target, but does not synthesize physical keyboard input.
+The native harnesses compile production source with warnings treated as errors. They use fakes for system settings and temporary fixtures for file changes. The transport harness uses real loopback sockets and a local TLS server; it does not change system proxy settings. The Carbon routing test delivers in-process events to the real application event target, but does not synthesize physical keyboard input.
+
+## Version 0.2.0 beta verification
+
+The beta uses a local HTTP/CONNECT proxy inside the unprivileged app. Its administrator installed helper selects the proxy during a running focus and restores the previous network settings afterward. The earlier hosts based enforcement, browser hiding guard and paid Network Extension approach are no longer used.
+
+On 11 October 2026, static analysis and all **170 Flutter tests** passed. Native checks passed **124 legacy hosts cleanup and helper bridge**, **69 app blocker**, **710 transport**, **631 proxy preference/recovery**, and **835 existing shortcut, completion, card, music and YouTube** checks. The [CI checks](https://github.com/albert2704/stint/actions/runs/38124934395) passed for source commit `adeae3c0b5b26d786ef57d1d21619dd65e68eae5`.
+
+The transport checks include a real certificate verified TLS handshake through CONNECT, both half close directions, twelve queued simultaneous DNS lookups, authenticated health checks at full connection capacity, malformed requests, domain changes and lease expiry. Preference checks use a fake SystemConfiguration backend and real temporary recovery journals, including uncertain commit/apply results, external edits, service changes and unsafe files. These harnesses do not install privileged software or change real network preferences.
+
+### Live browser and recovery checks
+
+The user completed the administrator helper upgrade. The installed helper reported version 2, proxy transport and readiness, with normal routing restored while inactive. These live checks then ran on an Apple Silicon Mac:
+
+* An existing normal Edge window loaded YouTube before focus. During focus, navigation failed and a hard reload displayed `ERR_TUNNEL_CONNECTION_FAILED`. An existing allowed GitHub tab still loaded after a hard reload, and Edge remained accessible.
+* Pausing restored the exact saved proxy dictionaries for all five network services and removed the recovery journal. Reloading YouTube then succeeded.
+* Terminating the exact Stint process with `SIGKILL` while blocking was active restored the saved proxy dictionaries and removed the journal in approximately 1.01 seconds. The helper reported that the proxy was unavailable and normal settings had been restored.
+* The exact universal release app was copied into the existing local app location and launched. It retained the existing progress, music selection and running timer. Blocking was active, YouTube failed with `ERR_TUNNEL_CONNECTION_FAILED`, and GitHub still loaded in Edge.
+
+* Restarting the root helper during active focus restored the exact baseline before waiting for a fresh app heartbeat. The replacement helper then re-enabled protection. The observation log captured both the inactive recovery period and subsequent active status.
+* Quitting the exact release app normally also restored the saved proxy dictionaries, removed the recovery journal and left no Stint process running. The helper used its proxy-unavailable recovery path.
+
+After verification, the original paused 05:00 short break, cycle position, 3 of 8 daily progress and music settings were restored. Exactly one release app remained running, with the helper inactive and the saved network settings restored.
+
+Chrome was not installed and remains unverified for this beta. These checks establish the observed Edge behavior, not universal coverage of browser versions, VPNs, cached pages or streams opened before routing changed. Physical Intel and macOS 12 testing, the downloaded app's Gatekeeper interaction and a full helper removal/reinstallation remain unverified. See [package verification](#downloadable-package-verification) and [setup and recovery](blocking.md).
+
+### Historical hosts experiment, replaced before this beta
+
+Earlier on 11 October, the hosts implementation passed temporary file checks and live DNS/restoration checks. It mapped YouTube to loopback during focus and restored the original hosts file and resolution on pause. The Finder setup handoff and administrator installation also worked.
+
+Browser testing then found a failure: an existing Edge profile still loaded YouTube in a new window and after a cache bypassing reload, even though Edge and macOS both resolved the domain to loopback. A fresh InPrivate window failed with `ERR_CONNECTION_REFUSED`. Connection reuse was the leading explanation, but no individual connection was traced. Chromium can [reuse HTTP/2 sessions](https://chromium.googlesource.com/chromium/src/+/HEAD/net/spdy/spdy_session_pool.cc) without a new hostname lookup. These results motivated the local proxy replacement; DNS success was not proof of reliable browser blocking.
+
+The beta helper removes old Stint hosts entries during upgrade and recovery. It does not add hosts entries during focus. Historical Edge tab chooser and Network Extension checks concern removed implementations and are not evidence for this proxy.
 
 ## Version 0.1.1 status
 
@@ -60,6 +101,16 @@ The Apple Silicon Command Line Tools development build was built and its code si
 The initial public source files also built successfully in a clean temporary checkout, using Flutter from `PATH` and a shared package cache. Static analysis and all 146 Flutter tests passed in that copy. No private design handoff files or project-local SDK were present. These checks verify the documented local packaging route and tests against the files being published.
 
 ## Downloadable package verification
+
+### Version 0.2.0 beta
+
+**Passed on 11 October 2026:** [Package macOS run 38124929655](https://github.com/albert2704/stint/actions/runs/38124929655), at source commit `adeae3c0b5b26d786ef57d1d21619dd65e68eae5`.
+
+The full Xcode workflow produced the universal AOT release app and passed its startup smoke check. The downloaded workflow artifact's DMG and ZIP matched their SHA256 checksums. Independent checks verified both `arm64` and `x86_64` architectures, deep strict ad hoc signatures, release entitlements, version `0.2.0` (build `3`), the declared macOS 12 minimum and absence of a debug Dart kernel. The disk image passed verification, and its app matched the ZIP copy.
+
+The exact packaged app also launched locally on Apple Silicon and passed the Edge blocking/allowed navigation checks described above. This is separate from the earlier debug development build. The package remains ad hoc signed and is not notarized. These checks do not establish physical Intel or macOS 12 operation, Gatekeeper approval or a download and upgrade through Finder.
+
+### Version 0.1.1 evidence
 
 **Version 0.1.1 passed on 10 October 2026:** [Package macOS run 38021166173](https://github.com/albert2704/stint/actions/runs/38021166173), at source commit `82623f112378771dfda20892f4dc0c36ae95d997`.
 
@@ -95,6 +146,6 @@ The downloaded v0.1.0 DMG and ZIP passed SHA256 comparison on an Apple Silicon M
 - Test **Control + Option + Command + S** while another app is active. The timer panel should appear. Test Start/Pause next; Reset and Skip should show confirmation when the interval has unfinished time.
 - YouTube needs real network and embedding permission for the chosen video. Headless tests cannot guarantee availability of a third-party stream.
 - System notification presentation depends on macOS permissions and Focus settings. A normal-Quit notification should also be tested on a real Mac.
-- Version 0.1.1 passed CI, universal Xcode packaging, and runner bootstrap checks. Physical Intel and macOS 12 testing, Gatekeeper interaction, and a manual upgrade remain unverified. The prerelease uses ad hoc signing; Apple Developer ID signing and notarization are not provided. Android is not implemented.
+- Version 0.2.0 beta passed CI, universal Xcode packaging, runner bootstrap and a local release app session. Physical Intel and macOS 12 testing, Chrome, Gatekeeper interaction and a downloaded app upgrade remain unverified. The prerelease uses ad hoc signing; Apple Developer ID signing and notarization are not provided. Android is not implemented.
 
 CI runs the same automated suites on a GitHub-hosted Mac. A green run is useful evidence for the tested commit, not a claim that all hardware and OS behaviors have been exercised.

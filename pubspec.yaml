@@ -1,7 +1,7 @@
 name: stint
-description: A simple Pomodoro timer with menu bar controls and focus music.
+description: A Pomodoro timer with menu bar controls, focus music, and distraction blocking.
 publish_to: none
-version: 0.1.1+2
+version: 0.2.0+3
 
 environment:
   sdk: '>=3.8.0 <4.0.0'
