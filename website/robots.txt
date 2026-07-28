@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://stint-focus.vercel.app/sitemap.xml
