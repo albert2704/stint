@@ -22,7 +22,7 @@ The local `.vercel` directory links this folder to the `stint-focus` project in 
 npx vercel deploy --prod
 ```
 
-Only this website folder is uploaded. The project uses CLI deployments. If enabling Git deployment later, first commit this folder and set the Vercel Root Directory to `website`.
+Only this website folder is uploaded. The project uses CLI deployments. If enabling Git deployment later, set the Vercel Root Directory to `website`.
 
 ## Editing
 
@@ -38,3 +38,9 @@ When publishing a new app release, update the DMG URL, displayed version and fil
 The local `qa/` fixtures force each palette and reduced motion for visual inspection. They are excluded from Git and Vercel deployment. The production page starts from system preferences and supports a saved manual choice.
 
 Validation during delivery covered desktop and phone layouts down to 320 CSS pixels, dark and light palettes, keyboard FAQ activation, sticky anchor offsets, reduced motion styles, countdown updates, release availability, and public HTTPS access. No browser console errors were observed. Safari, Firefox, and a screen reader have not been separately tested.
+
+## Current app release
+
+The primary download is Stint 0.2.0 Beta 1, a 28.4 MB universal DMG. The blocker section and FAQ describe focus-only app hiding, website setup, Edge verification, Chrome testing limits and recovery. Release assets, setup instructions and verification records are linked directly to the public GitHub release and docs.
+
+The blocker update was checked in dark and light themes at desktop and phone sizes, including 320, 390, 780 and 1440 CSS pixels. No horizontal overflow or browser console errors were observed. Keyboard activation opened the setup FAQ, and the download and documentation links point to the current beta. The existing reduced motion rules also apply to the new section.

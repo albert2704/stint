@@ -4,12 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Stint · One stint at a time</title>
-<meta name="description" content="A Pomodoro timer that lives in your Mac's menu bar. Focus in stints, rest on time, and see the whole cycle at a glance.">
+<meta name="description" content="A Pomodoro timer that lives in your Mac's menu bar. Focus in stints, block distractions, and rest on time.">
 <meta name="color-scheme" content="dark light">
 <meta name="theme-color" content="#111214">
 <meta name="theme-color" content="#F4F3F0" media="(prefers-color-scheme: light)">
 <meta property="og:title" content="Stint · One stint at a time">
-<meta property="og:description" content="A Pomodoro timer that lives in your Mac's menu bar.">
+<meta property="og:description" content="A free Mac Pomodoro timer with focus music, progress, and optional app and website blocking.">
 <meta property="og:image" content="https://stint-focus.vercel.app/og-image.png">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://stint-focus.vercel.app/">
@@ -37,6 +37,7 @@
       </a>
       <div class="navlinks" style="display: flex; align-items: center; gap: 28px">
         <a class="navlink" href="#cycle">How it works</a>
+        <a class="navlink" href="#blocker">Blocker</a>
         <a class="navlink" href="#sound">Sound</a>
         <a class="navlink" href="#progress">Progress</a>
         <a class="navlink" href="#faq">FAQ</a>
@@ -55,8 +56,9 @@
     <div id="top"></div>
     <section aria-labelledby="hero-title" style="max-width: 1200px; margin: 0 auto; padding: clamp(56px, 9vw, 112px) 24px 96px; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(460px, 100%), 1fr)); gap: 64px; align-items: center">
       <div style="display: flex; flex-direction: column; gap: 28px">
+        <a class="release-note" href="#blocker"><span>NEW IN 0.2.0 BETA</span> App &amp; website blocking <span aria-hidden="true">↗</span></a>
         <h1 id="hero-title" class="in1" style="margin: 0; font-size: clamp(52px, 7.4vw, 104px); line-height: 0.95; font-weight: 700; letter-spacing: -0.045em">One <span style="font-family: 'Martian Mono', ui-monospace, monospace; font-weight: 400; letter-spacing: -0.06em; color: var(--focusText)">stint</span> at a time.</h1>
-        <p class="in2" style="margin: 0; max-width: 520px; font-size: clamp(18px, 1.6vw, 21px); line-height: 1.5; color: var(--ink2)">A Pomodoro timer that lives in your Mac's menu bar. Focus in stints, rest on time, and see the whole cycle at a glance.</p>
+        <p class="in2" style="margin: 0; max-width: 520px; font-size: clamp(18px, 1.6vw, 21px); line-height: 1.5; color: var(--ink2)">A Pomodoro timer that lives in your Mac's menu bar. Focus in stints, block distractions, and rest on time.</p>
         <div class="in3" style="display: flex; flex-wrap: wrap; gap: 12px; align-items: center">
           <a class="cta" href="#download"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"></path></svg>Download for Mac</a>
           <a class="ghostcta" href="#cycle">See how it works</a>
@@ -97,6 +99,33 @@
               <span style="height: 50px; width: 180px; border-radius: 25px; background: var(--focus); color: var(--onAccent); display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 700; font-size: 15px"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1.2"></rect><rect x="14" y="5" width="4" height="14" rx="1.2"></rect></svg>Pause</span>
               <span class="mock-icon" style="width: 44px; height: 44px; border-radius: 22px; background: var(--surface); border: 1px solid var(--line)"><svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="m5 5 11 7L5 19z"/><rect x="17" y="5" width="2" height="14" rx="1"/></svg></span>
             </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="blocker" aria-labelledby="blocker-title" class="blocker-section">
+      <div class="blocker-layout">
+        <div class="blocker-copy">
+          <span class="feature-eyebrow reveal">DISTRACTION BLOCKER · BETA</span>
+          <h2 id="blocker-title" class="feature-heading reveal">Block distractions<br>during focus.</h2>
+          <p class="feature-lead reveal">Choose the apps and websites that pull you away. Stint blocks them while your focus timer runs, so your other tabs stay within reach.</p>
+          <ul class="blocker-benefits">
+            <li><strong>Keep your browser open.</strong> Blocked websites cannot connect. Allowed tabs keep working.</li>
+            <li><strong>Keep your work safe.</strong> Selected apps are hidden when you switch to them. Their documents stay open.</li>
+            <li><strong>Take a break.</strong> Pause the timer or start a break to release blocking. You can also confirm an early unblock.</li>
+          </ul>
+          <p class="feature-footnote">Website blocking needs a free, one time administrator setup. No browser extension or Apple Developer subscription.</p>
+          <a class="text-link blocker-guide" href="https://github.com/albert2704/stint/blob/main/docs/blocking.md">Setup, browser support &amp; recovery <span aria-hidden="true">↗</span></a>
+        </div>
+        <div class="blocker-illustration reveal" role="img" aria-label="Illustration of a focus session: YouTube is blocked, GitHub remains available, and selected apps are hidden with their documents kept open.">
+          <div aria-hidden="true">
+            <div class="guard-top"><span class="guard-wordmark">stint</span><span class="guard-badge"><span class="guard-dot"></span>Focus guard on</span></div>
+            <div class="guard-timer"><span>FOCUS · 2 OF 4</span><strong>18:42</strong><small>A little room to concentrate.</small></div>
+            <div class="guard-row"><span class="guard-symbol">×</span><span class="guard-domain">youtube.com</span><span class="guard-state">Blocked</span></div>
+            <div class="guard-row allowed"><span class="guard-symbol">✓</span><span class="guard-domain">github.com</span><span class="guard-state">Available</span></div>
+            <div class="guard-apps"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></svg><span><strong>Selected apps hidden</strong><small>Documents stay open.</small></span></div>
+            <p class="guard-caption">Access returns when you pause.</p>
           </div>
         </div>
       </div>
@@ -246,7 +275,7 @@
         </div>
         <div class="reveal" style="display: flex; flex-direction: column; gap: 10px; border-top: 2px solid var(--break); padding-top: 20px">
           <h3 style="margin: 0; font-size: 20px; font-weight: 700">Stays on your Mac</h3>
-          <p style="margin: 0; font-size: 16px; line-height: 1.55; color: var(--muted)">Your timer, rhythms, sounds and history are saved locally. Only YouTube playback needs the internet.</p>
+          <p style="margin: 0; font-size: 16px; line-height: 1.55; color: var(--muted)">Your timer, rhythms, sounds and history are saved locally. Stint does not log your browsing activity.</p>
         </div>
         <div class="reveal" style="display: flex; flex-direction: column; gap: 10px; border-top: 2px solid var(--ink); padding-top: 20px">
           <h3 style="margin: 0; font-size: 20px; font-weight: 700">Light or dark</h3>
@@ -265,11 +294,11 @@
           </details>
           <details>
             <summary>Which Macs does it run on?<span class="plus" aria-hidden="true" style="font-size: 26px; font-weight: 300; color: var(--muted)">+</span></summary>
-            <p style="margin: 0 0 22px; font-size: 16px; line-height: 1.6; color: var(--ink2)">Stint targets macOS 12 or later. One universal download includes Apple Silicon and Intel support. This preview has been checked on Apple Silicon; physical Intel and macOS 12 testing are still pending. <a class="text-link" href="https://github.com/albert2704/stint/blob/main/docs/testing.md#downloadable-package-verification">See verification details</a>.</p>
+            <p style="margin: 0 0 22px; font-size: 16px; line-height: 1.6; color: var(--ink2)">Stint targets macOS 12 or later. One universal download includes Apple Silicon and Intel support. This beta has been checked on Apple Silicon; physical Intel and macOS 12 testing are still pending. <a class="text-link" href="https://github.com/albert2704/stint/blob/main/docs/testing.md#downloadable-package-verification">See verification details</a>.</p>
           </details>
           <details>
             <summary>Does it work offline?<span class="plus" aria-hidden="true" style="font-size: 26px; font-weight: 300; color: var(--muted)">+</span></summary>
-            <p style="margin: 0 0 22px; font-size: 16px; line-height: 1.6; color: var(--ink2)">Yes. The timer, built-in loops, your own audio files and your progress all work without a connection. Only YouTube playback needs the internet.</p>
+            <p style="margin: 0 0 22px; font-size: 16px; line-height: 1.6; color: var(--ink2)">Yes. The timer, built-in loops, your own audio files and your progress all work without a connection. YouTube playback and browsing need an internet connection.</p>
           </details>
           <details>
             <summary>What happens when I close the window?<span class="plus" aria-hidden="true" style="font-size: 26px; font-weight: 300; color: var(--muted)">+</span></summary>
@@ -278,6 +307,18 @@
           <details>
             <summary>Will music start by itself?<span class="plus" aria-hidden="true" style="font-size: 26px; font-weight: 300; color: var(--muted)">+</span></summary>
             <p style="margin: 0 0 22px; font-size: 16px; line-height: 1.6; color: var(--ink2)">Never when you open the app. With Play with timer on, music starts with a focus session or break and pauses when the timer pauses or finishes. With it off, playback is entirely up to you. YouTube also pauses when you hide its player.</p>
+          </details>
+          <details>
+            <summary>How do I set up website blocking?<span class="plus" aria-hidden="true" style="font-size: 26px; font-weight: 300; color: var(--muted)">+</span></summary>
+            <p class="faq-answer">Open Settings → Block distractions, choose your apps and domains, and save the list. Choose Set up website blocker to reveal the installer in Finder, then open it and approve setup in Terminal with your administrator password. Stint never receives your password. No extension, certificate or paid Apple account is needed. <a class="text-link" href="https://github.com/albert2704/stint/blob/main/docs/blocking.md">Follow the setup guide</a>.</p>
+          </details>
+          <details>
+            <summary>Which browsers does the blocker support?<span class="plus" aria-hidden="true" style="font-size: 26px; font-weight: 300; color: var(--muted)">+</span></summary>
+            <p class="faq-answer">The beta was tested in Edge. Chrome is designed to use the same macOS proxy settings, but has not been tested yet. Browsers must use those settings; VPNs and custom proxies are unsupported. Loaded pages and buffered video can remain visible. The settings affect all accounts using those network services, including Stint’s YouTube player. Choose a built-in or local track when blocking YouTube. HTTPS stays encrypted and Stint does not log your browsing.</p>
+          </details>
+          <details>
+            <summary>Can I stop blocking before time is up?<span class="plus" aria-hidden="true" style="font-size: 26px; font-weight: 300; color: var(--muted)">+</span></summary>
+            <p class="faq-answer">Yes. Pause the timer, take a break, or confirm Unblock this stint. The next focus session uses your saved list again. The helper also restores network settings when Stint quits or crashes. If the helper is disabled and access does not return, the <a class="text-link" href="https://github.com/albert2704/stint/blob/main/docs/blocking.md#remove-or-recover-the-helper">recovery guide</a> explains how to restore access and remove it.</p>
           </details>
           <details>
             <summary>What counts toward my progress?<span class="plus" aria-hidden="true" style="font-size: 26px; font-weight: 300; color: var(--muted)">+</span></summary>
@@ -290,13 +331,13 @@
     <section id="download" aria-labelledby="download-title" style="max-width: 1200px; margin: 0 auto; padding: 128px 24px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 28px">
       <svg class="bob" width="88" height="88" viewBox="0 0 100 100" aria-hidden="true"><rect x="0.5" y="0.5" width="99" height="99" rx="22.5" fill="var(--logo-tile)" stroke="var(--line)" stroke-width="1"></rect><path d="M50 50 A17 17 0 1 1 33 67" fill="none" stroke="var(--logo-break)" stroke-width="11" stroke-linecap="round"></path><path d="M67 33 A17 17 0 1 0 50 50" fill="none" stroke="var(--logo-focus)" stroke-width="11" stroke-linecap="round"></path></svg>
       <h2 class="reveal" id="download-title" style="margin: 0; font-size: clamp(40px, 5.6vw, 72px); line-height: 1; font-weight: 700; letter-spacing: -0.04em">Start your first stint.</h2>
-      <a class="cta" href="https://github.com/albert2704/stint/releases/download/v0.1.1/Stint-0.1.1-macos-universal.dmg"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"></path></svg>Download for Mac</a>
+      <a class="cta" href="https://github.com/albert2704/stint/releases/download/v0.2.0-beta.1/Stint-0.2.0-macos-universal.dmg"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"></path></svg>Download for Mac</a>
       <p style="margin: 0; font-size: 14px; color: var(--muted)">Free &amp; open source · macOS 12+ · Apple Silicon &amp; Intel</p>
           <div class="install-note">
-        <p><strong>v0.1.1 Preview · 28 MB</strong></p>
-        <p>Open the DMG and drag Stint into Applications.</p>
-        <p>This preview is not signed with an Apple Developer ID or notarized by Apple. If macOS blocks it, try opening Stint once, then go to <strong>System Settings → Privacy &amp; Security → Open Anyway</strong>. Only continue if you trust this project.</p>
-        <p><a class="text-link" href="https://github.com/albert2704/stint/blob/main/docs/install.md">First launch guide</a><span aria-hidden="true"> · </span><a class="text-link" href="https://github.com/albert2704/stint/releases/tag/v0.1.1">ZIP, checksums &amp; release notes</a></p>
+        <p><strong>v0.2.0 Beta 1 · 28.4 MB</strong></p>
+        <p>Quit any running copy, open the DMG, and drag Stint into Applications. Website blocking is optional and needs administrator setup after installation.</p>
+        <p>This beta is not signed with an Apple Developer ID or notarized by Apple. If macOS blocks it, try opening Stint once, then go to <strong>System Settings → Privacy &amp; Security → Open Anyway</strong>. Only continue if you trust this project.</p>
+        <p><a class="text-link" href="https://github.com/albert2704/stint/blob/main/docs/install.md">First launch guide</a><span aria-hidden="true"> · </span><a class="text-link" href="https://github.com/albert2704/stint/releases/tag/v0.2.0-beta.1">ZIP, checksums &amp; release notes</a></p>
       </div>
     </section>
   </main>
