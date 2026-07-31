@@ -10,7 +10,7 @@ music: Quiet Keys — original Stint focus track
 
 ## Video direction
 
-Show real Stint fixture screenshots on a dark brand canvas. Headline left, app capture right, sliding scene arrivals, short directional exits, gentle screenshot pushes, and animated feature accents. All app images stay intact. The header progress strip tracks film time, not the app countdown. No simulated clicks or invented countdown states. Full-scene labels keep the overview understandable even with sound off.
+Show real Stint fixture screenshots on a dark brand canvas, with headlines on the left and fixed screenshot framing on the right. Opacity fades join the scenes. UI overlays illustrate timer, settings, blocker and volume states; chart masks reveal existing progress data. These are animated examples rather than a live recording or an exact sequence of app interactions. The header progress strip tracks film time. Full-scene labels keep the overview understandable even with sound off.
 
 ## Frame 1 — Focus, rest, repeat
 
@@ -21,7 +21,7 @@ Show real Stint fixture screenshots on a dark brand canvas. Headline left, app c
 - scene: Stint branding and real dark timer with music controls.
 - poster: 2s
 
-0–0.85s: headline and screenshot arrive from a slight offset and tilt. 0.8–4.4s: ring fills and orange/blue focus-break segments advance. Screenshot slowly pushes. 4.65–5s: slide/fade out.
+0–0.85s: headline arrives and the fixed screenshot fades in. 0.8–4.4s: ring fills and orange/blue focus-break segments advance. At 1.8, 2.8 and 3.8 seconds, digit overlays show 24:59, 24:58 and 24:57. The remaining captured controls stay static. 4.65–5s: fade out.
 
 ## Frame 2 — Find your rhythm
 
@@ -32,7 +32,7 @@ Show real Stint fixture screenshots on a dark brand canvas. Headline left, app c
 - scene: Actual settings with focus and break durations.
 - poster: 7s
 
-5–5.85s: settle in. 5.85–7.2s: label appears and a leader line draws toward the real rhythm settings. Three external rhythm chips highlight in sequence. Screenshot slowly pushes. 9.65–10s: slide/fade out.
+5–5.85s: headline arrives and the fixed screenshot fades in. 5.85–7.2s: label appears and a leader line draws toward the rhythm settings. At 6.2–6.6s, overlays change Classic values 25/5/15 and selection to Deep work values 50/10/30. Three external rhythm chips highlight in sequence. 9.65–10s: fade out.
 
 ## Frame 3 — Sound that follows you
 
@@ -43,7 +43,7 @@ Show real Stint fixture screenshots on a dark brand canvas. Headline left, app c
 - scene: Crop of genuine sound controls, with copy about optional timer linkage.
 - poster: 12s
 
-10–10.85s: sound crop settles in. 10.75–14.6s: orange/blue waveform pulses and a playhead travels underneath; both are illustrative motion outside the app capture. 14.65–15s: slide/fade out.
+10–10.57s: the fixed sound crop fades in. From 10.8s, headline and description words appear in sequence. 10.75–14.6s: orange/blue waveform pulses and a playhead travels underneath. The sound-panel crop remains unchanged. 14.65–15s: fade out.
 
 ## Frame 4 — Protect your focus
 
@@ -51,10 +51,10 @@ Show real Stint fixture screenshots on a dark brand canvas. Headline left, app c
 - duration: 5s
 - src: compositions/frames/blocker.html
 - asset_candidates: assets/stint-blocker.png
-- scene: Actual blocker widget with a synthetic Chat app, youtube.com, enabled focus blocking and Focus guard on. Supporting copy explains app hiding, website connection blocking, pause to release, administrator setup and keeping the browser open. The feature is labeled beta.
+- scene: Real blocker widget capture with synthetic Chat and youtube.com selections, plus an illustrative off-to-on switch/status overlay. Supporting copy explains app hiding, website connection blocking, pause to release, administrator setup and keeping the browser open. The feature is labeled beta and the composition identifies animated UI with sample data.
 - poster: 17s
 
-15–15.85s: headline and square blocker screenshot settle in. 15.7–16.33s: Only during focus and Pause to release chips arrive. 16.15–16.85s: setup note and browser-open copy appear. The screenshot gently pushes without changing its contents. 19.65–20s: slide/fade out.
+15–15.85s: headline arrives and the fixed blocker screenshot fades in. 15.7–16.33s: Only during focus and Pause to release chips arrive. 16.2–16.45s: switch overlay turns on and the underlying Focus guard on state is revealed. 16.15–16.85s: setup note and browser-open copy appear. The animation illustrates the state change rather than the Save blocklist workflow. 19.65–20s: fade out.
 
 ## Frame 5 — See your progress
 
@@ -65,7 +65,7 @@ Show real Stint fixture screenshots on a dark brand canvas. Headline left, app c
 - scene: Synthetic progress data showing goals and weekly totals.
 - poster: 22s
 
-20–20.85s: settle in. 21–23s: three progress marks rise in sequence. 22.9s: one-session-at-a-time note arrives. Screenshot slowly pushes. 24.65–25s: slide/fade out.
+20–20.85s: headline arrives and the fixed screenshot fades in. From 20.8s, masks uncover the original chart bars and daily segments. 21–23s: three external progress marks rise in sequence. 22.9s: one-session-at-a-time note arrives. 24.65–25s: fade out.
 
 ## Frame 6 — One stint. At a time.
 
@@ -76,7 +76,7 @@ Show real Stint fixture screenshots on a dark brand canvas. Headline left, app c
 - scene: Light appearance and Download the Mac beta invitation. Free, open source and MIT license; macOS 12+ with Apple silicon and Intel package targets.
 - poster: 27s
 
-25–25.85s: light screenshot settles in. 26.3–27.5s: Focus / Rest / Repeat arrive with a subtle spring; stint-focus.vercel.app appears at 27.6s. Keep the invitation visible through the final frame.
+25–25.85s: headline arrives and the fixed light screenshot fades in. 25.8–26.6s: an overlay animates volume from 20% to 35%; the sound icon pulses and returns to its resting form by 29.35s. The music bed keeps its own fixed mix. 26.3–27.5s: Focus / Rest / Repeat arrive with a subtle spring; stint-focus.vercel.app appears at 27.6s. Keep the invitation visible through the final frame.
 
 ## Music bed
 

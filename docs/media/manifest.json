@@ -3,10 +3,10 @@
   "source": "tooling/video",
   "checks": {
     "hyperframes": "0 lint, runtime, layout, motion, and contrast findings",
-    "contrast": "70/70 WCAG AA text checks passed across general and focused blocker scene audits",
-    "visual": "All six exported MP4 scenes and final frame inspected; layout checked at 18 timestamps",
+    "contrast": "77/77 WCAG AA text checks passed",
+    "visual": "All six exported MP4 scenes inspected; layout checked at six timestamps; UI states are illustrative overlays over fixture screenshots",
     "motion": "300 seek samples; blocker entrance, in-frame screenshot, and download address assertions passed",
-    "privateData": "Only synthetic widget fixture data; no personal desktop captures or live helper controls",
+    "privateData": "Synthetic widget fixture data and illustrative UI overlays; no personal desktop captures or live helper controls",
     "audio": "30-second AAC stereo verified; decoded RMS ratios confirm entrance/exit fades and 0.6994 middle amplitude",
     "blockerCapture": "720x720 real BlockerSettingsDialog rendered by capture/capture_blocker_test.dart; capture test and analysis passed"
   },
@@ -47,22 +47,22 @@
   },
   "assets": {
     "demo.mp4": {
-      "bytes": 8201926,
-      "sha256": "fca4dd985f0359accb89daf80fb37f4f84395d3d466b487ca24e13333e30752f"
+      "bytes": 3215110,
+      "sha256": "ede04e876bb9c29a4c4274717cca77496a8d0e60222a032ce9be81a1511275bf"
     },
     "demo.gif": {
-      "bytes": 4968588,
-      "sha256": "b236a294080a85091366e8cba4236db0ef7b88f0c24eb233935f2e4195b73ebe"
+      "bytes": 1901745,
+      "sha256": "b8bd406ec543a7f2a2cdb839c88c84b55f8050165a48e32a3d432162687a3065"
     },
     "stint-overview.png": {
-      "bytes": 83896,
-      "sha256": "b55dba43d6e3055fc3f2ee6236a2089b70524198acb1d747b7f063d08f27d917"
+      "bytes": 81035,
+      "sha256": "be49f5cb7160fb10a8686bd2c528cf6f734e03771de35ce519cda2439e008bdc"
     },
     "stint-blocker.png": {
       "bytes": 59820,
       "sha256": "bcfc891594c0faaf4784ea70a8fcfd5d1ef81a1dcca87ba5f6d2ac143cb64ece"
     }
   },
-  "revision": "blocker-beta-overview-with-music",
+  "revision": "fixed-framing-illustrative-ui-animation",
   "renderer": "HyperFrames 0.8.147"
 }

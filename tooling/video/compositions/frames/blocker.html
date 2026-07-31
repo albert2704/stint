@@ -19,6 +19,7 @@
 #scene-blocker .blocker-browser{font-size:20px;color:#78B9E6;margin:20px 0 0}
 #scene-blocker .blocker-shot{position:absolute;left:663px;top:116px;width:524px;overflow:hidden;border:1px solid #36393E;border-radius:20px;background:#101113}
 #scene-blocker .blocker-shot img{display:block;width:100%;height:auto}
+#scene-blocker .blocker-details{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 #scene-blocker .blocker-divider{position:absolute;left:64px;right:64px;bottom:69px;height:1px;background:#2E3035}
 #scene-blocker .blocker-footer{position:absolute;left:64px;right:64px;bottom:37px;display:flex;justify-content:space-between;font:400 10px MartianMono,monospace;letter-spacing:1.2px;color:#ABAFB7}
 #scene-blocker .blocker-footer strong{font-weight:400;color:#F88932}
@@ -33,22 +34,35 @@
       <p data-hf-id="hf-yrqf" class="blocker-note">Website setup needs administrator approval.</p>
       <p data-hf-id="hf-ueyn" class="blocker-browser">Your browser stays open.</p>
     </div>
-    <div data-hf-id="hf-sx7r" class="blocker-shot"><img data-hf-id="hf-g8on" src="assets/stint-blocker.png" alt="Actual Stint blocker settings with a synthetic Chat app and youtube.com selected; focus guard on"></div>
+    <div data-hf-id="hf-sx7r" class="blocker-shot"><img data-hf-id="hf-g8on" src="assets/stint-blocker.png" alt="Actual Stint blocker settings with a synthetic Chat app and youtube.com selected; focus guard on"><svg class="blocker-details" viewBox="0 0 720 720" aria-hidden="true">
+      <g class="blocker-off-status">
+        <rect x="36" y="96" width="177" height="59" fill="#1A1B1F"/>
+        <path d="M47 99L53 102V107C53 111 50 113 47 115C44 113 41 111 41 107V102Z" fill="none" stroke="#9C9FA6" stroke-width="2" stroke-linejoin="round"/>
+        <text x="67" y="112" fill="#EDEBE6" font-family="HankenGrotesk" font-size="14" font-weight="700">Focus guard off</text>
+        <text x="49" y="147" fill="#C6C5C1" font-family="HankenGrotesk" font-size="14" font-weight="700">Block this stint</text>
+      </g>
+      <rect x="640" y="210" width="56" height="36" fill="#111214"/>
+      <rect class="blocker-switch-track" x="642" y="212" width="52" height="32" rx="16" fill="#3A3D44"/>
+      <circle class="blocker-switch-knob" cx="658" cy="228" r="12" fill="#9C9FA6"/>
+    </svg></div>
     <div data-hf-id="hf-qaki" class="blocker-divider"></div>
-    <div data-hf-id="hf-qhhq" class="blocker-footer"><span data-hf-id="hf-wp94">ACTUAL APP UI · DEMONSTRATION DATA</span><strong data-hf-id="hf-0tkz">04 / 06</strong></div>
+    <div data-hf-id="hf-qhhq" class="blocker-footer"><span data-hf-id="hf-wp94">ANIMATED UI DEMO · SAMPLE DATA</span><strong data-hf-id="hf-0tkz">04 / 06</strong></div>
   </div>
 </div>
 <script>
 const tl=gsap.timeline({paused:true});
-tl.fromTo('#scene-blocker .blocker-inner',{x:44,opacity:0},{x:0,opacity:1,duration:.48,ease:'power3.out'},0);
+tl.fromTo('#scene-blocker .blocker-inner',{opacity:0},{opacity:1,duration:.48,ease:'power3.out'},0);
 tl.fromTo('#scene-blocker h2 span',{x:-30,y:22,opacity:0},{x:0,y:0,opacity:1,duration:.58,stagger:.1,ease:'power3.out'},.10);
 tl.fromTo('#scene-blocker .blocker-description',{y:18,opacity:0},{y:0,opacity:1,duration:.5,ease:'power2.out'},.42);
-tl.fromTo('#scene-blocker .blocker-shot',{y:24,scale:.94,opacity:0},{y:0,scale:1,opacity:1,duration:.85,ease:'power3.out'},.12);
-tl.to('#scene-blocker .blocker-shot',{y:-4,scale:1.012,duration:3.55,ease:'none'},1);
+tl.fromTo('#scene-blocker .blocker-shot',{opacity:0},{opacity:1,duration:.6,ease:'power3.out'},.12);
+// Change only the switch and its dependent status, with fixed screen framing.
+tl.fromTo('#scene-blocker .blocker-switch-track',{attr:{fill:'#3A3D44'}},{attr:{fill:'#F2893B'},duration:.25,ease:'power2.inOut'},1.2);
+tl.fromTo('#scene-blocker .blocker-switch-knob',{attr:{cx:658,fill:'#9C9FA6'}},{attr:{cx:678,fill:'#111214'},duration:.25,ease:'power2.inOut'},1.2);
+tl.set('#scene-blocker .blocker-off-status',{opacity:0},1.45);
 // Adapt the registry's staggered-fade-up primitive to the existing Stint rhythm.
 tl.fromTo('#scene-blocker .blocker-chip',{y:12,opacity:0,filter:'blur(3px)'},{y:0,opacity:1,filter:'blur(0px)',duration:.45,stagger:.18,ease:'power3.out'},.7);
 tl.fromTo('#scene-blocker .blocker-note, #scene-blocker .blocker-browser',{y:10,opacity:0},{y:0,opacity:1,duration:.5,stagger:.2,ease:'power2.out'},1.15);
-tl.to('#scene-blocker .blocker-inner',{x:-36,opacity:0,duration:.35,ease:'power2.in'},4.65);
+tl.to('#scene-blocker .blocker-inner',{opacity:0,duration:.35,ease:'power2.in'},4.65);
 window.__timelines['scene-blocker']=tl;
 </script>
 </template></body></html>

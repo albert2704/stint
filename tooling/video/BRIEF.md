@@ -20,17 +20,17 @@ Actual Flutter widget-test screenshots in assets/. Synthetic fixture data only, 
 
 ## Customizations
 
-Dark Stint orange/blue branding, readable text, genuine interface screenshots. Deliver a 1280×720 MP4, a smaller looping GIF, a hero still, and individual screenshots.
+Dark Stint orange/blue branding, readable text, genuine interface screenshots with illustrative UI overlays. Deliver a 1280×720 MP4, a smaller looping GIF, a hero still, and individual screenshots.
 
 ## Notes
 
-MIT license confirmed by the user. Do not imply an Android release, sync, handwriting, boards, or a desktop pet. No narration. Quiet Keys, the app’s original synthesized track, provides a soft music bed. Do not animate fake changes inside the screenshots. The video is a feature overview, not a live interaction recording.
+MIT license confirmed by the user. Do not imply an Android release, sync, handwriting, boards, or a desktop pet. No narration. Quiet Keys, the app’s original synthesized track, provides a soft music bed. Timer, settings, blocker and volume overlay states are illustrative examples over real fixture captures. Describe the result as an animated overview rather than a live recording or an exact sequence of app actions.
 
 Website blocking requires one-time administrator setup and browsers that use macOS proxy settings. Keep the browser open, describe app hiding rather than app termination, and show that pausing releases blocking. Do not imply protection against every browser, VPN or existing buffered media. Label the feature as beta and point to the website for download and setup details. macOS 12+, Apple silicon and Intel describe the package targets; physical Intel and macOS 12 testing remain unverified in the release documentation.
 
 ## Motion update
 
-Retain the timer/cycle illustration, moving callouts, musical waveform accents, screenshot pushes, progress marks and scene transitions. Insert the blocker scene at 15–20 seconds, move progress to 20–25 seconds, and hold the download invitation through the last frame at 30 seconds. Preserve the real app pixels.
+Keep screenshot framing fixed and use opacity transitions. Retain the timer/cycle illustration, moving callouts, musical waveform accents and progress marks; add aligned UI overlays for countdown digits, rhythm selection, blocker state, chart reveals and volume. The blocker scene runs at 15–20 seconds, progress at 20–25 seconds, and the download invitation holds through the last frame at 30 seconds. The PNG assets remain the original fixture captures; the composition supplies the illustrative states.
 
 ## Music update
 
