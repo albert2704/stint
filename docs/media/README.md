@@ -1,6 +1,6 @@
 # Stint images and video
 
-These media assets show Stint with synthetic data from Flutter widget tests. They contain no personal desktop content or real session history.
+The app demo images and video show Stint with synthetic data from Flutter widget tests. They contain no personal desktop content or real session history. The additional Gatekeeper image is a user supplied screenshot of the macOS first launch warning, included in the installation guide.
 
 | File | Description |
 | --- | --- |
@@ -13,6 +13,7 @@ These media assets show Stint with synthetic data from Flutter widget tests. The
 | `stint-blocker.png` | 720×720 capture of the real Block distractions widget, with synthetic Chat and youtube.com selections and an active focus guard. |
 | `progress-dark.png` | Synthetic daily goals, weekly totals, streaks, and completed stints. |
 | `progress-light.png` | The same progress surface in light appearance. |
+| `macos-gatekeeper-warning.png` | Actual macOS “Stint” Not Opened warning explaining that Apple could not verify the app. See the [installation guide](../install.md#first-launch-and-gatekeeper). |
 
 The animated overview combines real fixture screenshots with illustrative UI overlays: a ticking countdown, rhythm selection, a blocker switch/status transition, chart reveals, and volume and sound-icon animation. Screenshots hold a fixed position while copy, callouts, waveforms and focus/pause chips animate around them. Timer, settings, blocker and volume states are illustrative; the video is not a live recording or a step-by-step interaction guide. It moves through six scenes: focus, rhythms, music, distraction blocking, progress, and the Mac beta download. The music scene leaves “Play with timer” off while the accompanying copy explains enabling it.
 

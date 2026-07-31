@@ -125,6 +125,12 @@ Version 0.1.1 deliberately starts fresh with a new application identity. It does
 
 Quit the old app before running the new one, then choose your rhythm and music again and allow notifications when prompted. The current app's **Recover previous save** only restores a backup from its own workspace. It does not retrieve the previous app's data.
 
+## “Stint” Not Opened on first launch
+
+If macOS says **“Apple could not verify ‘Stint’ is free of malware”**, the current beta has not been notarized by Apple. That message does not say malware was detected. If you trust the copy you downloaded from the official Stint release page, you can select **Done**, then use **System Settings → Privacy & Security → Open Anyway** for Stint and confirm.
+
+See the [installation guide's screenshot and numbered steps](install.md#first-launch-and-gatekeeper), including what to do if **Open Anyway** is missing. A warning that the app contains malware, will damage your computer, or is damaged is different; do not dismiss it using these steps.
+
 ## Build or test failures
 
 | Symptom | What to check |

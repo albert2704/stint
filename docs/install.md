@@ -32,11 +32,28 @@ If an earlier Stint is running, choose **Stint → Quit Stint** before replacing
 
 ## First launch and Gatekeeper
 
-Because this prerelease has no Developer ID signature or notarization, macOS may say it cannot verify the developer or check the app. Only continue if you trust this project and the download came from its release page.
+This beta has an ad hoc signature, without an Apple Developer ID signature or Apple notarization. On first launch, you may see **“Stint” Not Opened** and this message:
 
-After trying to open Stint once, you can use **System Settings → Privacy & Security → Open Anyway**, then confirm **Open** if you still want to run it. Follow [Apple's instructions for opening an app from an unidentified developer](https://support.apple.com/en-us/102445); labels can differ by macOS version. A managed Mac may prevent this exception.
+> Apple could not verify “Stint” is free of malware that may harm your Mac or compromise your privacy.
 
-A warning about damage or malware is different from an unidentified developer warning. Do not dismiss it as routine. Stop, download a fresh copy from the release page, and report the exact message if it persists. [Apple explains the different warnings](https://support.apple.com/en-us/102445).
+<img src="media/macos-gatekeeper-warning.png" width="380" alt="macOS shows Stint Not Opened because Apple could not verify the app, with Move to Trash and Done buttons">
+
+This message means Apple cannot verify the app. It does not say that malware was detected, and it is not an assurance that the download is safe. Only continue if you trust the project and obtained your copy from the [official Stint release page](https://github.com/albert2704/stint/releases).
+
+If you choose to open that copy:
+
+1. You can select **Done** in the warning to keep the app.
+2. Open **System Settings → Privacy & Security**.
+3. Scroll to **Security** and select **Open Anyway** beside the message about Stint.
+4. Confirm **Open** or **Open Anyway** if prompted, and authenticate with your Mac login password or Touch ID if requested.
+
+macOS saves an exception for this app, so you can open it normally afterward. You do not need to disable Gatekeeper for all apps or run a Terminal command. Follow [Apple's instructions](https://support.apple.com/en-us/102445); labels can differ by macOS version.
+
+**No Open Anyway button?** You can try opening Stint from Applications again, then return to Privacy & Security. The option is available for about an hour after a blocked launch. A Mac managed by your organization may prevent this exception; see [Apple's security settings guide](https://support.apple.com/guide/mac-help/mh40617/mac).
+
+**A different warning?** A message that the app **“will damage your computer”**, contains malware, or is **“damaged and can't be opened”** is not the verification warning shown above. Do not use these steps to dismiss it. Stop and report the exact message. [Apple explains the different warnings](https://support.apple.com/en-us/102445).
+
+Removing this verification warning from future public downloads requires a release signed with an Apple Developer ID and notarized by Apple. The current beta does not provide that verification.
 
 ## Optional checksum check
 

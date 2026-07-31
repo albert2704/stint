@@ -29,6 +29,8 @@ This beta adds optional app and website blocking. The earlier [0.1.1 preview](ht
 
 Open the DMG, drag **Stint.app** to **Applications**, then open it there. Flutter and developer tools are not required. See the [installation guide](docs/install.md) for first-launch approval, checksums, and updates.
 
+**“Stint” Not Opened?** This beta is not notarized, so macOS may say Apple could not verify it is free of malware. If you trust your copy from the official release page, select **Done**, then **System Settings → Privacy & Security → Open Anyway** for Stint and confirm. See the [warning screenshot and complete steps](docs/install.md#first-launch-and-gatekeeper).
+
 **Upgrading from 0.1.1:** quit Stint and replace the app. The beta keeps the same app identity and saved data. If you tested the older website helper from source, run **Set up website blocker** once to upgrade it. See the [beta release notes](docs/releases/v0.2.0-beta.1.md).
 
 **Upgrading from 0.1.0:** quit the old app first. Version 0.1.1 uses a new Stint app identity and starts with fresh settings, history, music library, and permissions. Your previous data is left untouched and is not imported automatically. See the [0.1.1 release notes](docs/releases/v0.1.1.md).

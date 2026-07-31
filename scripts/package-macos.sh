@@ -97,9 +97,19 @@ Stint for macOS 12 or later (Apple Silicon and Intel)
 Drag Stint.app to Applications, then open it from Applications.
 Quit an older copy of Stint before replacing it.
 
-Check the release notes for its signing and notarization status.
-macOS may block the first launch of an unnotarized preview. Only if you trust this download,
-follow Apple's Open Anyway guidance in System Settings > Privacy & Security:
+This beta is ad hoc signed, without Apple Developer ID signing or Apple notarization.
+macOS may show "Stint Not Opened" and say Apple could not verify Stint is free of malware.
+That message means Apple cannot verify the app; it does not say malware was detected.
+Only if you trust this copy from the official Stint release page, you can:
+1. Select Done in the warning to keep the app.
+2. Open System Settings > Privacy & Security.
+3. Scroll to Security and select Open Anyway for Stint.
+4. Confirm Open or Open Anyway and authenticate if prompted.
+If Open Anyway is missing, try opening Stint from Applications again, then return to settings.
+Labels can differ by macOS version, and a managed Mac may prevent this exception.
+These steps do not apply to a warning that the app contains malware, will damage your
+computer, or is damaged. Stop and report the exact message instead.
+Apple's guidance:
 https://support.apple.com/en-us/102445
 
 Downloads and source: https://github.com/albert2704/stint
