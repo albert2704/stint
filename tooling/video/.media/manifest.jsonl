@@ -5,3 +5,4 @@
 {"id":"image_005","type":"image","path":"assets/stint-light.png","source":"existing","description":"stint light","width":480,"height":758,"provenance":{"provider":"local","adopted":true}}
 {"id":"image_006","type":"image","path":"assets/stint-settings.png","source":"existing","description":"stint settings","width":420,"height":600,"provenance":{"provider":"local","adopted":true}}
 {"id":"bgm_001","type":"bgm","path":".media/audio/bgm/bgm_001.wav","source":"ingested","description":"quiet_keys.wav","provenance":{"provider":"local","from":"../../assets/music/quiet_keys.wav"}}
+{"id":"image_007","type":"image","path":"assets/stint-blocker.png","source":"existing","description":"Actual blocker settings rendered from a synthetic Flutter widget fixture; focus guard on, Chat and youtube.com selected","width":720,"height":720,"provenance":{"provider":"local","capture":"capture/capture_blocker_test.dart","personalData":false}}

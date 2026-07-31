@@ -37,7 +37,7 @@ Open the DMG, drag **Stint.app** to **Applications**, then open it there. Flutte
 
 [![A short animated tour of Stint](docs/media/demo.gif)](docs/media/demo.mp4)
 
-[Watch or download the full demo video](https://github.com/albert2704/stint/raw/refs/heads/main/docs/media/demo.mp4). This animated overview uses real app renders with demonstration data and Stint's original Quiet Keys music. The inline GIF is silent. [Screenshots and editable video source](docs/media/README.md) are included.
+[Watch or download the full demo video](https://github.com/albert2704/stint/raw/refs/heads/main/docs/media/demo.mp4). This 30-second animated overview covers the timer, music, distraction blocker beta, and progress, using real app renders with demonstration data and Stint's original Quiet Keys music. The inline GIF is silent. [Screenshots and editable video source](docs/media/README.md) are included.
 
 ## What you can do
 

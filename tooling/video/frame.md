@@ -27,17 +27,18 @@ Stint's orange focus and blue break colors sit on the actual app's dark canvas. 
 
 # Motion direction
 
-The five scenes last five seconds each. Headline lines arrive in sequence, while app screenshots settle from a small offset/tilt and gently push during the reading hold. The inner scene content slides and fades at each boundary; the header stays stable.
+The six scenes last five seconds each. Headline lines arrive in sequence, while app screenshots settle from a small offset/tilt and gently push during the reading hold. The inner scene content slides and fades between features; the header stays stable. The download invitation holds through the final frame.
 
-Each scene has one illustrative accent outside the app capture:
+The motion and supporting copy stay outside the app captures:
 
 1. An angular progress ring plus filling orange/blue cycle segments.
 2. A drawn leader callout and sequential rhythm-chip highlights.
 3. A finite, deterministic orange/blue waveform and traveling playhead.
-4. Three growing progress marks and a one-session-at-a-time note.
-5. A sequenced Build / Tweak / Share invitation and the repository address.
+4. Sequential focus/pause chips, an administrator-setup note and the browser-open message beside the actual blocker widget.
+5. Three growing progress marks and a one-session-at-a-time note.
+6. A sequenced Focus / Rest / Repeat invitation and the website address for downloading the Mac beta.
 
-The thin header progress strip follows film time. None of these accents changes captured timer values, toggles a real setting, or depicts a simulated click. Quiet Keys provides a soft music bed with short entrance and exit fades. The GIF stays silent.
+The thin header progress strip follows film time. None of these accents changes captured timer values, toggles a real setting, or depicts a simulated click. The blocker capture is a 720×720 image from the real Flutter widget using synthetic selection and status. Keep its pixels intact and its beta label visible. Quiet Keys provides a soft music bed with a 0.8-second entrance fade and a 1.3-second exit fade over the 30-second film. The GIF stays silent.
 
 # Reproduction and accessibility
 

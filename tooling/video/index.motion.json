@@ -1,0 +1,9 @@
+{
+  "duration": 30,
+  "assertions": [
+    { "kind": "appearsBy", "selector": "#scene-blocker h2", "bySec": 16 },
+    { "kind": "appearsBy", "selector": "#scene-blocker .blocker-chip:last-child", "bySec": 16.5 },
+    { "kind": "staysInFrame", "selector": "#scene-blocker .blocker-shot" },
+    { "kind": "appearsBy", "selector": "#scene-5 .repo-link", "bySec": 28.4 }
+  ]
+}

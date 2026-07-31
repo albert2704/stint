@@ -1,56 +1,68 @@
 {
-  "generated": "2026-10-10",
+  "generated": "2026-10-11",
   "source": "tooling/video",
   "checks": {
-    "hyperframes": "0 lint, runtime, layout, and motion findings",
-    "contrast": "59/59 WCAG AA text checks passed",
-    "visual": "All five rendered scenes inspected; automated layout checked at 15 timestamps",
-    "privateData": "Only synthetic widget-test data; no personal desktop captures",
-    "audio": "AAC stereo verified; decoded amplitude ratios confirm fade-in, 0.7 middle gain, and fade-out",
-    "audioComposition": "0 findings after adding music; 58/58 text contrast checks at five scene midpoints"
+    "hyperframes": "0 lint, runtime, layout, motion, and contrast findings",
+    "contrast": "70/70 WCAG AA text checks passed across general and focused blocker scene audits",
+    "visual": "All six exported MP4 scenes and final frame inspected; layout checked at 18 timestamps",
+    "motion": "300 seek samples; blocker entrance, in-frame screenshot, and download address assertions passed",
+    "privateData": "Only synthetic widget fixture data; no personal desktop captures or live helper controls",
+    "audio": "30-second AAC stereo verified; decoded RMS ratios confirm entrance/exit fades and 0.6994 middle amplitude",
+    "blockerCapture": "720x720 real BlockerSettingsDialog rendered by capture/capture_blocker_test.dart; capture test and analysis passed"
   },
   "video": {
     "file": "demo.mp4",
     "width": 1280,
     "height": 720,
     "fps": 30,
-    "durationSeconds": 25,
+    "durationSeconds": 30,
     "audio": {
       "track": "Quiet Keys",
       "source": ".media/audio/bgm/bgm_001.wav",
       "codec": "aac",
       "sampleRate": 48000,
       "channels": 2,
-      "durationSeconds": 25,
+      "durationSeconds": 30,
       "amplitude": 0.7,
       "fadeInSeconds": 0.8,
       "fadeOutSeconds": 1.3,
-      "meanDbfs": -26.7,
-      "peakDbfs": -11.4
-    }
+      "meanDbfs": -26.6,
+      "peakDbfs": -12.2,
+      "decodedAmplitudeRatios": {
+        "fadeIn": 0.2634,
+        "middle": 0.6994,
+        "fadeOut": 0.2191
+      }
+    },
+    "frames": 900
   },
   "gif": {
     "file": "demo.gif",
     "width": 800,
     "height": 450,
     "fps": 8,
-    "frames": 200,
-    "durationSeconds": 25.01,
+    "frames": 240,
+    "durationSeconds": 30.01,
     "loop": 0
   },
   "assets": {
     "demo.mp4": {
-      "bytes": 6763127,
-      "sha256": "253d27925adf4040b63a04c8ac92aff47fddf276678a4cf5577a5fd955ce83f2"
+      "bytes": 8201926,
+      "sha256": "fca4dd985f0359accb89daf80fb37f4f84395d3d466b487ca24e13333e30752f"
     },
     "demo.gif": {
-      "bytes": 4212324,
-      "sha256": "359a05028c8ac2d8295c4900565c5bdcdf37f937366ae27e1b33a0ecca98a5a6"
+      "bytes": 4968588,
+      "sha256": "b236a294080a85091366e8cba4236db0ef7b88f0c24eb233935f2e4195b73ebe"
     },
     "stint-overview.png": {
-      "bytes": 82340,
-      "sha256": "8300b44f484b36f43741ddddd546bf271e0367d08a754bced21264759bc92fca"
+      "bytes": 83896,
+      "sha256": "b55dba43d6e3055fc3f2ee6236a2089b70524198acb1d747b7f063d08f27d917"
+    },
+    "stint-blocker.png": {
+      "bytes": 59820,
+      "sha256": "bcfc891594c0faaf4784ea70a8fcfd5d1ef81a1dcca87ba5f6d2ac143cb64ece"
     }
   },
-  "revision": "animated-overview-with-music"
+  "revision": "blocker-beta-overview-with-music",
+  "renderer": "HyperFrames 0.8.147"
 }

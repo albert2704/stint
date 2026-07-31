@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><title>Stint — Block distractions</title></head><body><template>
+<style>
+@font-face{font-family:HankenGrotesk;src:url('assets/HankenGrotesk-Regular.ttf');font-weight:400}
+@font-face{font-family:HankenGrotesk;src:url('assets/HankenGrotesk-Bold.ttf');font-weight:700}
+@font-face{font-family:MartianMono;src:url('assets/MartianMono-Regular.ttf');font-weight:400}
+#scene-blocker{position:relative;width:100%;height:100%;overflow:hidden;background:#101113;color:#EDECEA;font-family:HankenGrotesk,sans-serif}
+#scene-blocker *{box-sizing:border-box}
+#scene-blocker .blocker-inner{position:absolute;inset:0}
+#scene-blocker .blocker-copy{position:absolute;left:64px;top:174px;width:540px}
+#scene-blocker .blocker-eyebrow{font:400 12px MartianMono,monospace;letter-spacing:1.6px;color:#F88932;margin:0 0 24px}
+#scene-blocker h2{margin:0;font-size:68px;line-height:1.24;letter-spacing:-2.5px}
+#scene-blocker h2 span{display:block}
+#scene-blocker h2 span:last-child{color:#F88932}
+#scene-blocker .blocker-description{font-size:23px;line-height:1.45;color:#ABAFB7;max-width:470px;margin:25px 0 0}
+#scene-blocker .blocker-chips{display:flex;gap:10px;margin-top:28px}
+#scene-blocker .blocker-chip{font:400 12px MartianMono,monospace;padding:12px 14px;border:1px solid #36393E;border-radius:7px}
+#scene-blocker .blocker-note{font-size:17px;line-height:1.4;color:#ABAFB7;width:470px;margin:24px 0 0}
+#scene-blocker .blocker-browser{font-size:20px;color:#78B9E6;margin:20px 0 0}
+#scene-blocker .blocker-shot{position:absolute;left:663px;top:116px;width:524px;overflow:hidden;border:1px solid #36393E;border-radius:20px;background:#101113}
+#scene-blocker .blocker-shot img{display:block;width:100%;height:auto}
+#scene-blocker .blocker-divider{position:absolute;left:64px;right:64px;bottom:69px;height:1px;background:#2E3035}
+#scene-blocker .blocker-footer{position:absolute;left:64px;right:64px;bottom:37px;display:flex;justify-content:space-between;font:400 10px MartianMono,monospace;letter-spacing:1.2px;color:#ABAFB7}
+#scene-blocker .blocker-footer strong{font-weight:400;color:#F88932}
+</style>
+<div data-hf-id="hf-kvwt" id="scene-blocker" data-composition-id="scene-blocker" data-width="1280" data-height="720" data-duration="5">
+  <div data-hf-id="hf-zisd" class="blocker-inner">
+    <div data-hf-id="hf-aye4" class="blocker-copy">
+      <p data-hf-id="hf-v7i8" class="blocker-eyebrow">NEW · DISTRACTION BLOCKER BETA</p>
+      <h2 data-hf-id="hf-2l5r"><span data-hf-id="hf-oegb">Protect your</span><span data-hf-id="hf-qzhf">focus.</span></h2>
+      <p data-hf-id="hf-x7sl" class="blocker-description">Hide selected apps. Stop connections to distracting websites.</p>
+      <div data-hf-id="hf-a9jw" class="blocker-chips"><span data-hf-id="hf-b82f" class="blocker-chip">Only during focus</span><span data-hf-id="hf-xr9y" class="blocker-chip">Pause to release</span></div>
+      <p data-hf-id="hf-yrqf" class="blocker-note">Website setup needs administrator approval.</p>
+      <p data-hf-id="hf-ueyn" class="blocker-browser">Your browser stays open.</p>
+    </div>
+    <div data-hf-id="hf-sx7r" class="blocker-shot"><img data-hf-id="hf-g8on" src="assets/stint-blocker.png" alt="Actual Stint blocker settings with a synthetic Chat app and youtube.com selected; focus guard on"></div>
+    <div data-hf-id="hf-qaki" class="blocker-divider"></div>
+    <div data-hf-id="hf-qhhq" class="blocker-footer"><span data-hf-id="hf-wp94">ACTUAL APP UI · DEMONSTRATION DATA</span><strong data-hf-id="hf-0tkz">04 / 06</strong></div>
+  </div>
+</div>
+<script>
+const tl=gsap.timeline({paused:true});
+tl.fromTo('#scene-blocker .blocker-inner',{x:44,opacity:0},{x:0,opacity:1,duration:.48,ease:'power3.out'},0);
+tl.fromTo('#scene-blocker h2 span',{x:-30,y:22,opacity:0},{x:0,y:0,opacity:1,duration:.58,stagger:.1,ease:'power3.out'},.10);
+tl.fromTo('#scene-blocker .blocker-description',{y:18,opacity:0},{y:0,opacity:1,duration:.5,ease:'power2.out'},.42);
+tl.fromTo('#scene-blocker .blocker-shot',{y:24,scale:.94,opacity:0},{y:0,scale:1,opacity:1,duration:.85,ease:'power3.out'},.12);
+tl.to('#scene-blocker .blocker-shot',{y:-4,scale:1.012,duration:3.55,ease:'none'},1);
+// Adapt the registry's staggered-fade-up primitive to the existing Stint rhythm.
+tl.fromTo('#scene-blocker .blocker-chip',{y:12,opacity:0,filter:'blur(3px)'},{y:0,opacity:1,filter:'blur(0px)',duration:.45,stagger:.18,ease:'power3.out'},.7);
+tl.fromTo('#scene-blocker .blocker-note, #scene-blocker .blocker-browser',{y:10,opacity:0},{y:0,opacity:1,duration:.5,stagger:.2,ease:'power2.out'},1.15);
+tl.to('#scene-blocker .blocker-inner',{x:-36,opacity:0,duration:.35,ease:'power2.in'},4.65);
+window.__timelines['scene-blocker']=tl;
+</script>
+</template></body></html>
