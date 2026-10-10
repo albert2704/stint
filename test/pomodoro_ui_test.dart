@@ -4,16 +4,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:focus_desk/data/controller.dart';
-import 'package:focus_desk/data/models.dart';
-import 'package:focus_desk/data/store.dart';
-import 'package:focus_desk/main.dart';
-import 'package:focus_desk/music.dart';
-import 'package:focus_desk/ui/theme.dart';
+import 'package:stint/data/controller.dart';
+import 'package:stint/data/models.dart';
+import 'package:stint/data/store.dart';
+import 'package:stint/main.dart';
+import 'package:stint/music.dart';
+import 'package:stint/ui/theme.dart';
 
 Future<void> mount(
   WidgetTester tester,
-  DeskController c, {
+  StintController c, {
   Size size = const Size(480, 758),
   FocusMusic? music,
 }) async {
@@ -24,7 +24,7 @@ Future<void> mount(
   await tester.pumpWidget(
     RepaintBoundary(
       key: const Key('capture'),
-      child: FocusDeskApp(controller: c, music: music),
+      child: StintApp(controller: c, music: music),
     ),
   );
   await tester.pumpAndSettle();
@@ -47,7 +47,7 @@ Future<void> capture(WidgetTester tester, String name) async {
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-  const timerChannel = MethodChannel('focus_desk/timer');
+  const timerChannel = MethodChannel('stint/timer');
   final messenger =
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
   setUp(() {
@@ -83,7 +83,7 @@ void main() {
     tester,
   ) async {
     var now = DateTime(2026, 10, 8, 10);
-    final c = DeskController(
+    final c = StintController(
       MemoryWorkspaceStore(),
       now: () => now,
       tickAutomatically: false,
@@ -121,7 +121,7 @@ void main() {
   testWidgets('changing phase confirms before replacing unfinished time', (
     tester,
   ) async {
-    final c = DeskController(MemoryWorkspaceStore(), tickAutomatically: false);
+    final c = StintController(MemoryWorkspaceStore(), tickAutomatically: false);
     addTearDown(c.dispose);
     await mount(tester, c);
     await tester.tap(find.text('Start focus'));
@@ -147,7 +147,7 @@ void main() {
   testWidgets('duration preferences validate and preserve a running interval', (
     tester,
   ) async {
-    final c = DeskController(MemoryWorkspaceStore(), tickAutomatically: false);
+    final c = StintController(MemoryWorkspaceStore(), tickAutomatically: false);
     addTearDown(c.dispose);
     c.startFocus();
     final deadline = c.timer.endsAt;
@@ -174,7 +174,7 @@ void main() {
   testWidgets('Stint surfaces render in both themes and small windows', (
     tester,
   ) async {
-    final c = DeskController(MemoryWorkspaceStore(), tickAutomatically: false);
+    final c = StintController(MemoryWorkspaceStore(), tickAutomatically: false);
     final music = FocusMusic();
     addTearDown(c.dispose);
     addTearDown(music.dispose);
@@ -201,7 +201,7 @@ void main() {
   testWidgets(
     'minute controls affect current time and reset uses inline confirmation',
     (tester) async {
-      final c = DeskController(
+      final c = StintController(
         MemoryWorkspaceStore(),
         tickAutomatically: false,
       );

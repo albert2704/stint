@@ -1,2 +1,2 @@
-#import "DeskMenuBar.h"
-#import "DeskMusic.h"
+#import "StintMenuBar.h"
+#import "StintMusic.h"

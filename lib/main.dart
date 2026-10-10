@@ -23,7 +23,7 @@ class Bootstrap extends StatefulWidget {
 }
 
 class _BootstrapState extends State<Bootstrap> {
-  DeskController? controller;
+  StintController? controller;
   FileWorkspaceStore? store;
   String? error;
   NativeTimerBridge? timerBridge;
@@ -47,7 +47,7 @@ class _BootstrapState extends State<Bootstrap> {
       if (restore) {
         store!.restorePrevious();
       }
-      final loaded = DeskController(store!);
+      final loaded = StintController(store!);
       final loadedMusic = FocusMusic();
       await loadedMusic.load();
       if (!mounted) {
@@ -98,7 +98,7 @@ class _BootstrapState extends State<Bootstrap> {
   @override
   Widget build(BuildContext context) {
     if (controller != null) {
-      return FocusDeskApp(
+      return StintApp(
         controller: controller!,
         navigatorKey: navigatorKey,
         music: music,
@@ -106,7 +106,7 @@ class _BootstrapState extends State<Bootstrap> {
     }
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      theme: deskTheme(Brightness.light),
+      theme: stintTheme(Brightness.light),
       home: Scaffold(
         body: Center(
           child: SizedBox(
@@ -159,14 +159,14 @@ class _BootstrapState extends State<Bootstrap> {
   }
 }
 
-class FocusDeskApp extends StatelessWidget {
-  const FocusDeskApp({
+class StintApp extends StatelessWidget {
+  const StintApp({
     super.key,
     required this.controller,
     this.navigatorKey,
     this.music,
   });
-  final DeskController controller;
+  final StintController controller;
   final GlobalKey<NavigatorState>? navigatorKey;
   final FocusMusic? music;
   @override
@@ -176,8 +176,8 @@ class FocusDeskApp extends StatelessWidget {
       title: 'Stint',
       navigatorKey: navigatorKey,
       debugShowCheckedModeBanner: false,
-      theme: deskTheme(Brightness.light),
-      darkTheme: deskTheme(Brightness.dark),
+      theme: stintTheme(Brightness.light),
+      darkTheme: stintTheme(Brightness.dark),
       themeMode: switch (controller.workspace.settings.appearance) {
         'dark' => ThemeMode.dark,
         'light' => ThemeMode.light,

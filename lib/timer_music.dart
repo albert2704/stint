@@ -12,7 +12,7 @@ class TimerMusicCoordinator {
     music.addListener(_onMusic);
   }
 
-  final DeskController controller;
+  final StintController controller;
   final FocusMusic music;
   late ({TimerPhase phase, bool running, String? session}) _lastTimer;
   late bool _lastFollow;

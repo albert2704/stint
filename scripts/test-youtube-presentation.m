@@ -1,12 +1,12 @@
 // Exercise production presentation/intent logic with in-memory host and WebKit
 // substitutes. No AppKit windows, web content, network, audio, or preferences.
 #import <Cocoa/Cocoa.h>
-static NSApplication *DeskTestApplication;
-#define NSApp DeskTestApplication
+static NSApplication *StintTestApplication;
+#define NSApp StintTestApplication
 #pragma clang diagnostic push
 // Included .m files are implementation units, not nullability-complete headers.
 #pragma clang diagnostic ignored "-Wnullability-completeness"
-#import "../macos/Runner/DeskYouTubePlayer.m"
+#import "../macos/Runner/StintYouTubePlayer.m"
 #pragma clang diagnostic pop
 #undef NSApp
 
@@ -16,46 +16,46 @@ static void Check(BOOL condition, NSString *message) {
   if (!condition) { fprintf(stderr, "FAIL: %s\n", message.UTF8String); exit(1); }
 }
 
-@interface DeskHostWindowProbe : NSObject
+@interface StintHostWindowProbe : NSObject
 @property(nonatomic, getter=isVisible) BOOL visible;
 @property(nonatomic, getter=isMiniaturized) BOOL miniaturized;
 @property(nonatomic) NSWindowOcclusionState occlusionState;
 @end
-@implementation DeskHostWindowProbe
+@implementation StintHostWindowProbe
 @end
 
-@interface DeskHostViewProbe : NSObject
-@property(nonatomic, strong) DeskHostWindowProbe *window;
+@interface StintHostViewProbe : NSObject
+@property(nonatomic, strong) StintHostWindowProbe *window;
 @property(nonatomic, getter=isHiddenOrHasHiddenAncestor) BOOL hiddenOrHasHiddenAncestor;
 @property(nonatomic) NSRect visibleRect;
 @property(nonatomic, copy) NSString *accessibilityLabel;
 @end
-@implementation DeskHostViewProbe
+@implementation StintHostViewProbe
 @end
 
-@interface DeskStatusProbe : NSObject
+@interface StintStatusProbe : NSObject
 @property(nonatomic, copy) NSString *stringValue;
 @property(nonatomic, copy) NSString *toolTip;
 @end
-@implementation DeskStatusProbe
+@implementation StintStatusProbe
 @end
 
-@interface DeskFrameProbe : NSObject
+@interface StintFrameProbe : NSObject
 - (BOOL)isMainFrame;
 @end
-@implementation DeskFrameProbe
+@implementation StintFrameProbe
 - (BOOL)isMainFrame { return YES; }
 @end
 
-@interface DeskScriptMessageProbe : NSObject
+@interface StintScriptMessageProbe : NSObject
 @property(nonatomic, strong) WKWebView *webView;
-@property(nonatomic, strong) DeskFrameProbe *frameInfo;
+@property(nonatomic, strong) StintFrameProbe *frameInfo;
 @property(nonatomic, copy) NSDictionary *body;
 @end
-@implementation DeskScriptMessageProbe
+@implementation StintScriptMessageProbe
 @end
 
-@interface DeskWebViewProbe : NSObject
+@interface StintWebViewProbe : NSObject
 @property(nonatomic, weak) id navigationDelegate;
 @property(nonatomic, weak) id UIDelegate;
 @property(nonatomic, strong) NSMutableArray<NSDictionary *> *commands;
@@ -76,7 +76,7 @@ static void Check(BOOL condition, NSString *message) {
 - (id)loadHTMLString:(NSString *)html baseURL:(NSURL *)baseURL;
 - (void)removeFromSuperview;
 @end
-@implementation DeskWebViewProbe
+@implementation StintWebViewProbe
 - (instancetype)init {
   self = [super init];
   if (self) { _commands = [NSMutableArray array]; _suspensions = [NSMutableArray array]; }
@@ -118,18 +118,18 @@ static void Check(BOOL condition, NSString *message) {
 
 // Replace only construction of platform views/pages. Show, play, pause,
 // visibility checks, command generation, and stale-intent guards stay real.
-@interface DeskPlayerProbe : DeskYouTubePlayer
+@interface StintPlayerProbe : StintYouTubePlayer
 @property(nonatomic) NSUInteger pageLoads;
 @end
-@implementation DeskPlayerProbe
+@implementation StintPlayerProbe
 - (void)createViewIfNeeded {
   if (self.contentView) return;
-  DeskHostViewProbe *host = [[DeskHostViewProbe alloc] init];
-  host.window = [[DeskHostWindowProbe alloc] init];
+  StintHostViewProbe *host = [[StintHostViewProbe alloc] init];
+  host.window = [[StintHostWindowProbe alloc] init];
   host.window.occlusionState = NSWindowOcclusionStateVisible;
   host.visibleRect = NSMakeRect(0, 0, 308, 238);
   self.contentView = (NSView *)host;
-  self.statusLabel = (NSTextField *)[[DeskStatusProbe alloc] init];
+  self.statusLabel = (NSTextField *)[[StintStatusProbe alloc] init];
 }
 - (void)loadSelectedVideo {
   Check(self.videoId.length == 11, @"A selected video exists before page construction");
@@ -138,25 +138,25 @@ static void Check(BOOL condition, NSString *message) {
   self.pageToken = NSUUID.UUID.UUIDString;
   self.ready = YES;
   self.failed = NO;
-  self.webView = (WKWebView *)[[DeskWebViewProbe alloc] init];
+  self.webView = (WKWebView *)[[StintWebViewProbe alloc] init];
   if (![self isPlaybackVisible]) [self setMediaSuspended:YES webView:self.webView completion:nil];
 }
 @end
 
-// Inject the view/page probe at DeskMusic's single player-construction boundary.
-#define DeskYouTubePlayer DeskPlayerProbe
+// Inject the view/page probe at StintMusic's single player-construction boundary.
+#define StintYouTubePlayer StintPlayerProbe
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wnullability-completeness"
-#import "../macos/Runner/DeskMusic.m"
+#import "../macos/Runner/StintMusic.m"
 #pragma clang diagnostic pop
-#undef DeskYouTubePlayer
+#undef StintYouTubePlayer
 
-static DeskWebViewProbe *Web(DeskPlayerProbe *player) { return (DeskWebViewProbe *)player.webView; }
-static void SetVisible(DeskPlayerProbe *player, BOOL visible) {
-  ((DeskHostViewProbe *)player.contentView).window.visible = visible;
+static StintWebViewProbe *Web(StintPlayerProbe *player) { return (StintWebViewProbe *)player.webView; }
+static void SetVisible(StintPlayerProbe *player, BOOL visible) {
+  ((StintHostViewProbe *)player.contentView).window.visible = visible;
   [player presentationVisibilityChanged:visible];
 }
-static NSUInteger Plays(DeskWebViewProbe *web) {
+static NSUInteger Plays(StintWebViewProbe *web) {
   NSUInteger count = 0;
   for (NSDictionary *command in web.commands) if ([command[@"action"] isEqualToString:@"play"]) count++;
   return count;
@@ -165,7 +165,7 @@ static NSUInteger Plays(DeskWebViewProbe *web) {
 int main(void) {
   @autoreleasepool {
     __block NSUInteger shown = 0;
-    DeskPlayerProbe *player = [[DeskPlayerProbe alloc] initWithStateChanged:^(BOOL playing, BOOL starting, NSString *error) {
+    StintPlayerProbe *player = [[StintPlayerProbe alloc] initWithStateChanged:^(BOOL playing, BOOL starting, NSString *error) {
       (void)playing; (void)starting; (void)error;
     }];
     Check(!player.contentView && !player.webView, @"Construction creates no presentation or web page");
@@ -173,16 +173,16 @@ int main(void) {
     Check(shown == 0 && !player.starting, @"Show without selection stays idle");
     NSView *view = player.view;
     Check(view && player.view == view && player.pageLoads == 0, @"Embedded view is stable and lazy");
-    __weak DeskPlayerProbe *weakPlayer = player;
+    __weak StintPlayerProbe *weakPlayer = player;
     player.showPlayer = ^{ shown++; SetVisible(weakPlayer, YES); };
     [player setVideoId:@"M7lc1UVf-VE" title:@"Focus stream" volume:0.3];
-    DeskWebViewProbe *firstWeb = Web(player);
+    StintWebViewProbe *firstWeb = Web(player);
     Check(player.pageLoads == 1 && !player.playing && !player.starting, @"Selecting creates a paused page");
     Check(firstWeb.suspensions.lastObject.boolValue, @"Hidden selection suspends media");
     Check(firstWeb.suspensionDepth == 1, @"Hidden selection owns one suspension");
-    DeskScriptMessageProbe *ready = [[DeskScriptMessageProbe alloc] init];
+    StintScriptMessageProbe *ready = [[StintScriptMessageProbe alloc] init];
     ready.webView = player.webView;
-    ready.frameInfo = [[DeskFrameProbe alloc] init];
+    ready.frameInfo = [[StintFrameProbe alloc] init];
     ready.body = @{@"token": player.pageToken, @"type": @"ready"};
     [player userContentController:(WKUserContentController *)[[NSObject alloc] init]
         didReceiveScriptMessage:(WKScriptMessage *)ready];
@@ -192,7 +192,7 @@ int main(void) {
     Check(shown == 1 && Plays(firstWeb) == 0 && !player.starting, @"Show requests the host without autoplay");
     Check([[firstWeb.commands lastObject][@"action"] isEqualToString:@"controls"], @"Visible paused controls are usable");
     Check(firstWeb.suspensionDepth == 0, @"Showing fully releases hidden-page suspension");
-    DeskHostViewProbe *host = (DeskHostViewProbe *)view;
+    StintHostViewProbe *host = (StintHostViewProbe *)view;
     host.hiddenOrHasHiddenAncestor = YES;
     Check(![player isPlaybackVisible], @"A hidden embedded view is ineligible for playback");
     host.hiddenOrHasHiddenAncestor = NO;
@@ -254,7 +254,7 @@ int main(void) {
     Check(!player.videoId && !player.webView && player.view == view, @"Stop discards media while retaining the reusable host view");
 
     __block NSString *missingHostError = nil;
-    DeskPlayerProbe *unhosted = [[DeskPlayerProbe alloc] initWithStateChanged:^(BOOL playing, BOOL starting, NSString *error) {
+    StintPlayerProbe *unhosted = [[StintPlayerProbe alloc] initWithStateChanged:^(BOOL playing, BOOL starting, NSString *error) {
       (void)playing; (void)starting;
       missingHostError = error;
     }];
@@ -265,9 +265,9 @@ int main(void) {
         @"Missing host does not leave a pending play intent or timeout");
     [unhosted stop];
 
-    // Bypass DeskMusic's preferences/channel initializer; only production
+    // Bypass StintMusic's preferences/channel initializer; only production
     // preparation, host callbacks, and teardown are exercised.
-    DeskMusic *music = [[DeskMusic alloc] init];
+    StintMusic *music = [[StintMusic alloc] init];
     music.tracks = [NSMutableArray array];
     NSDictionary *track = @{@"id": @"youtube_M7lc1UVf-VE", @"title": @"Focus stream", @"youtubeVideoId": @"M7lc1UVf-VE"};
     music.youTubeTracks = [NSMutableArray arrayWithObject:track];
@@ -275,7 +275,7 @@ int main(void) {
     music.volume = 0.3;
     __block NSView *hostedView = nil;
     __block NSUInteger hostShows = 0;
-    __weak DeskMusic *weakMusic = music;
+    __weak StintMusic *weakMusic = music;
     music.youTubeViewChanged = ^(NSView *changed) { hostedView = changed; };
     music.showYouTubePlayer = ^{ hostShows++; SetVisible(weakMusic.youTubePlayer, YES); };
     [music prepareYouTubeTrack:track];

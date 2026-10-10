@@ -1,8 +1,8 @@
 // Compile the real native implementation; this harness never starts AppKit or audio.
 #import <Cocoa/Cocoa.h>
-static NSApplication *DeskTestApplication;
-#define NSApp DeskTestApplication
-#import "../macos/Runner/DeskMenuBar.m"
+static NSApplication *StintTestApplication;
+#define NSApp StintTestApplication
+#import "../macos/Runner/StintMenuBar.m"
 #undef NSApp
 
 static NSUInteger checks = 0;
@@ -11,16 +11,16 @@ static void Check(BOOL condition, NSString *message) {
   if (!condition) { NSLog(@"FAIL: %@", message); exit(1); }
 }
 static NSDate *At(NSTimeInterval seconds) { return [NSDate dateWithTimeIntervalSince1970:seconds]; }
-static DeskCompletionGate *Started(NSString *phase) {
-  DeskCompletionGate *gate = [[DeskCompletionGate alloc] init];
+static StintCompletionGate *Started(NSString *phase) {
+  StintCompletionGate *gate = [[StintCompletionGate alloc] init];
   Check(![gate observeKey:@"session:200" deadline:At(200) phase:phase routine:@"classic" idle:NO atTime:At(100)], @"Starting is silent");
   return gate;
 }
-static BOOL Transition(DeskCompletionGate *gate, NSString *phase, NSString *routine, NSTimeInterval now) {
+static BOOL Transition(StintCompletionGate *gate, NSString *phase, NSString *routine, NSTimeInterval now) {
   return [gate observeKey:nil deadline:nil phase:phase routine:routine idle:YES atTime:At(now)];
 }
 
-@interface DeskAlertProbe : DeskMenuBar
+@interface StintAlertProbe : StintMenuBar
 @property(nonatomic) NSUInteger chimes;
 @property(nonatomic) NSUInteger openedWindows;
 @property(nonatomic) NSUInteger completionCards;
@@ -28,7 +28,7 @@ static BOOL Transition(DeskCompletionGate *gate, NSString *phase, NSString *rout
 @property(nonatomic) NSUInteger hints;
 @property(nonatomic, strong) UNNotificationContent *presentedContent;
 @end
-@implementation DeskAlertProbe
+@implementation StintAlertProbe
 - (void)playCompletionSound { self.chimes++; }
 - (void)presentMenuBarHint { self.hints++; }
 - (void)presentCompletionContent:(UNNotificationContent *)content preview:(BOOL)preview {
@@ -45,11 +45,11 @@ static BOOL Transition(DeskCompletionGate *gate, NSString *phase, NSString *rout
 @end
 
 // In-memory substitutes keep preferences, Library/Sounds, and audio untouched.
-@interface DeskDefaultsProbe : NSObject
+@interface StintDefaultsProbe : NSObject
 @property(nonatomic, strong) NSMutableDictionary *values;
 @property(nonatomic) NSUInteger writes;
 @end
-@implementation DeskDefaultsProbe
+@implementation StintDefaultsProbe
 - (id)objectForKey:(NSString *)key { return self.values[key]; }
 - (BOOL)boolForKey:(NSString *)key { return [self.values[key] boolValue]; }
 - (void)setBool:(BOOL)value forKey:(NSString *)key { [self setObject:@(value) forKey:key]; }
@@ -60,7 +60,7 @@ static BOOL Transition(DeskCompletionGate *gate, NSString *phase, NSString *rout
 }
 @end
 
-@interface DeskFakeSound : NSObject
+@interface StintFakeSound : NSObject
 @property(nonatomic, weak) id<NSSoundDelegate> delegate;
 @property(nonatomic) NSTimeInterval currentTime;
 @property(nonatomic) NSTimeInterval duration;
@@ -70,22 +70,22 @@ static BOOL Transition(DeskCompletionGate *gate, NSString *phase, NSString *rout
 @property(nonatomic) NSUInteger plays;
 @property(nonatomic) NSUInteger stops;
 @end
-@implementation DeskFakeSound
+@implementation StintFakeSound
 - (BOOL)play { self.plays++; return !self.failPlay; }
 - (BOOL)stop { self.stops++; return YES; }
 @end
 
-@interface DeskSoundProbe : DeskMenuBar
+@interface StintSoundProbe : StintMenuBar
 @property(nonatomic, copy) NSString *lastSoundName;
 @property(nonatomic, copy) NSString *cachedSoundName;
-@property(nonatomic, strong) DeskFakeSound *lastAudio;
+@property(nonatomic, strong) StintFakeSound *lastAudio;
 @property(nonatomic) BOOL failNextPlay;
 @property(nonatomic) NSUInteger errors;
 @end
-@implementation DeskSoundProbe
+@implementation StintSoundProbe
 - (NSSound *)newAlertSoundNamed:(NSString *)name {
   self.lastSoundName = name;
-  self.lastAudio = [[DeskFakeSound alloc] init];
+  self.lastAudio = [[StintFakeSound alloc] init];
   self.lastAudio.duration = 1;
   self.lastAudio.failPlay = self.failNextPlay;
   self.failNextPlay = NO;
@@ -95,7 +95,7 @@ static BOOL Transition(DeskCompletionGate *gate, NSString *phase, NSString *rout
 - (void)reportNotificationError:(NSString *)message { self.errors++; }
 @end
 
-static id Call(DeskMenuBar *probe, NSString *method, id arguments) {
+static id Call(StintMenuBar *probe, NSString *method, id arguments) {
   __block id answer = nil;
   __block NSUInteger replies = 0;
   [probe handleCall:[FlutterMethodCall methodCallWithMethodName:method arguments:arguments] result:^(id result) {
@@ -109,12 +109,12 @@ static void Pump(NSTimeInterval seconds) {
   [NSRunLoop.currentRunLoop runUntilDate:[NSDate dateWithTimeIntervalSinceNow:seconds]];
 }
 
-@interface DeskNotificationProbe : NSObject
+@interface StintNotificationProbe : NSObject
 @property(nonatomic, strong) UNNotificationRequest *lastRequest;
 @property(nonatomic) NSUInteger requests;
 @property(nonatomic, copy) NSSet<UNNotificationCategory *> *categories;
 @end
-@implementation DeskNotificationProbe
+@implementation StintNotificationProbe
 - (void)addNotificationRequest:(UNNotificationRequest *)request withCompletionHandler:(void (^)(NSError *))completion {
   self.lastRequest = request;
   self.requests++;
@@ -125,16 +125,16 @@ static void Pump(NSTimeInterval seconds) {
 - (id)delegate { return nil; }
 @end
 
-@interface DeskDeliveredNotificationProbe : NSObject
+@interface StintDeliveredNotificationProbe : NSObject
 @property(nonatomic, strong) UNNotificationRequest *request;
 @end
-@implementation DeskDeliveredNotificationProbe
+@implementation StintDeliveredNotificationProbe
 @end
 
-static UNNotificationPresentationOptions PresentationOptions(DeskMenuBar *probe, UNNotificationRequest *request) {
-  DeskDeliveredNotificationProbe *notification = [[DeskDeliveredNotificationProbe alloc] init];
+static UNNotificationPresentationOptions PresentationOptions(StintMenuBar *probe, UNNotificationRequest *request) {
+  StintDeliveredNotificationProbe *notification = [[StintDeliveredNotificationProbe alloc] init];
   notification.request = request;
-  DeskNotificationProbe *center = [[DeskNotificationProbe alloc] init];
+  StintNotificationProbe *center = [[StintNotificationProbe alloc] init];
   __block NSUInteger replies = 0;
   __block UNNotificationPresentationOptions options = UNNotificationPresentationOptionNone;
   [probe userNotificationCenter:(UNUserNotificationCenter *)center willPresentNotification:(UNNotification *)notification
@@ -144,19 +144,19 @@ static UNNotificationPresentationOptions PresentationOptions(DeskMenuBar *probe,
   return options;
 }
 
-@interface DeskSchedulingProbe : DeskAlertProbe
+@interface StintSchedulingProbe : StintAlertProbe
 @end
-@implementation DeskSchedulingProbe
+@implementation StintSchedulingProbe
 - (void)checkAuthorizationForGeneration:(NSUInteger)generation { [self scheduleForGeneration:generation]; }
 @end
 
-@interface DeskChannelProbe : NSObject
+@interface StintChannelProbe : NSObject
 @property(nonatomic, copy) NSString *method;
 @property(nonatomic, strong) id arguments;
 @property(nonatomic) NSUInteger calls;
 @property(nonatomic, copy) void (^callObserver)(NSString *method);
 @end
-@implementation DeskChannelProbe
+@implementation StintChannelProbe
 - (void)invokeMethod:(NSString *)method arguments:(id)arguments {
   self.method = method; self.arguments = arguments; self.calls++;
   if (self.callObserver) self.callObserver(method);
@@ -164,60 +164,60 @@ static UNNotificationPresentationOptions PresentationOptions(DeskMenuBar *probe,
 - (void)setMethodCallHandler:(id)handler {}
 @end
 
-@interface DeskApplicationProbe : NSObject
+@interface StintApplicationProbe : NSObject
 @property(nonatomic) NSUInteger activations;
 @property(nonatomic, strong) NSEvent *currentEvent;
 @end
-@implementation DeskApplicationProbe
+@implementation StintApplicationProbe
 - (void)activateIgnoringOtherApps:(BOOL)ignore { self.activations++; }
 @end
 
-@interface DeskWindowProbe : NSObject
+@interface StintWindowProbe : NSObject
 @property(nonatomic, getter=isMiniaturized) BOOL miniaturized;
 @property(nonatomic) NSUInteger keyRequests;
 @property(nonatomic) NSUInteger frontRequests;
 @end
-@implementation DeskWindowProbe
+@implementation StintWindowProbe
 - (void)makeKeyWindow { self.keyRequests++; }
 - (void)deminiaturize:(id)sender { self.miniaturized = NO; }
 - (void)makeKeyAndOrderFront:(id)sender { self.frontRequests++; }
 @end
 
-@interface DeskViewProbe : NSObject
+@interface StintViewProbe : NSObject
 @property(nonatomic, strong) NSWindow *window;
 @property(nonatomic) NSRect bounds;
 @property(nonatomic) NSUInteger removals;
 @end
-@implementation DeskViewProbe
+@implementation StintViewProbe
 - (void)removeFromSuperview { self.removals++; }
 @end
 
-@interface DeskControllerProbe : NSObject
+@interface StintControllerProbe : NSObject
 @property(nonatomic, strong) NSView *view;
 @end
-@implementation DeskControllerProbe
+@implementation StintControllerProbe
 @end
 
-@interface DeskPopoverProbe : NSObject
+@interface StintPopoverProbe : NSObject
 @property(nonatomic, getter=isShown) BOOL shown;
 @property(nonatomic) NSUInteger shows;
 @property(nonatomic) NSUInteger closes;
 @property(nonatomic, strong) NSViewController *contentViewController;
 @end
-@implementation DeskPopoverProbe
+@implementation StintPopoverProbe
 - (void)showRelativeToRect:(NSRect)rect ofView:(NSView *)view preferredEdge:(NSRectEdge)edge {
   self.shown = YES; self.shows++;
 }
 - (void)close { self.shown = NO; self.closes++; }
 @end
 
-@interface DeskPanelProbe : DeskMenuBar
+@interface StintPanelProbe : StintMenuBar
 @end
-@implementation DeskPanelProbe
+@implementation StintPanelProbe
 - (void)render {}
 @end
 
-@interface DeskBannerProbe : NSObject
+@interface StintBannerProbe : NSObject
 @property(nonatomic) BOOL hasContent;
 @property(nonatomic, getter=isHint) BOOL hint;
 @property(nonatomic, getter=isVisible) BOOL visible;
@@ -225,7 +225,7 @@ static UNNotificationPresentationOptions PresentationOptions(DeskMenuBar *probe,
 @property(nonatomic) NSUInteger dismissals;
 @property(nonatomic, copy) void (^dismissedHandler)(void);
 @end
-@implementation DeskBannerProbe
+@implementation StintBannerProbe
 - (void)setTemporarilyHidden:(BOOL)hidden {
   _temporarilyHidden = hidden;
   self.visible = self.hasContent && !hidden;
@@ -236,33 +236,33 @@ static UNNotificationPresentationOptions PresentationOptions(DeskMenuBar *probe,
 }
 @end
 
-@interface DeskButtonProbe : NSObject
+@interface StintButtonProbe : NSObject
 @property(nonatomic, copy) NSString *title;
 @property(nonatomic, copy) NSString *accessibilityLabel;
 @property(nonatomic, copy) NSString *toolTip;
 @end
-@implementation DeskButtonProbe
+@implementation StintButtonProbe
 @end
 
 static void CheckPanelPresentation(void) {
-  DeskApplicationProbe *application = [[DeskApplicationProbe alloc] init];
-  DeskTestApplication = (NSApplication *)application;
-  DeskPanelProbe *panel = [[DeskPanelProbe alloc] init];
-  DeskChannelProbe *channel = [[DeskChannelProbe alloc] init];
-  DeskWindowProbe *mainWindow = [[DeskWindowProbe alloc] init];
-  DeskWindowProbe *popoverWindow = [[DeskWindowProbe alloc] init];
-  DeskViewProbe *view = [[DeskViewProbe alloc] init];
+  StintApplicationProbe *application = [[StintApplicationProbe alloc] init];
+  StintTestApplication = (NSApplication *)application;
+  StintPanelProbe *panel = [[StintPanelProbe alloc] init];
+  StintChannelProbe *channel = [[StintChannelProbe alloc] init];
+  StintWindowProbe *mainWindow = [[StintWindowProbe alloc] init];
+  StintWindowProbe *popoverWindow = [[StintWindowProbe alloc] init];
+  StintViewProbe *view = [[StintViewProbe alloc] init];
   view.window = (NSWindow *)popoverWindow;
-  DeskControllerProbe *controller = [[DeskControllerProbe alloc] init];
+  StintControllerProbe *controller = [[StintControllerProbe alloc] init];
   controller.view = (NSView *)view;
-  DeskPopoverProbe *popover = [[DeskPopoverProbe alloc] init];
+  StintPopoverProbe *popover = [[StintPopoverProbe alloc] init];
   popover.contentViewController = (NSViewController *)controller;
   panel.channel = (FlutterMethodChannel *)channel;
   panel.window = (NSWindow *)mainWindow;
   panel.popover = (NSPopover *)popover;
-  DeskBannerProbe *banner = [[DeskBannerProbe alloc] init];
+  StintBannerProbe *banner = [[StintBannerProbe alloc] init];
   banner.hasContent = YES; banner.visible = YES;
-  panel.completionBanner = (DeskCompletionBanner *)banner;
+  panel.completionBanner = (StintCompletionBanner *)banner;
   [panel statusItemClicked:nil];
   Check(popover.shown && popover.shows == 1, @"Status click opens the timer popover");
   Check([channel.method isEqualToString:@"refresh"] && popoverWindow.keyRequests == 1, @"Opening refreshes the timer and requests popover keyboard focus");
@@ -299,21 +299,21 @@ static void CheckPanelPresentation(void) {
   [panel setYouTubeView:nil];
   Check(!panel.embeddedYouTubeView && view.removals == 1 && !visibility.lastObject.boolValue,
       @"Removing the embedded player detaches its view and reports it hidden");
-  DeskTestApplication = nil;
+  StintTestApplication = nil;
 }
 
 static void CheckShortcutRouting(void) {
-  DeskApplicationProbe *application = [[DeskApplicationProbe alloc] init];
-  DeskTestApplication = (NSApplication *)application;
-  DeskPanelProbe *panel = [[DeskPanelProbe alloc] init];
-  DeskChannelProbe *channel = [[DeskChannelProbe alloc] init];
-  DeskWindowProbe *mainWindow = [[DeskWindowProbe alloc] init];
-  DeskWindowProbe *popoverWindow = [[DeskWindowProbe alloc] init];
-  DeskViewProbe *view = [[DeskViewProbe alloc] init];
+  StintApplicationProbe *application = [[StintApplicationProbe alloc] init];
+  StintTestApplication = (NSApplication *)application;
+  StintPanelProbe *panel = [[StintPanelProbe alloc] init];
+  StintChannelProbe *channel = [[StintChannelProbe alloc] init];
+  StintWindowProbe *mainWindow = [[StintWindowProbe alloc] init];
+  StintWindowProbe *popoverWindow = [[StintWindowProbe alloc] init];
+  StintViewProbe *view = [[StintViewProbe alloc] init];
   view.window = (NSWindow *)popoverWindow;
-  DeskControllerProbe *controller = [[DeskControllerProbe alloc] init];
+  StintControllerProbe *controller = [[StintControllerProbe alloc] init];
   controller.view = (NSView *)view;
-  DeskPopoverProbe *popover = [[DeskPopoverProbe alloc] init];
+  StintPopoverProbe *popover = [[StintPopoverProbe alloc] init];
   popover.contentViewController = (NSViewController *)controller;
   panel.channel = (FlutterMethodChannel *)channel;
   panel.window = (NSWindow *)mainWindow;
@@ -363,7 +363,7 @@ static void CheckShortcutRouting(void) {
   Check(application.activations == 0 && mainWindow.frontRequests == 0,
       @"Reset, Skip and Show panel shortcuts never activate or raise the main window");
   channel.callObserver = nil;
-  DeskTestApplication = nil;
+  StintTestApplication = nil;
 }
 
 static NSDictionary *Snapshot(NSString *phase, NSNumber *deadline) {
@@ -376,38 +376,38 @@ static NSDictionary *Snapshot(NSString *phase, NSNumber *deadline) {
 }
 
 static void CheckNotificationVariants(void) {
-  DeskAlertProbe *probe = [[DeskAlertProbe alloc] init];
-  probe.alertDefaults = (NSUserDefaults *)[[DeskDefaultsProbe alloc] init];
+  StintAlertProbe *probe = [[StintAlertProbe alloc] init];
+  probe.alertDefaults = (NSUserDefaults *)[[StintDefaultsProbe alloc] init];
   probe.focusMinutes = 25; probe.shortBreakMinutes = 5;
   probe.dailyGoal = 8; probe.sessionId = @"completed";
   NSArray<NSDictionary *> *variants = @[
     @{@"phase": @"Focus", @"step": @2, @"count": @3, @"longMinutes": @15,
       @"title": @"Focus complete", @"body": @"Your short break is ready.",
-      @"action": @"Start break", @"secondary": @"Skip break", @"category": @"focus-desk.start-break", @"goalMet": @NO},
+      @"action": @"Start break", @"secondary": @"Skip break", @"category": @"stint.start-break", @"goalMet": @NO},
     @{@"phase": @"Focus", @"step": @6, @"count": @4, @"longMinutes": @15,
       @"title": @"Four stints done", @"body": @"Your long break is ready. Take the full 15 minutes.",
-      @"action": @"Start long break", @"secondary": @"Skip break", @"category": @"focus-desk.start-long-break", @"goalMet": @NO},
+      @"action": @"Start long break", @"secondary": @"Skip break", @"category": @"stint.start-long-break", @"goalMet": @NO},
     @{@"phase": @"Focus", @"step": @6, @"count": @4, @"longMinutes": @30,
       @"title": @"Four stints done", @"body": @"Your long break is ready. Take the full 30 minutes.",
-      @"action": @"Start long break", @"secondary": @"Skip break", @"category": @"focus-desk.start-long-break", @"goalMet": @NO},
+      @"action": @"Start long break", @"secondary": @"Skip break", @"category": @"stint.start-long-break", @"goalMet": @NO},
     @{@"phase": @"Focus", @"step": @2, @"count": @8, @"longMinutes": @15,
       @"title": @"Daily goal met", @"body": @"8 stints today. Your short break is ready.",
-      @"action": @"Start break", @"secondary": @"Skip break", @"category": @"focus-desk.start-break", @"goalMet": @YES},
+      @"action": @"Start break", @"secondary": @"Skip break", @"category": @"stint.start-break", @"goalMet": @YES},
     @{@"phase": @"Focus", @"step": @6, @"count": @8, @"longMinutes": @30,
       @"title": @"Daily goal met", @"body": @"8 stints today. Your long break is ready.",
-      @"action": @"Start long break", @"secondary": @"Skip break", @"category": @"focus-desk.start-long-break", @"goalMet": @YES},
+      @"action": @"Start long break", @"secondary": @"Skip break", @"category": @"stint.start-long-break", @"goalMet": @YES},
     @{@"phase": @"Focus", @"step": @0, @"count": @9, @"longMinutes": @15,
       @"title": @"Focus complete", @"body": @"Your short break is ready.",
-      @"action": @"Start break", @"secondary": @"Skip break", @"category": @"focus-desk.start-break", @"goalMet": @NO},
+      @"action": @"Start break", @"secondary": @"Skip break", @"category": @"stint.start-break", @"goalMet": @NO},
     @{@"phase": @"Focus", @"step": @6, @"count": @12, @"longMinutes": @15,
       @"title": @"Four stints done", @"body": @"Your long break is ready. Take the full 15 minutes.",
-      @"action": @"Start long break", @"secondary": @"Skip break", @"category": @"focus-desk.start-long-break", @"goalMet": @NO},
+      @"action": @"Start long break", @"secondary": @"Skip break", @"category": @"stint.start-long-break", @"goalMet": @NO},
     @{@"phase": @"Short break", @"step": @3, @"count": @8, @"longMinutes": @15,
       @"title": @"Break over", @"body": @"Focus 3 of 4 is ready when you are.",
-      @"action": @"Start focus", @"secondary": @"Not now", @"category": @"focus-desk.start-focus", @"goalMet": @NO},
+      @"action": @"Start focus", @"secondary": @"Not now", @"category": @"stint.start-focus", @"goalMet": @NO},
     @{@"phase": @"Long break", @"step": @7, @"count": @8, @"longMinutes": @15,
       @"title": @"Break over", @"body": @"Focus 1 of 4 is ready when you are.",
-      @"action": @"Start focus", @"secondary": @"Not now", @"category": @"focus-desk.start-focus", @"goalMet": @NO}
+      @"action": @"Start focus", @"secondary": @"Not now", @"category": @"stint.start-focus", @"goalMet": @NO}
   ];
   for (NSDictionary *variant in variants) {
     probe.phase = variant[@"phase"]; probe.cycleStep = [variant[@"step"] integerValue];
@@ -461,9 +461,9 @@ int main(void) {
     CheckPanelPresentation();
     CheckShortcutRouting();
     CheckNotificationVariants();
-    Check([DeskDurationLabel(89) isEqualToString:@"1 minute 29 seconds"], @"Adjusted interval duration preserves non-minute seconds in accessibility copy");
-    Check([DeskDurationLabel(1500) isEqualToString:@"25 minutes"], @"Whole configured durations remain concise");
-    DeskCompletionGate *gate = Started(@"Focus");
+    Check([StintDurationLabel(89) isEqualToString:@"1 minute 29 seconds"], @"Adjusted interval duration preserves non-minute seconds in accessibility copy");
+    Check([StintDurationLabel(1500) isEqualToString:@"25 minutes"], @"Whole configured durations remain concise");
+    StintCompletionGate *gate = Started(@"Focus");
     Check(![gate consumeExpiryAtTime:At(199)], @"No early chime");
     Check([gate consumeExpiryAtTime:At(200)], @"Native expiry chimes");
     Check(![gate consumeExpiryAtTime:At(201)], @"Repeated native expiry is silent");
@@ -494,7 +494,7 @@ int main(void) {
     Check(![gate observeKey:@"session:300" deadline:At(300) phase:@"Focus" routine:@"classic" idle:NO atTime:At(210)], @"Resume is silent");
     Check([gate consumeExpiryAtTime:At(300)], @"Resumed interval chimes at its new deadline");
 
-    gate = [[DeskCompletionGate alloc] init];
+    gate = [[StintCompletionGate alloc] init];
     Check(![gate observeKey:@"old:200" deadline:At(200) phase:@"Focus" routine:@"classic" idle:NO atTime:At(201)], @"Overdue restored state is silent");
     Check(![gate consumeExpiryAtTime:At(201)], @"Overdue restored state does not arm the ticker");
     Check(!Transition(gate, @"Short break", @"classic", 201), @"Restored completion transition is silent");
@@ -505,8 +505,8 @@ int main(void) {
     Check([gate consumeExpiryAtTime:At(500)], @"A live interval that expires during sleep chimes on wake");
 
     // Verify the actual update/render entry points share the same gate.
-    DeskAlertProbe *probe = [[DeskAlertProbe alloc] init];
-    probe.completionGate = [[DeskCompletionGate alloc] init];
+    StintAlertProbe *probe = [[StintAlertProbe alloc] init];
+    probe.completionGate = [[StintCompletionGate alloc] init];
     NSNumber *future = @((NSDate.date.timeIntervalSince1970 + 600) * 1000);
     [probe update:Snapshot(@"Focus", future)];
     probe.completionGate.deadline = NSDate.distantPast;
@@ -527,8 +527,8 @@ int main(void) {
     Check(probe.chimes == 2 && probe.completionCards == 2, @"Overdue startup remains silent and card-free through actual entry points");
 
     for (NSString *action in @[@"pause", @"reset", @"skip", @"jump"]) {
-      DeskAlertProbe *canceled = [[DeskAlertProbe alloc] init];
-      canceled.completionGate = [[DeskCompletionGate alloc] init];
+      StintAlertProbe *canceled = [[StintAlertProbe alloc] init];
+      canceled.completionGate = [[StintCompletionGate alloc] init];
       [canceled update:Snapshot(@"Focus", future)];
       NSMutableDictionary *state = [Snapshot([action isEqualToString:@"skip"] || [action isEqualToString:@"jump"]
           ? @"Short break" : @"Focus", nil) mutableCopy];
@@ -541,9 +541,9 @@ int main(void) {
           [NSString stringWithFormat:@"%@ never presents a completion card or plays a completion chime", action]);
     }
 
-    DeskAlertProbe *card = [[DeskAlertProbe alloc] init];
-    card.completionGate = [[DeskCompletionGate alloc] init];
-    DeskChannelProbe *cardChannel = [[DeskChannelProbe alloc] init];
+    StintAlertProbe *card = [[StintAlertProbe alloc] init];
+    card.completionGate = [[StintCompletionGate alloc] init];
+    StintChannelProbe *cardChannel = [[StintChannelProbe alloc] init];
     card.channel = (FlutterMethodChannel *)cardChannel;
     NSMutableDictionary *fourthFocus = [Snapshot(@"Focus", future) mutableCopy];
     fourthFocus[@"cycleStep"] = @6;
@@ -640,8 +640,8 @@ int main(void) {
         && [card.completionCardContext[@"cycleStep"] isEqual:@0] && card.completionCards == 2,
         @"A new completion replaces the previous card's context with its own next interval");
 
-    DeskAlertProbe *preview = [[DeskAlertProbe alloc] init];
-    preview.completionGate = [[DeskCompletionGate alloc] init];
+    StintAlertProbe *preview = [[StintAlertProbe alloc] init];
+    preview.completionGate = [[StintCompletionGate alloc] init];
     [preview update:Snapshot(@"Focus", future)];
     NSString *previewTimerKey = preview.notificationKey;
     [preview previewNotification:nil];
@@ -667,11 +667,11 @@ int main(void) {
     Check(PresentationOptions(probe, quit) == (UNNotificationPresentationOptionBanner | UNNotificationPresentationOptionList | UNNotificationPresentationOptionSound),
         @"Foreground notification during Quit permits the system banner and sound");
     probe.terminating = NO;
-    UNNotificationRequest *otherNotification = [UNNotificationRequest requestWithIdentifier:@"focus-desk.menu-bar-hint" content:live.content trigger:nil];
+    UNNotificationRequest *otherNotification = [UNNotificationRequest requestWithIdentifier:@"stint.menu-bar-hint" content:live.content trigger:nil];
     Check(PresentationOptions(probe, otherNotification) == (UNNotificationPresentationOptionBanner | UNNotificationPresentationOptionList | UNNotificationPresentationOptionSound),
         @"Non-timer notifications retain their normal foreground presentation");
 
-    DeskNotificationProbe *center = [[DeskNotificationProbe alloc] init];
+    StintNotificationProbe *center = [[StintNotificationProbe alloc] init];
     probe.notifications = (UNUserNotificationCenter *)center;
     probe.authorizationKnown = YES;
     probe.authorizationStatus = UNAuthorizationStatusAuthorized;
@@ -693,13 +693,13 @@ int main(void) {
     [probe prepareNotificationForTermination:nil];
     Check(center.lastRequest == nil, @"Quit while idle does not create an alert");
 
-    DeskChannelProbe *channel = [[DeskChannelProbe alloc] init];
-    DeskAlertProbe *stint = [[DeskAlertProbe alloc] init];
+    StintChannelProbe *channel = [[StintChannelProbe alloc] init];
+    StintAlertProbe *stint = [[StintAlertProbe alloc] init];
     stint.channel = (FlutterMethodChannel *)channel;
     stint.notifications = (UNUserNotificationCenter *)center;
-    stint.completionGate = [[DeskCompletionGate alloc] init];
-    stint.alertDefaults = (NSUserDefaults *)[[DeskDefaultsProbe alloc] init];
-    DeskButtonProbe *progressButton = [[DeskButtonProbe alloc] init];
+    stint.completionGate = [[StintCompletionGate alloc] init];
+    stint.alertDefaults = (NSUserDefaults *)[[StintDefaultsProbe alloc] init];
+    StintButtonProbe *progressButton = [[StintButtonProbe alloc] init];
     stint.progressButton = (NSButton *)progressButton;
     NSMutableDictionary *progressState = [Snapshot(@"Focus", nil) mutableCopy];
     progressState[@"todayCount"] = @3; progressState[@"dailyGoal"] = @8; progressState[@"completionCount"] = @3;
@@ -727,13 +727,13 @@ int main(void) {
     [stint openProgress:nil]; Check([channel.method isEqualToString:@"progress"] && stint.openedWindows == 2, @"Panel Progress opens the window and routes to Progress");
     NSDictionary *context = @{@"sessionId": @"finished-session", @"cycleStep": @3};
     stint.ready = NO;
-    [stint handleNotificationAction:@"focus-desk.start-next" userInfo:context];
+    [stint handleNotificationAction:@"stint.start-next" userInfo:context];
     Check([stint.pendingNotificationAction isEqual:context], @"Cold notification action waits for Dart readiness");
     [stint update:Snapshot(@"Short break", nil)];
     Check([channel.method isEqualToString:@"startNext"] && [channel.arguments isEqual:context] && !stint.pendingNotificationAction, @"First snapshot forwards the exact completion context once");
     NSUInteger calls = channel.calls;
-    [stint handleNotificationAction:@"focus-desk.start-next" userInfo:@{@"sessionId": @"", @"cycleStep": @3}];
-    [stint handleNotificationAction:@"focus-desk.start-next" userInfo:@{@"sessionId": @"old", @"cycleStep": @8}];
+    [stint handleNotificationAction:@"stint.start-next" userInfo:@{@"sessionId": @"", @"cycleStep": @3}];
+    [stint handleNotificationAction:@"stint.start-next" userInfo:@{@"sessionId": @"old", @"cycleStep": @8}];
     Check(channel.calls == calls, @"Malformed notification context is not forwarded");
     [stint registerNotificationActions];
     NSMutableSet *actionTitles = [NSMutableSet set];
@@ -743,11 +743,11 @@ int main(void) {
       Check(category.actions.count == 1, @"Each completion category has one primary system action");
       for (UNNotificationAction *action in category.actions) {
         [actionTitles addObject:action.title];
-        Check([action.identifier isEqualToString:@"focus-desk.start-next"], @"All system completion actions retain the validated start-next identifier");
+        Check([action.identifier isEqualToString:@"stint.start-next"], @"All system completion actions retain the validated start-next identifier");
       }
     }
     Check([actionTitles isEqualToSet:[NSSet setWithArray:@[@"Start focus", @"Start break", @"Start long break"]]], @"Notification categories offer the correct next-interval actions");
-    Check([categoryIdentifiers isEqualToSet:[NSSet setWithArray:@[@"focus-desk.start-focus", @"focus-desk.start-break", @"focus-desk.start-long-break"]]],
+    Check([categoryIdentifiers isEqualToSet:[NSSet setWithArray:@[@"stint.start-focus", @"stint.start-break", @"stint.start-long-break"]]],
         @"Long breaks have a distinct system notification category");
     stint.phase = @"Focus"; stint.cycleStep = 6; stint.sessionId = @"focus-four";
     UNNotificationRequest *longBreak = [stint notificationForKey:@"copy" deadline:[NSDate dateWithTimeIntervalSinceNow:60] audible:NO];
@@ -756,7 +756,7 @@ int main(void) {
     stint.phase = @"Long break"; stint.cycleStep = 7;
     UNNotificationRequest *newCycle = [stint notificationForKey:@"copy" deadline:[NSDate dateWithTimeIntervalSinceNow:60] audible:NO];
     Check([newCycle.content.title isEqualToString:@"Break over"] && [newCycle.content.body isEqualToString:@"Focus 1 of 4 is ready when you are."], @"Long-break completion offers a new cycle");
-    [(DeskDefaultsProbe *)stint.alertDefaults setObject:@"Ping" forKey:DeskAlertSoundPreference];
+    [(StintDefaultsProbe *)stint.alertDefaults setObject:@"Ping" forKey:StintAlertSoundPreference];
     stint.todayCount = 2; stint.dailyGoal = 8; stint.completionCount = @3;
     stint.phase = @"Focus";
     NSDate *today = [NSCalendar.currentCalendar startOfDayForDate:NSDate.date];
@@ -782,9 +782,9 @@ int main(void) {
     Check([progressAlert.content.subtitle isEqualToString:@"0 of 8 today · Ping played twice"], @"Older snapshots do not count a break crossing midnight");
     NSUInteger requests = center.requests;
     [stint windowWillClose]; [stint windowWillClose];
-    Check(stint.hints == 1 && [(DeskDefaultsProbe *)stint.alertDefaults boolForKey:@"menuBarHintShown"], @"First-close hint presents once and persists its existing flag");
+    Check(stint.hints == 1 && [(StintDefaultsProbe *)stint.alertDefaults boolForKey:@"StintMenuBarHintShown"], @"First-close hint presents once and persists its Stint flag");
     Check(center.requests == requests && stint.chimes == 0, @"First-close hint never posts a system notification or plays sound");
-    DeskAlertProbe *restoredHint = [[DeskAlertProbe alloc] init];
+    StintAlertProbe *restoredHint = [[StintAlertProbe alloc] init];
     restoredHint.alertDefaults = stint.alertDefaults;
     [restoredHint windowWillClose];
     Check(restoredHint.hints == 0, @"Once-only hint stays suppressed after creating a new native owner");
@@ -804,11 +804,11 @@ int main(void) {
     [stint update:jump];
     Check(stint.chimes == 1 && stint.cycleStep == 1 && [stint.pendingAction[@"kind"] isEqualToString:@"reset"], @"Completion proof, cycle position, and shared confirmation arrive in one snapshot");
 
-    DeskNotificationProbe *progressCenter = [[DeskNotificationProbe alloc] init];
-    DeskSchedulingProbe *scheduled = [[DeskSchedulingProbe alloc] init];
+    StintNotificationProbe *progressCenter = [[StintNotificationProbe alloc] init];
+    StintSchedulingProbe *scheduled = [[StintSchedulingProbe alloc] init];
     scheduled.notifications = (UNUserNotificationCenter *)progressCenter;
-    scheduled.alertDefaults = (NSUserDefaults *)[[DeskDefaultsProbe alloc] init];
-    scheduled.completionGate = [[DeskCompletionGate alloc] init];
+    scheduled.alertDefaults = (NSUserDefaults *)[[StintDefaultsProbe alloc] init];
+    scheduled.completionGate = [[StintCompletionGate alloc] init];
     NSMutableDictionary *scheduledState = [Snapshot(@"Focus", future) mutableCopy];
     scheduledState[@"todayCount"] = @2; scheduledState[@"dailyGoal"] = @8; scheduledState[@"completionCount"] = @3;
     [scheduled update:scheduledState];
@@ -829,11 +829,11 @@ int main(void) {
     Check([scheduled.liveCompletionRequest.content.subtitle isEqualToString:@"4 of 10 today · Pop played twice"],
         @"Changing the selected alert sound updates the completion card's cached detail");
 
-    DeskNotificationProbe *rhythmCenter = [[DeskNotificationProbe alloc] init];
-    DeskSchedulingProbe *rhythmSchedule = [[DeskSchedulingProbe alloc] init];
+    StintNotificationProbe *rhythmCenter = [[StintNotificationProbe alloc] init];
+    StintSchedulingProbe *rhythmSchedule = [[StintSchedulingProbe alloc] init];
     rhythmSchedule.notifications = (UNUserNotificationCenter *)rhythmCenter;
-    rhythmSchedule.alertDefaults = (NSUserDefaults *)[[DeskDefaultsProbe alloc] init];
-    rhythmSchedule.completionGate = [[DeskCompletionGate alloc] init];
+    rhythmSchedule.alertDefaults = (NSUserDefaults *)[[StintDefaultsProbe alloc] init];
+    rhythmSchedule.completionGate = [[StintCompletionGate alloc] init];
     NSMutableDictionary *rhythmState = [fourthFocus mutableCopy];
     [rhythmSchedule update:rhythmState];
     NSString *rhythmIdentifier = rhythmCenter.lastRequest.identifier;
@@ -854,14 +854,14 @@ int main(void) {
         && [rhythmSchedule.liveCompletionRequest.content.title isEqualToString:@"Daily goal met"],
         @"Changing the goal refreshes the scheduled and live goal-met variant at exactly the projected count");
 
-    DeskDefaultsProbe *defaults = [[DeskDefaultsProbe alloc] init];
-    DeskSoundProbe *sounds = [[DeskSoundProbe alloc] init];
+    StintDefaultsProbe *defaults = [[StintDefaultsProbe alloc] init];
+    StintSoundProbe *sounds = [[StintSoundProbe alloc] init];
     sounds.alertDefaults = (NSUserDefaults *)defaults;
     NSDictionary *settings = Call(sounds, @"getAlertSoundSettings", nil);
     Check([settings[@"selectedSound"] isEqualToString:@"Glass"], @"Glass is the default alert sound");
     Check([settings[@"sounds"] isEqualToArray:@[@"Glass", @"Ping", @"Pop", @"Funk", @"Submarine", @"Basso"]], @"Settings expose only the six supported sounds");
     settings = Call(sounds, @"setAlertSound", @"Ping");
-    Check([settings[@"selectedSound"] isEqualToString:@"Ping"] && [defaults.values[DeskAlertSoundPreference] isEqualToString:@"Ping"], @"Selection is persisted under the native preference key");
+    Check([settings[@"selectedSound"] isEqualToString:@"Ping"] && [defaults.values[StintAlertSoundPreference] isEqualToString:@"Ping"], @"Selection is persisted under the native preference key");
     Check(sounds.lastAudio == nil, @"Saving the choice does not preview it");
     Check([Call(sounds, @"previewAlertSound", @"Pop")[@"durationMilliseconds"] integerValue] == 2250, @"Preview reports the two-play duration including the gap");
     Check([sounds.lastSoundName isEqualToString:@"Pop"] && defaults.writes == 1, @"Preview plays the requested sound without saving it");
@@ -877,16 +877,16 @@ int main(void) {
       }
     }
     Check(defaults.writes == 1 && [sounds.lastSoundName isEqualToString:@"Ping"], @"Invalid calls neither persist nor play");
-    DeskSoundProbe *restored = [[DeskSoundProbe alloc] init];
+    StintSoundProbe *restored = [[StintSoundProbe alloc] init];
     restored.alertDefaults = (NSUserDefaults *)defaults;
     Check([[restored alertSoundSettings][@"selectedSound"] isEqualToString:@"Ping"], @"New native instance restores the saved choice");
-    [defaults setObject:@"obsolete" forKey:DeskAlertSoundPreference];
+    [defaults setObject:@"obsolete" forKey:StintAlertSoundPreference];
     Check([[restored alertSoundSettings][@"selectedSound"] isEqualToString:@"Glass"], @"Unknown stored choice falls back to Glass");
-    [defaults setObject:@[] forKey:DeskAlertSoundPreference];
+    [defaults setObject:@[] forKey:StintAlertSoundPreference];
     Check([[restored alertSoundSettings][@"selectedSound"] isEqualToString:@"Glass"], @"Corrupt preference type falls back safely");
 
     Call(sounds, @"previewAlertSound", @"Basso");
-    DeskFakeSound *first = sounds.lastAudio;
+    StintFakeSound *first = sounds.lastAudio;
     Check(first.plays == 1, @"Alert starts its first play immediately");
     [sounds sound:(NSSound *)first didFinishPlaying:YES];
     Pump(0.1);
@@ -898,11 +898,11 @@ int main(void) {
     Check(first.plays == 2, @"Second finish does not loop");
 
     Call(sounds, @"previewAlertSound", @"Funk");
-    DeskFakeSound *replaced = sounds.lastAudio;
+    StintFakeSound *replaced = sounds.lastAudio;
     [sounds sound:(NSSound *)replaced didFinishPlaying:YES];
     Pump(0.05);
     Call(sounds, @"previewAlertSound", @"Submarine");
-    DeskFakeSound *replacement = sounds.lastAudio;
+    StintFakeSound *replacement = sounds.lastAudio;
     Pump(0.3);
     Check(replaced.plays == 1 && replacement.plays == 1, @"New preview cancels the old scheduled repeat");
     [sounds sound:(NSSound *)replaced didFinishPlaying:YES];
@@ -916,10 +916,10 @@ int main(void) {
     Pump(0.3);
     Check(sounds.lastAudio.plays == 1 && sounds.errors == 2, @"Initial play failure does not retry");
 
-    DeskFakeSound *disposedAudio;
-    __weak DeskSoundProbe *weakDisposed;
+    StintFakeSound *disposedAudio;
+    __weak StintSoundProbe *weakDisposed;
     @autoreleasepool {
-      DeskSoundProbe *disposed = [[DeskSoundProbe alloc] init];
+      StintSoundProbe *disposed = [[StintSoundProbe alloc] init];
       weakDisposed = disposed;
       [disposed playAlertSound:@"Pop"];
       disposedAudio = disposed.lastAudio;
@@ -928,7 +928,7 @@ int main(void) {
     }
     Pump(0.3);
     Check(weakDisposed == nil && disposedAudio.plays == 1, @"Disposing the native owner cancels the scheduled repeat");
-    sounds.cachedSoundName = @"focus-desk-alert-Ping-v1.wav";
+    sounds.cachedSoundName = @"stint-alert-Ping-v1.wav";
     UNNotificationRequest *pairedQuit = [sounds notificationForKey:@"sound-choice" deadline:[NSDate dateWithTimeIntervalSinceNow:60] audible:YES];
     Check(pairedQuit.content.sound != nil, @"Quit notification accepts the cached repeated sound");
     printf("Passed %lu completion alert checks.\n", (unsigned long)checks);

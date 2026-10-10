@@ -118,7 +118,7 @@ class ShortcutSettings {
 
 /// Shares the timer channel without replacing its event handler.
 class StintKeymap {
-  const StintKeymap({this.channel = const MethodChannel('focus_desk/timer')});
+  const StintKeymap({this.channel = const MethodChannel('stint/timer')});
 
   final MethodChannel channel;
 

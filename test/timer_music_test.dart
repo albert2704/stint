@@ -1,19 +1,19 @@
 import 'dart:async';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:focus_desk/data/controller.dart';
-import 'package:focus_desk/data/models.dart';
-import 'package:focus_desk/data/store.dart';
-import 'package:focus_desk/music.dart';
-import 'package:focus_desk/timer_music.dart';
+import 'package:stint/data/controller.dart';
+import 'package:stint/data/models.dart';
+import 'package:stint/data/store.dart';
+import 'package:stint/music.dart';
+import 'package:stint/timer_music.dart';
 import 'music_test.dart' show FakeMusicAssets, FakeMusicHost;
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-  const channel = MethodChannel('focus_desk/linked-music-test');
+  const channel = MethodChannel('stint/linked-music-test');
   final messenger =
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
-  late DeskController controller;
+  late StintController controller;
   late FocusMusic music;
   late FakeMusicHost host;
   late FakeMusicAssets assets;
@@ -36,7 +36,7 @@ void main() {
 
   setUp(() {
     now = DateTime(2026, 10, 8, 10);
-    controller = DeskController(
+    controller = StintController(
       MemoryWorkspaceStore(),
       now: () => now,
       tickAutomatically: false,

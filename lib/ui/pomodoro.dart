@@ -11,7 +11,7 @@ import 'theme.dart';
 
 class PomodoroScreen extends StatelessWidget {
   const PomodoroScreen({super.key, required this.controller, this.music});
-  final DeskController controller;
+  final StintController controller;
   final FocusMusic? music;
 
   String status(BuildContext context) {
@@ -400,7 +400,7 @@ class PomodoroScreen extends StatelessWidget {
 
 class TimerConfirmBar extends StatelessWidget {
   const TimerConfirmBar({super.key, required this.controller});
-  final DeskController controller;
+  final StintController controller;
   @override
   Widget build(BuildContext context) {
     final pending = controller.pendingAction!;
@@ -464,7 +464,7 @@ class TimerConfirmBar extends StatelessWidget {
 
 class CycleTrack extends StatelessWidget {
   const CycleTrack({super.key, required this.controller});
-  final DeskController controller;
+  final StintController controller;
   @override
   Widget build(BuildContext context) {
     final colors = StintColors.of(context);

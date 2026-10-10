@@ -10,5 +10,5 @@ xcrun clang -Wall -Wextra -Werror -arch "$(uname -m)" -fobjc-arc -fmodules \
   -fmodules-cache-path=build/native-module-cache -mmacosx-version-min=12.0 \
   -isysroot "$(xcrun --sdk macosx --show-sdk-path)" \
   -F"$FRAMEWORK_DIR" -framework Cocoa -framework Carbon -framework QuartzCore -framework CoreText -framework FlutterMacOS -framework UserNotifications -framework AVFoundation \
-  -Wl,-rpath,"$FRAMEWORK_DIR" scripts/test-completion-alert.m macos/Runner/DeskAlertSound.m macos/Runner/DeskCompletionBanner.m macos/Runner/DeskKeymap.m -o build/native-tests/completion-alert
+  -Wl,-rpath,"$FRAMEWORK_DIR" scripts/test-completion-alert.m macos/Runner/StintAlertSound.m macos/Runner/StintCompletionBanner.m macos/Runner/StintKeymap.m -o build/native-tests/completion-alert
 build/native-tests/completion-alert

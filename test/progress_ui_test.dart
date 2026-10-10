@@ -4,11 +4,11 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:focus_desk/data/controller.dart';
-import 'package:focus_desk/data/models.dart';
-import 'package:focus_desk/data/store.dart';
-import 'package:focus_desk/ui/progress.dart';
-import 'package:focus_desk/ui/theme.dart';
+import 'package:stint/data/controller.dart';
+import 'package:stint/data/models.dart';
+import 'package:stint/data/store.dart';
+import 'package:stint/ui/progress.dart';
+import 'package:stint/ui/theme.dart';
 
 final _friday = DateTime(2026, 10, 9, 12);
 
@@ -22,7 +22,7 @@ FocusSession _stint(int day, int hour) => FocusSession(
 
 Future<void> _mount(
   WidgetTester tester,
-  DeskController controller, {
+  StintController controller, {
   bool localized = false,
   bool duplicateOpen = false,
 }) async {
@@ -32,7 +32,7 @@ Future<void> _mount(
   addTearDown(tester.view.resetPhysicalSize);
   await tester.pumpWidget(
     MaterialApp(
-      theme: deskTheme(Brightness.light),
+      theme: stintTheme(Brightness.light),
       localizationsDelegates: [
         if (localized) const _MondayLocalizationsDelegate(),
       ],
@@ -102,7 +102,7 @@ void main() {
   testWidgets('locale controls week start, dates and weekday labels', (
     tester,
   ) async {
-    final controller = DeskController(
+    final controller = StintController(
       MemoryWorkspaceStore(),
       now: () => _friday,
       tickAutomatically: false,
@@ -127,7 +127,7 @@ void main() {
   testWidgets('all chart days are keyboard buttons, including upcoming days', (
     tester,
   ) async {
-    final controller = DeskController(
+    final controller = StintController(
       MemoryWorkspaceStore(),
       now: () => _friday,
       tickAutomatically: false,
@@ -178,7 +178,7 @@ void main() {
     tester,
   ) async {
     final store = _FailingStore();
-    final controller = DeskController(
+    final controller = StintController(
       store,
       now: () => _friday,
       tickAutomatically: false,
@@ -200,7 +200,7 @@ void main() {
   });
 
   testWidgets('repeated open requests produce one modal route', (tester) async {
-    final controller = DeskController(
+    final controller = StintController(
       MemoryWorkspaceStore(),
       now: () => _friday,
       tickAutomatically: false,
@@ -217,7 +217,7 @@ void main() {
   testWidgets('above-goal counts fit compact layout and pips are decorative', (
     tester,
   ) async {
-    final controller = DeskController(
+    final controller = StintController(
       MemoryWorkspaceStore(),
       now: () => _friday,
       tickAutomatically: false,

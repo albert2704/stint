@@ -1,20 +1,20 @@
-#import "DeskKeymap.h"
+#import "StintKeymap.h"
 #import <Carbon/Carbon.h>
 #import <math.h>
 
-static NSString *const DeskKeymapPreference = @"StintKeyboardShortcuts";
-static const OSType DeskKeymapSignature = 'STNT';
+static NSString *const StintKeymapPreference = @"StintKeyboardShortcuts";
+static const OSType StintKeymapSignature = 'STNT';
 
-static NSArray<NSString *> *DeskShortcutActions(void) {
+static NSArray<NSString *> *StintShortcutActions(void) {
   return @[@"toggle", @"reset", @"skip", @"panel"];
 }
 
-static NSString *DeskShortcutActionName(NSString *action) {
+static NSString *StintShortcutActionName(NSString *action) {
   return @{@"toggle": @"Start/Pause", @"reset": @"Reset", @"skip": @"Skip",
            @"panel": @"Show timer panel"}[action] ?: action;
 }
 
-static NSDictionary<NSNumber *, NSString *> *DeskShortcutKeys(void) {
+static NSDictionary<NSNumber *, NSString *> *StintShortcutKeys(void) {
   static NSDictionary *keys;
   static dispatch_once_t once;
   dispatch_once(&once, ^{
@@ -32,25 +32,25 @@ static NSDictionary<NSNumber *, NSString *> *DeskShortcutKeys(void) {
   return keys;
 }
 
-static BOOL DeskShortcutInteger(id value) {
+static BOOL StintShortcutInteger(id value) {
   return [value isKindOfClass:NSNumber.class] &&
       CFGetTypeID((__bridge CFTypeRef)value) != CFBooleanGetTypeID() &&
       isfinite([value doubleValue]) && [value doubleValue] == [value integerValue];
 }
 
-static NSUInteger DeskShortcutModifiers(NSEventModifierFlags flags) {
+static NSUInteger StintShortcutModifiers(NSEventModifierFlags flags) {
   return ((flags & NSEventModifierFlagControl) ? 1 : 0) |
       ((flags & NSEventModifierFlagOption) ? 2 : 0) |
       ((flags & NSEventModifierFlagShift) ? 4 : 0) |
       ((flags & NSEventModifierFlagCommand) ? 8 : 0);
 }
 
-static UInt32 DeskShortcutCarbonModifiers(NSUInteger bits) {
+static UInt32 StintShortcutCarbonModifiers(NSUInteger bits) {
   return ((bits & 1) ? controlKey : 0) | ((bits & 2) ? optionKey : 0) |
       ((bits & 4) ? shiftKey : 0) | ((bits & 8) ? cmdKey : 0);
 }
 
-static BOOL DeskShortcutReserved(NSInteger key, NSUInteger modifiers) {
+static BOOL StintShortcutReserved(NSInteger key, NSUInteger modifiers) {
   // Keep standard editing/menu commands, app hiding/quit, input switching,
   // screenshots, screen locking, and Mission Control available to macOS/apps.
   if ((modifiers & 8) && (key == 12 || key == 4 || key == 46 || key == 43 || key == 49)) return YES;
@@ -60,7 +60,7 @@ static BOOL DeskShortcutReserved(NSInteger key, NSUInteger modifiers) {
   if (modifiers == 1 && [@[@120, @99, @118, @96, @97, @98, @100] containsObject:@(key)]) return YES;
   if ((modifiers == 12 || modifiers == 14) && [@[@20, @21, @23, @22] containsObject:@(key)]) return YES;
   if (modifiers == 8 || modifiers == 12 || modifiers == 10 || modifiers == 14) {
-    NSString *name = DeskShortcutKeys()[@(key)];
+    NSString *name = StintShortcutKeys()[@(key)];
     NSSet *menuKeys = [NSSet setWithArray:@[@"A", @"B", @"C", @"D", @"E", @"F", @"G", @"I",
         @"K", @"L", @"N", @"O", @"P", @"R", @"S", @"T", @"U", @"V", @"W", @"X", @"Y", @"Z"]];
     if ([menuKeys containsObject:name]) return YES;
@@ -69,9 +69,9 @@ static BOOL DeskShortcutReserved(NSInteger key, NSUInteger modifiers) {
   return NO;
 }
 
-static NSDictionary *DeskShortcutBinding(id value, NSString **error) {
-  if (![value isKindOfClass:NSDictionary.class] || !DeskShortcutInteger(value[@"keyCode"]) ||
-      !DeskShortcutInteger(value[@"modifiers"])) {
+static NSDictionary *StintShortcutBinding(id value, NSString **error) {
+  if (![value isKindOfClass:NSDictionary.class] || !StintShortcutInteger(value[@"keyCode"]) ||
+      !StintShortcutInteger(value[@"modifiers"])) {
     if (error) *error = @"A shortcut must contain a supported key and valid modifiers.";
     return nil;
   }
@@ -81,11 +81,11 @@ static NSDictionary *DeskShortcutBinding(id value, NSString **error) {
     if (error) *error = @"Include Control or Command in each shortcut.";
     return nil;
   }
-  if (DeskShortcutReserved(key, bits)) {
+  if (StintShortcutReserved(key, bits)) {
     if (error) *error = @"That shortcut is reserved for macOS or standard app commands. Choose another combination.";
     return nil;
   }
-  NSString *name = DeskShortcutKeys()[@(key)];
+  NSString *name = StintShortcutKeys()[@(key)];
   if (!name) {
     if (error) *error = @"Use a letter, digit, arrow, Space, or F1 through F12.";
     return nil;
@@ -99,7 +99,7 @@ static NSDictionary *DeskShortcutBinding(id value, NSString **error) {
   return @{@"keyCode": @(key), @"modifiers": @(bits), @"label": label};
 }
 
-static NSDictionary *DeskShortcutConfiguration(id value, NSString **error) {
+static NSDictionary *StintShortcutConfiguration(id value, NSString **error) {
   if (![value isKindOfClass:NSDictionary.class] ||
       ![value[@"global"] isKindOfClass:NSNumber.class] ||
       CFGetTypeID((__bridge CFTypeRef)value[@"global"]) != CFBooleanGetTypeID() ||
@@ -108,25 +108,25 @@ static NSDictionary *DeskShortcutConfiguration(id value, NSString **error) {
     return nil;
   }
   NSDictionary *source = value[@"bindings"];
-  if (![[NSSet setWithArray:source.allKeys] isEqualToSet:[NSSet setWithArray:DeskShortcutActions()]]) {
+  if (![[NSSet setWithArray:source.allKeys] isEqualToSet:[NSSet setWithArray:StintShortcutActions()]]) {
     if (error) *error = @"Shortcut settings must include exactly Start/Pause, Reset, Skip, and Show timer panel.";
     return nil;
   }
   NSMutableDictionary *bindings = [NSMutableDictionary dictionary];
   NSMutableDictionary *owners = [NSMutableDictionary dictionary];
-  for (NSString *action in DeskShortcutActions()) {
+  for (NSString *action in StintShortcutActions()) {
     id binding = source[action];
     if (binding == NSNull.null) {
       bindings[action] = NSNull.null;
       continue;
     }
-    NSDictionary *canonical = DeskShortcutBinding(binding, error);
+    NSDictionary *canonical = StintShortcutBinding(binding, error);
     if (!canonical) return nil;
     NSString *identity = [NSString stringWithFormat:@"%@:%@", canonical[@"keyCode"], canonical[@"modifiers"]];
     NSString *owner = owners[identity];
     if (owner) {
       if (error) *error = [NSString stringWithFormat:@"%@ and %@ use the same shortcut. Choose a different combination.",
-                          DeskShortcutActionName(owner), DeskShortcutActionName(action)];
+                          StintShortcutActionName(owner), StintShortcutActionName(action)];
       return nil;
     }
     owners[identity] = action;
@@ -135,17 +135,17 @@ static NSDictionary *DeskShortcutConfiguration(id value, NSString **error) {
   return @{@"global": @([value[@"global"] boolValue]), @"bindings": bindings};
 }
 
-static NSDictionary *DeskShortcutDefaults(void) {
+static NSDictionary *StintShortcutDefaults(void) {
   NSMutableDictionary *bindings = [NSMutableDictionary dictionary];
   NSArray *keys = @[@35, @15, @45, @1];
-  [DeskShortcutActions() enumerateObjectsUsingBlock:^(NSString *action, NSUInteger index, BOOL *stop) {
+  [StintShortcutActions() enumerateObjectsUsingBlock:^(NSString *action, NSUInteger index, BOOL *stop) {
     (void)stop;
-    bindings[action] = DeskShortcutBinding(@{@"keyCode": keys[index], @"modifiers": @11}, NULL);
+    bindings[action] = StintShortcutBinding(@{@"keyCode": keys[index], @"modifiers": @11}, NULL);
   }];
   return @{@"global": @YES, @"bindings": bindings};
 }
 
-@interface DeskKeymap ()
+@interface StintKeymap ()
 @property(nonatomic, strong) NSUserDefaults *defaults;
 @property(nonatomic, copy) void (^action)(NSString *);
 @property(nonatomic, copy) NSDictionary *configuration;
@@ -165,18 +165,18 @@ static NSDictionary *DeskShortcutDefaults(void) {
 - (NSEvent *)handleLocalEvent:(NSEvent *)event;
 @end
 
-static OSStatus DeskShortcutEventHandler(EventHandlerCallRef next, EventRef event, void *context) {
+static OSStatus StintShortcutEventHandler(EventHandlerCallRef next, EventRef event, void *context) {
   (void)next;
   EventHotKeyID identifier;
   OSStatus status = GetEventParameter(event, kEventParamDirectObject, typeEventHotKeyID,
                                      NULL, sizeof(identifier), NULL, &identifier);
-  if (status != noErr || identifier.signature != DeskKeymapSignature) return eventNotHandledErr;
-  DeskKeymap *keymap = (__bridge DeskKeymap *)context;
+  if (status != noErr || identifier.signature != StintKeymapSignature) return eventNotHandledErr;
+  StintKeymap *keymap = (__bridge StintKeymap *)context;
   [keymap handleHotKeyIdentifier:identifier.id pressed:GetEventKind(event) == kEventHotKeyPressed];
   return noErr;
 }
 
-@implementation DeskKeymap
+@implementation StintKeymap
 
 - (instancetype)initWithDefaults:(NSUserDefaults *)defaults action:(void (^)(NSString *))action {
   if ((self = [super init])) {
@@ -188,7 +188,7 @@ static OSStatus DeskShortcutEventHandler(EventHandlerCallRef next, EventRef even
     _pressedLocalKeys = [NSMutableSet set];
     _suppressedKeyCodes = [NSMutableSet set];
     _nextIdentifier = 1;
-    NSDictionary *stored = [defaults objectForKey:DeskKeymapPreference];
+    NSDictionary *stored = [defaults objectForKey:StintKeymapPreference];
     NSString *error;
     if (stored) {
       // UserDefaults property lists cannot contain null. Missing saved actions
@@ -196,22 +196,22 @@ static OSStatus DeskShortcutEventHandler(EventHandlerCallRef next, EventRef even
       id candidate = stored;
       if ([stored isKindOfClass:NSDictionary.class] && [stored[@"bindings"] isKindOfClass:NSDictionary.class]) {
         NSMutableDictionary *bindings = [stored[@"bindings"] mutableCopy];
-        for (NSString *actionKey in DeskShortcutActions()) if (!bindings[actionKey]) bindings[actionKey] = NSNull.null;
+        for (NSString *actionKey in StintShortcutActions()) if (!bindings[actionKey]) bindings[actionKey] = NSNull.null;
         NSMutableDictionary *expanded = [stored mutableCopy];
         expanded[@"bindings"] = bindings;
         candidate = expanded;
       }
-      _configuration = DeskShortcutConfiguration(candidate, &error);
+      _configuration = StintShortcutConfiguration(candidate, &error);
       if (!_configuration) _lastError = [@"Saved shortcuts could not be read. Defaults are shown. " stringByAppendingString:error];
     }
-    if (!_configuration) _configuration = DeskShortcutDefaults();
+    if (!_configuration) _configuration = StintShortcutDefaults();
     _localMonitor = [self installLocalMonitor];
     if (!_localMonitor) {
       _lastError = @"Stint could not listen for shortcuts. Relaunch Stint and try again.";
     } else if (![self registerConfiguration:_configuration error:&error]) {
       _lastError = _lastError ? [_lastError stringByAppendingFormat:@" %@", error] : error;
     }
-    __weak DeskKeymap *weakSelf = self;
+    __weak StintKeymap *weakSelf = self;
     _resignObserver = [NSNotificationCenter.defaultCenter addObserverForName:NSApplicationDidResignActiveNotification
         object:nil queue:NSOperationQueue.mainQueue usingBlock:^(NSNotification *notification) {
       (void)notification;
@@ -222,7 +222,7 @@ static OSStatus DeskShortcutEventHandler(EventHandlerCallRef next, EventRef even
 }
 
 - (id)installLocalMonitor {
-  __weak DeskKeymap *weakSelf = self;
+  __weak StintKeymap *weakSelf = self;
   return [NSEvent addLocalMonitorForEventsMatchingMask:NSEventMaskKeyDown | NSEventMaskKeyUp
       handler:^NSEvent *(NSEvent *event) { return [weakSelf handleLocalEvent:event] ?: (weakSelf ? nil : event); }];
 }
@@ -233,7 +233,7 @@ static OSStatus DeskShortcutEventHandler(EventHandlerCallRef next, EventRef even
   if (self.eventHandler) return noErr;
   EventTypeSpec events[] = {{kEventClassKeyboard, kEventHotKeyPressed}, {kEventClassKeyboard, kEventHotKeyReleased}};
   EventHandlerRef handler = NULL;
-  OSStatus status = InstallEventHandler(GetApplicationEventTarget(), DeskShortcutEventHandler,
+  OSStatus status = InstallEventHandler(GetApplicationEventTarget(), StintShortcutEventHandler,
       2, events, (__bridge void *)self, &handler);
   self.eventHandler = handler;
   return status;
@@ -241,7 +241,7 @@ static OSStatus DeskShortcutEventHandler(EventHandlerCallRef next, EventRef even
 
 - (OSStatus)registerKeyCode:(UInt32)keyCode modifiers:(UInt32)modifiers
                 identifier:(UInt32)identifier reference:(EventHotKeyRef *)reference {
-  EventHotKeyID hotKeyID = {DeskKeymapSignature, identifier};
+  EventHotKeyID hotKeyID = {StintKeymapSignature, identifier};
   return RegisterEventHotKey(keyCode, modifiers, hotKeyID, GetApplicationEventTarget(),
                             kEventHotKeyExclusive, reference);
 }
@@ -266,17 +266,17 @@ static OSStatus DeskShortcutEventHandler(EventHandlerCallRef next, EventRef even
     if (error) *error = [NSString stringWithFormat:@"macOS could not enable global shortcuts (error %d). Try Only in Stint or relaunch Stint.", (int)handlerStatus];
     return NO;
   }
-  for (NSString *action in DeskShortcutActions()) {
+  for (NSString *action in StintShortcutActions()) {
     id binding = configuration[@"bindings"][action];
     if (binding == NSNull.null) continue;
     EventHotKeyRef reference = NULL;
     UInt32 identifier = self.nextIdentifier++;
     OSStatus status = [self registerKeyCode:[binding[@"keyCode"] unsignedIntValue]
-        modifiers:DeskShortcutCarbonModifiers([binding[@"modifiers"] unsignedIntegerValue])
+        modifiers:StintShortcutCarbonModifiers([binding[@"modifiers"] unsignedIntegerValue])
         identifier:identifier reference:&reference];
     if (status != noErr || !reference) {
       if (error) *error = [NSString stringWithFormat:@"%@ (%@) could not be registered. Another app or macOS may be using it (error %d). Choose another shortcut.",
-                          DeskShortcutActionName(action), binding[@"label"], (int)status];
+                          StintShortcutActionName(action), binding[@"label"], (int)status];
       [self unregisterHotKeys];
       return NO;
     }
@@ -288,7 +288,7 @@ static OSStatus DeskShortcutEventHandler(EventHandlerCallRef next, EventRef even
 
 - (NSDictionary *)state {
   NSMutableDictionary *state = [self.configuration mutableCopy];
-  state[@"defaults"] = DeskShortcutDefaults();
+  state[@"defaults"] = StintShortcutDefaults();
   if (self.lastError) state[@"error"] = self.lastError;
   return state;
 }
@@ -298,7 +298,7 @@ static OSStatus DeskShortcutEventHandler(EventHandlerCallRef next, EventRef even
 }
 
 - (BOOL)saveConfiguration:(id)value error:(NSString **)error {
-  NSDictionary *next = DeskShortcutConfiguration(value, error);
+  NSDictionary *next = StintShortcutConfiguration(value, error);
   if (!next) return NO;
   if (!self.localMonitor) {
     if (error) *error = @"Stint could not listen for shortcuts. Relaunch Stint and try again.";
@@ -317,8 +317,8 @@ static OSStatus DeskShortcutEventHandler(EventHandlerCallRef next, EventRef even
   self.configuration = next;
   self.lastError = nil;
   NSMutableDictionary *savedBindings = [next[@"bindings"] mutableCopy];
-  for (NSString *action in DeskShortcutActions()) if (savedBindings[action] == NSNull.null) [savedBindings removeObjectForKey:action];
-  [self.defaults setObject:@{@"global": next[@"global"], @"bindings": savedBindings} forKey:DeskKeymapPreference];
+  for (NSString *action in StintShortcutActions()) if (savedBindings[action] == NSNull.null) [savedBindings removeObjectForKey:action];
+  [self.defaults setObject:@{@"global": next[@"global"], @"bindings": savedBindings} forKey:StintKeymapPreference];
   return YES;
 }
 
@@ -375,8 +375,8 @@ static OSStatus DeskShortcutEventHandler(EventHandlerCallRef next, EventRef even
     if (event.type != NSEventTypeKeyDown || event.isARepeat) return nil;
     if (event.keyCode == kVK_Escape) { [self finishRecording:nil]; return nil; }
     NSString *error;
-    NSDictionary *binding = DeskShortcutBinding(@{@"keyCode": key,
-        @"modifiers": @(DeskShortcutModifiers(event.modifierFlags))}, &error);
+    NSDictionary *binding = StintShortcutBinding(@{@"keyCode": key,
+        @"modifiers": @(StintShortcutModifiers(event.modifierFlags))}, &error);
     // Restoring a captured chord while its keys are still held must not turn
     // the recording press (or its repeat events) into a timer command.
     [self.suppressedKeyCodes addObject:key];
@@ -396,8 +396,8 @@ static OSStatus DeskShortcutEventHandler(EventHandlerCallRef next, EventRef even
     [self.suppressedKeyCodes removeObject:key];
   }
   if ([self.configuration[@"global"] boolValue]) return event;
-  NSUInteger modifiers = DeskShortcutModifiers(event.modifierFlags);
-  for (NSString *action in DeskShortcutActions()) {
+  NSUInteger modifiers = StintShortcutModifiers(event.modifierFlags);
+  for (NSString *action in StintShortcutActions()) {
     id binding = self.configuration[@"bindings"][action];
     if (binding == NSNull.null || [binding[@"keyCode"] unsignedIntegerValue] != event.keyCode ||
         [binding[@"modifiers"] unsignedIntegerValue] != modifiers) continue;

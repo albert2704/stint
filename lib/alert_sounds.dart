@@ -30,7 +30,7 @@ class AlertSoundSettings {
 
 /// Uses the timer channel without replacing its native-to-Dart event handler.
 class AlertSounds {
-  const AlertSounds({this.channel = const MethodChannel('focus_desk/timer')});
+  const AlertSounds({this.channel = const MethodChannel('stint/timer')});
   final MethodChannel channel;
 
   Future<AlertSoundSettings> load() async => AlertSoundSettings.fromNative(

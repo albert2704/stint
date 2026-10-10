@@ -76,8 +76,8 @@ class Project {
   );
 }
 
-class DeskTask {
-  DeskTask({
+class StintTask {
+  StintTask({
     required this.id,
     required this.projectId,
     required this.title,
@@ -112,7 +112,7 @@ class DeskTask {
     'createdAt': createdAt.toIso8601String(),
     'completedAt': completedAt?.toIso8601String(),
   };
-  factory DeskTask.fromJson(Map<String, dynamic> j) => DeskTask(
+  factory StintTask.fromJson(Map<String, dynamic> j) => StintTask(
     id: j['id'] as String,
     projectId: j['projectId'] as String,
     title: j['title'] as String,
@@ -130,8 +130,8 @@ class DeskTask {
   );
 }
 
-class DeskNote {
-  DeskNote({
+class StintNote {
+  StintNote({
     required this.id,
     required this.projectId,
     this.title = 'Untitled note',
@@ -150,7 +150,7 @@ class DeskNote {
     'body': body,
     'updatedAt': updatedAt.toIso8601String(),
   };
-  factory DeskNote.fromJson(Map<String, dynamic> j) => DeskNote(
+  factory StintNote.fromJson(Map<String, dynamic> j) => StintNote(
     id: j['id'] as String,
     projectId: j['projectId'] as String,
     title: j['title'] as String,
@@ -242,7 +242,7 @@ class FocusRoutine {
       longBreakMinutes >= 1 &&
       longBreakMinutes <= 60;
 
-  bool matches(DeskSettings settings) =>
+  bool matches(StintPreferences settings) =>
       focusMinutes == settings.focusMinutes &&
       shortBreakMinutes == settings.shortBreakMinutes &&
       longBreakMinutes == settings.longBreakMinutes;
@@ -270,8 +270,8 @@ class FocusRoutine {
   }
 }
 
-class DeskSettings {
-  DeskSettings({
+class StintPreferences {
+  StintPreferences({
     this.focusMinutes = 25,
     this.shortBreakMinutes = 5,
     this.longBreakMinutes = 15,
@@ -308,7 +308,7 @@ class DeskSettings {
     'preferredRoutineId': preferredRoutineId,
     'dailyGoal': dailyGoal,
   };
-  factory DeskSettings.fromJson(Map<String, dynamic> j) => DeskSettings(
+  factory StintPreferences.fromJson(Map<String, dynamic> j) => StintPreferences(
     focusMinutes: j['focusMinutes'] as int,
     shortBreakMinutes: j['shortBreakMinutes'] as int,
     longBreakMinutes: j['longBreakMinutes'] as int,
@@ -388,10 +388,10 @@ class Workspace {
     required this.timer,
   });
   final List<Project> projects;
-  final List<DeskTask> tasks;
-  final List<DeskNote> notes;
+  final List<StintTask> tasks;
+  final List<StintNote> notes;
   final List<FocusSession> sessions;
-  final DeskSettings settings;
+  final StintPreferences settings;
   FocusTimer timer;
 
   factory Workspace.empty() => Workspace(
@@ -399,7 +399,7 @@ class Workspace {
     tasks: [],
     notes: [],
     sessions: [],
-    settings: DeskSettings(),
+    settings: StintPreferences(),
     timer: FocusTimer(),
   );
   String encode() => const JsonEncoder.withIndent('  ').convert({
@@ -423,15 +423,15 @@ class Workspace {
             .map((x) => Project.fromJson(x as Map<String, dynamic>))
             .toList(),
         tasks: (j['tasks'] as List)
-            .map((x) => DeskTask.fromJson(x as Map<String, dynamic>))
+            .map((x) => StintTask.fromJson(x as Map<String, dynamic>))
             .toList(),
         notes: (j['notes'] as List)
-            .map((x) => DeskNote.fromJson(x as Map<String, dynamic>))
+            .map((x) => StintNote.fromJson(x as Map<String, dynamic>))
             .toList(),
         sessions: (j['sessions'] as List)
             .map((x) => FocusSession.fromJson(x as Map<String, dynamic>))
             .toList(),
-        settings: DeskSettings.fromJson(j['settings'] as Map<String, dynamic>),
+        settings: StintPreferences.fromJson(j['settings'] as Map<String, dynamic>),
         timer: FocusTimer.fromJson(j['timer'] as Map<String, dynamic>),
       );
       final projectIds = w.projects.map((p) => p.id).toSet();
@@ -469,7 +469,7 @@ class Workspace {
           s.longBreakMinutes > 60 ||
           !['system', 'light', 'dark'].contains(s.appearance) ||
           s.dailyGoal < 1 ||
-          s.dailyGoal > DeskSettings.maxDailyGoal ||
+          s.dailyGoal > StintPreferences.maxDailyGoal ||
           routineIds.length != s.customRoutines.length ||
           s.customRoutines.any(
             (routine) =>

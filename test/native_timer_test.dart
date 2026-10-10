@@ -1,22 +1,22 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:focus_desk/data/controller.dart';
-import 'package:focus_desk/data/models.dart';
-import 'package:focus_desk/data/store.dart';
-import 'package:focus_desk/native_timer.dart';
-import 'package:focus_desk/music.dart';
+import 'package:stint/data/controller.dart';
+import 'package:stint/data/models.dart';
+import 'package:stint/data/store.dart';
+import 'package:stint/native_timer.dart';
+import 'package:stint/music.dart';
 import 'music_test.dart' show FakeMusicAssets, FakeMusicHost;
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   late DateTime now;
   late MemoryWorkspaceStore store;
-  late DeskController controller;
+  late StintController controller;
 
   setUp(() {
     now = DateTime(2026, 10, 8, 10);
     store = MemoryWorkspaceStore();
-    controller = DeskController(
+    controller = StintController(
       store,
       now: () => now,
       tickAutomatically: false,
@@ -25,7 +25,7 @@ void main() {
   tearDown(() => controller.dispose());
 
   group('native timer bridge', () {
-    const channel = MethodChannel('focus_desk/timer-test');
+    const channel = MethodChannel('stint/timer-test');
     final messenger =
         TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
     late List<MethodCall> calls;
@@ -237,7 +237,7 @@ void main() {
   });
 
   group('shared Stint controls', () {
-    const channel = MethodChannel('focus_desk/stint-panel-test');
+    const channel = MethodChannel('stint/stint-panel-test');
     final messenger =
         TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
     late NativeTimerBridge bridge;
@@ -564,8 +564,8 @@ void main() {
   });
 
   group('menu panel controls', () {
-    const channel = MethodChannel('focus_desk/panel-test');
-    const audioChannel = MethodChannel('focus_desk/panel-music-test');
+    const channel = MethodChannel('stint/panel-test');
+    const audioChannel = MethodChannel('stint/panel-music-test');
     final messenger =
         TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
     late FocusMusic music;
@@ -685,7 +685,7 @@ void main() {
         expect(controller.timer.totalSeconds, 2700);
         expect(controller.timer.completedCount, 1);
         expect(controller.workspace.sessions.single.id, completedId);
-        final restored = DeskController(
+        final restored = StintController(
           store,
           now: () => now,
           tickAutomatically: false,

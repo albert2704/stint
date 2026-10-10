@@ -1,38 +1,38 @@
-#import "DeskMusic.h"
-#import "DeskYouTubePlayer.h"
+#import "StintMusic.h"
+#import "StintYouTubePlayer.h"
 #import <AVFoundation/AVFoundation.h>
 #import <UniformTypeIdentifiers/UniformTypeIdentifiers.h>
 #import <math.h>
 
-static NSString *const DeskMusicTracksKey = @"FocusDeskMusicTracks";
-static NSString *const DeskMusicYouTubeTracksKey = @"FocusDeskMusicYouTubeTracks";
-static NSString *const DeskMusicSelectionKey = @"FocusDeskMusicSelectedId";
-static NSString *const DeskMusicVolumeKey = @"FocusDeskMusicVolume";
-static NSString *const DeskMusicFollowTimerKey = @"FocusDeskMusicFollowTimer";
-static NSUInteger const DeskMusicMaximumBytes = 200 * 1024 * 1024;
-static NSTimeInterval const DeskMusicFadeDuration = 0.7;
+static NSString *const StintMusicTracksKey = @"StintMusicTracks";
+static NSString *const StintMusicYouTubeTracksKey = @"StintMusicYouTubeTracks";
+static NSString *const StintMusicSelectionKey = @"StintMusicSelectedId";
+static NSString *const StintMusicVolumeKey = @"StintMusicVolume";
+static NSString *const StintMusicFollowTimerKey = @"StintMusicFollowTimer";
+static NSUInteger const StintMusicMaximumBytes = 200 * 1024 * 1024;
+static NSTimeInterval const StintMusicFadeDuration = 0.7;
 
-static BOOL DeskBuiltinTrack(NSString *identifier) {
+static BOOL StintBuiltinTrack(NSString *identifier) {
   return [@[@"quiet_keys", @"warm_drift", @"night_study"] containsObject:identifier];
 }
 
-static BOOL DeskYouTubeVideoId(id value) {
+static BOOL StintYouTubeVideoId(id value) {
   if (![value isKindOfClass:NSString.class] || [value length] != 11) return NO;
   NSCharacterSet *allowed = [NSCharacterSet characterSetWithCharactersInString:@"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-"];
   return [value rangeOfCharacterFromSet:allowed.invertedSet].location == NSNotFound;
 }
 
-static FlutterError *DeskMusicError(NSString *code, NSString *message) {
+static FlutterError *StintMusicError(NSString *code, NSString *message) {
   return [FlutterError errorWithCode:code message:message details:nil];
 }
 
-@interface DeskMusic () <AVAudioPlayerDelegate>
+@interface StintMusic () <AVAudioPlayerDelegate>
 @property(nonatomic, weak) NSWindow *window;
 @property(nonatomic, strong) FlutterMethodChannel *channel;
 @property(nonatomic, strong) AVAudioPlayer *player;
 @property(nonatomic, strong) NSMutableArray<NSDictionary *> *tracks;
 @property(nonatomic, strong) NSMutableArray<NSDictionary *> *youTubeTracks;
-@property(nonatomic, strong) DeskYouTubePlayer *youTubePlayer;
+@property(nonatomic, strong) StintYouTubePlayer *youTubePlayer;
 @property(nonatomic) BOOL suppressYouTubeEvents;
 @property(nonatomic, copy) NSString *selectedId;
 @property(nonatomic) double volume;
@@ -42,7 +42,7 @@ static FlutterError *DeskMusicError(NSString *code, NSString *message) {
 @property(nonatomic, copy) FlutterResult fadePauseResult;
 @end
 
-@implementation DeskMusic
+@implementation StintMusic
 
 - (instancetype)initWithWindow:(NSWindow *)window messenger:(id<FlutterBinaryMessenger>)messenger {
   self = [super init];
@@ -51,7 +51,7 @@ static FlutterError *DeskMusicError(NSString *code, NSString *message) {
   _tracks = [NSMutableArray array];
   _youTubeTracks = [NSMutableArray array];
   NSUserDefaults *defaults = NSUserDefaults.standardUserDefaults;
-  id savedTracks = [defaults objectForKey:DeskMusicTracksKey];
+  id savedTracks = [defaults objectForKey:StintMusicTracksKey];
   if ([savedTracks isKindOfClass:NSArray.class]) {
     NSMutableSet *identifiers = [NSMutableSet set];
     for (id entry in savedTracks) {
@@ -68,7 +68,7 @@ static FlutterError *DeskMusicError(NSString *code, NSString *message) {
       [identifiers addObject:identifier];
     }
   }
-  id savedYouTube = [defaults objectForKey:DeskMusicYouTubeTracksKey];
+  id savedYouTube = [defaults objectForKey:StintMusicYouTubeTracksKey];
   if ([savedYouTube isKindOfClass:NSArray.class]) {
     NSMutableSet *identifiers = [NSMutableSet set];
     for (id entry in savedYouTube) {
@@ -76,7 +76,7 @@ static FlutterError *DeskMusicError(NSString *code, NSString *message) {
       NSString *videoId = entry[@"youtubeVideoId"];
       NSString *identifier = entry[@"id"];
       NSString *title = entry[@"title"];
-      if (!DeskYouTubeVideoId(videoId) ||
+      if (!StintYouTubeVideoId(videoId) ||
           ![identifier isKindOfClass:NSString.class] ||
           ![identifier isEqualToString:[@"youtube_" stringByAppendingString:videoId]] ||
           ![title isKindOfClass:NSString.class] || title.length > 120 ||
@@ -87,16 +87,16 @@ static FlutterError *DeskMusicError(NSString *code, NSString *message) {
       [identifiers addObject:identifier];
     }
   }
-  id savedSelection = [defaults objectForKey:DeskMusicSelectionKey];
+  id savedSelection = [defaults objectForKey:StintMusicSelectionKey];
   _selectedId = [savedSelection isKindOfClass:NSString.class] && [self knownTrack:savedSelection] ? savedSelection : @"quiet_keys";
-  id savedVolume = [defaults objectForKey:DeskMusicVolumeKey];
+  id savedVolume = [defaults objectForKey:StintMusicVolumeKey];
   _volume = [savedVolume isKindOfClass:NSNumber.class] && isfinite([savedVolume doubleValue]) ? MIN(1, MAX(0, [savedVolume doubleValue])) : 0.35;
-  _followTimer = [defaults boolForKey:DeskMusicFollowTimerKey];
-  _channel = [FlutterMethodChannel methodChannelWithName:@"focus_desk/music" binaryMessenger:messenger];
-  __weak DeskMusic *weakSelf = self;
+  _followTimer = [defaults boolForKey:StintMusicFollowTimerKey];
+  _channel = [FlutterMethodChannel methodChannelWithName:@"stint/music" binaryMessenger:messenger];
+  __weak StintMusic *weakSelf = self;
   [_channel setMethodCallHandler:^(FlutterMethodCall *call, FlutterResult result) {
-    DeskMusic *self = weakSelf;
-    if (!self) { result(DeskMusicError(@"closed", @"Stint is closing.")); return; }
+    StintMusic *self = weakSelf;
+    if (!self) { result(StintMusicError(@"closed", @"Stint is closing.")); return; }
     [self handleCall:call result:result];
   }];
   // Restoring a library or selection never starts playback.
@@ -125,7 +125,7 @@ static FlutterError *DeskMusicError(NSString *code, NSString *message) {
 }
 
 - (BOOL)knownTrack:(NSString *)identifier {
-  return DeskBuiltinTrack(identifier) || [self customTrack:identifier] != nil || [self youTubeTrack:identifier] != nil;
+  return StintBuiltinTrack(identifier) || [self customTrack:identifier] != nil || [self youTubeTrack:identifier] != nil;
 }
 
 - (NSDictionary *)youTubeTrack:(NSString *)identifier {
@@ -135,11 +135,11 @@ static FlutterError *DeskMusicError(NSString *code, NSString *message) {
 
 - (void)prepareYouTubeTrack:(NSDictionary *)track {
   if (!self.youTubePlayer) {
-    __weak DeskMusic *weakSelf = self;
-    self.youTubePlayer = [[DeskYouTubePlayer alloc] initWithStateChanged:^(BOOL playing, BOOL starting, NSString *error) {
+    __weak StintMusic *weakSelf = self;
+    self.youTubePlayer = [[StintYouTubePlayer alloc] initWithStateChanged:^(BOOL playing, BOOL starting, NSString *error) {
       (void)playing;
       (void)starting;
-      DeskMusic *self = weakSelf;
+      StintMusic *self = weakSelf;
       if (!self || self.suppressYouTubeEvents) return;
       NSDictionary *selected = [self youTubeTrack:self.selectedId];
       if (!selected || ![self.youTubePlayer.videoId isEqualToString:selected[@"youtubeVideoId"]]) return;
@@ -172,15 +172,15 @@ static FlutterError *DeskMusicError(NSString *code, NSString *message) {
   NSDictionary *args = [arguments isKindOfClass:NSDictionary.class] ? arguments : nil;
   id videoId = args[@"videoId"];
   id suppliedTitle = args[@"title"];
-  if (!DeskYouTubeVideoId(videoId) ||
+  if (!StintYouTubeVideoId(videoId) ||
       (suppliedTitle && suppliedTitle != NSNull.null && ![suppliedTitle isKindOfClass:NSString.class])) {
-    result(DeskMusicError(@"invalid_arguments", @"Enter a valid YouTube video link and an optional title."));
+    result(StintMusicError(@"invalid_arguments", @"Enter a valid YouTube video link and an optional title."));
     return;
   }
   NSString *title = [suppliedTitle isKindOfClass:NSString.class]
       ? [suppliedTitle stringByTrimmingCharactersInSet:NSCharacterSet.whitespaceAndNewlineCharacterSet] : @"";
   if (title.length > 120) {
-    result(DeskMusicError(@"invalid_arguments", @"Keep the YouTube title to 120 characters or fewer."));
+    result(StintMusicError(@"invalid_arguments", @"Keep the YouTube title to 120 characters or fewer."));
     return;
   }
   NSString *identifier = [@"youtube_" stringByAppendingString:videoId];
@@ -192,8 +192,8 @@ static FlutterError *DeskMusicError(NSString *code, NSString *message) {
   result = [self resultByCancellingFade:result];
   [self stopAllPlayers];
   self.selectedId = identifier;
-  [NSUserDefaults.standardUserDefaults setObject:self.youTubeTracks forKey:DeskMusicYouTubeTracksKey];
-  [NSUserDefaults.standardUserDefaults setObject:identifier forKey:DeskMusicSelectionKey];
+  [NSUserDefaults.standardUserDefaults setObject:self.youTubeTracks forKey:StintMusicYouTubeTracksKey];
+  [NSUserDefaults.standardUserDefaults setObject:identifier forKey:StintMusicSelectionKey];
   // Store a link only. The web player is created after Show player or Play.
   result([self state]);
 }
@@ -201,7 +201,7 @@ static FlutterError *DeskMusicError(NSString *code, NSString *message) {
 - (NSURL *)musicDirectory:(NSError **)error {
   NSURL *support = [NSFileManager.defaultManager URLForDirectory:NSApplicationSupportDirectory inDomain:NSUserDomainMask appropriateForURL:nil create:YES error:error];
   if (!support) return nil;
-  NSURL *directory = [[support URLByAppendingPathComponent:@"Focus Desk" isDirectory:YES] URLByAppendingPathComponent:@"Music" isDirectory:YES];
+  NSURL *directory = [[support URLByAppendingPathComponent:@"Stint" isDirectory:YES] URLByAppendingPathComponent:@"Music" isDirectory:YES];
   if (![NSFileManager.defaultManager createDirectoryAtURL:directory withIntermediateDirectories:YES attributes:nil error:error]) return nil;
   return directory;
 }
@@ -218,13 +218,13 @@ static FlutterError *DeskMusicError(NSString *code, NSString *message) {
         ![filename isKindOfClass:NSString.class] ||
         ![filename.lastPathComponent isEqualToString:filename] ||
         ![filename.stringByDeletingPathExtension isEqualToString:identifier]) {
-      result(DeskMusicError(@"unknown_track", @"Choose an imported audio file to remove."));
+      result(StintMusicError(@"unknown_track", @"Choose an imported audio file to remove."));
       return;
     }
     NSError *error = nil;
     NSURL *directory = [self musicDirectory:&error];
     if (!directory) {
-      result(DeskMusicError(@"remove_failed", @"This sound could not be removed. Try again."));
+      result(StintMusicError(@"remove_failed", @"This sound could not be removed. Try again."));
       return;
     }
     // Only remove Stint's cached copy, never the user's original imported file.
@@ -233,7 +233,7 @@ static FlutterError *DeskMusicError(NSString *code, NSString *message) {
     for (NSURL *folder in @[directory, directory.URLByDeletingLastPathComponent]) {
       NSDictionary *attributes = [files attributesOfItemAtPath:folder.path error:&error];
       if (![attributes[NSFileType] isEqualToString:NSFileTypeDirectory]) {
-        result(DeskMusicError(@"remove_failed", @"The saved audio folder is unavailable."));
+        result(StintMusicError(@"remove_failed", @"The saved audio folder is unavailable."));
         return;
       }
     }
@@ -241,22 +241,22 @@ static FlutterError *DeskMusicError(NSString *code, NSString *message) {
     NSDictionary *attributes = [files attributesOfItemAtPath:cachedFile.path error:&error];
     if (attributes && ![attributes[NSFileType] isEqualToString:NSFileTypeRegular] &&
         ![attributes[NSFileType] isEqualToString:NSFileTypeSymbolicLink]) {
-      result(DeskMusicError(@"remove_failed", @"This saved audio file could not be removed."));
+      result(StintMusicError(@"remove_failed", @"This saved audio file could not be removed."));
       return;
     }
     if ((!attributes && error.code != NSFileReadNoSuchFileError && error.code != NSFileNoSuchFileError) ||
         (attributes && ![files removeItemAtURL:cachedFile error:&error])) {
-      result(DeskMusicError(@"remove_failed", @"This sound could not be removed. Try again."));
+      result(StintMusicError(@"remove_failed", @"This sound could not be removed. Try again."));
       return;
     }
     if ([self.selectedId isEqualToString:identifier]) {
       result = [self resultByCancellingFade:result];
       [self stopAllPlayers];
       self.selectedId = @"quiet_keys";
-      [NSUserDefaults.standardUserDefaults setObject:self.selectedId forKey:DeskMusicSelectionKey];
+      [NSUserDefaults.standardUserDefaults setObject:self.selectedId forKey:StintMusicSelectionKey];
     }
     [self.tracks removeObject:track];
-    [NSUserDefaults.standardUserDefaults setObject:self.tracks forKey:DeskMusicTracksKey];
+    [NSUserDefaults.standardUserDefaults setObject:self.tracks forKey:StintMusicTracksKey];
     result([self state]);
     return;
   }
@@ -264,29 +264,29 @@ static FlutterError *DeskMusicError(NSString *code, NSString *message) {
     NSString *identifier = [call.arguments isKindOfClass:NSString.class] ? call.arguments : nil;
     NSDictionary *track = identifier ? [self youTubeTrack:identifier] : nil;
     if (!track) {
-      result(DeskMusicError(@"unknown_track", @"Choose a saved YouTube link to remove."));
+      result(StintMusicError(@"unknown_track", @"Choose a saved YouTube link to remove."));
       return;
     }
     if ([self.selectedId isEqualToString:identifier]) {
       result = [self resultByCancellingFade:result];
       [self stopAllPlayers];
       self.selectedId = @"quiet_keys";
-      [NSUserDefaults.standardUserDefaults setObject:self.selectedId forKey:DeskMusicSelectionKey];
+      [NSUserDefaults.standardUserDefaults setObject:self.selectedId forKey:StintMusicSelectionKey];
     }
     [self.youTubeTracks removeObject:track];
-    [NSUserDefaults.standardUserDefaults setObject:self.youTubeTracks forKey:DeskMusicYouTubeTracksKey];
+    [NSUserDefaults.standardUserDefaults setObject:self.youTubeTracks forKey:StintMusicYouTubeTracksKey];
     result([self state]);
     return;
   }
   if ([@[@"load", @"import", @"pause", @"resume", @"fadePause", @"showYouTube"] containsObject:method]) {
     if (call.arguments && call.arguments != NSNull.null) {
-      result(DeskMusicError(@"invalid_arguments", @"This music command does not accept arguments."));
+      result(StintMusicError(@"invalid_arguments", @"This music command does not accept arguments."));
       return;
     }
     if ([method isEqualToString:@"import"]) { [self importTracks:result]; return; }
     NSDictionary *youTube = [self youTubeTrack:self.selectedId];
     if ([method isEqualToString:@"showYouTube"]) {
-      if (!youTube) { result(DeskMusicError(@"not_youtube", @"Choose a YouTube track to show its player.")); return; }
+      if (!youTube) { result(StintMusicError(@"not_youtube", @"Choose a YouTube track to show its player.")); return; }
       result = [self resultByCancellingFade:result];
       [self stopPlayer];
       [self prepareYouTubeTrack:youTube];
@@ -325,7 +325,7 @@ static FlutterError *DeskMusicError(NSString *code, NSString *message) {
     }
     if ([method isEqualToString:@"pause"]) [self.player pause];
     if ([method isEqualToString:@"resume"] && self.player && !self.player.isPlaying && ![self.player play]) {
-      result(DeskMusicError(@"playback_failed", @"The audio could not resume. Try playing the track again."));
+      result(StintMusicError(@"playback_failed", @"The audio could not resume. Try playing the track again."));
       return;
     }
     result([self state]);
@@ -334,25 +334,25 @@ static FlutterError *DeskMusicError(NSString *code, NSString *message) {
   if ([method isEqualToString:@"followTimer"]) {
     id value = call.arguments;
     if (![value isKindOfClass:NSNumber.class] || CFGetTypeID((__bridge CFTypeRef)value) != CFBooleanGetTypeID()) {
-      result(DeskMusicError(@"invalid_arguments", @"Play with timer must be on or off."));
+      result(StintMusicError(@"invalid_arguments", @"Play with timer must be on or off."));
       return;
     }
     self.followTimer = [value boolValue];
-    [NSUserDefaults.standardUserDefaults setBool:self.followTimer forKey:DeskMusicFollowTimerKey];
+    [NSUserDefaults.standardUserDefaults setBool:self.followTimer forKey:StintMusicFollowTimerKey];
     result([self state]);
     return;
   }
   if ([method isEqualToString:@"volume"]) {
     id value = call.arguments;
     if (![value isKindOfClass:NSNumber.class] || CFGetTypeID((__bridge CFTypeRef)value) == CFBooleanGetTypeID() || !isfinite([value doubleValue])) {
-      result(DeskMusicError(@"invalid_arguments", @"Volume must be a finite number."));
+      result(StintMusicError(@"invalid_arguments", @"Volume must be a finite number."));
       return;
     }
     result = [self resultByCancellingFade:result];
     self.volume = MIN(1, MAX(0, [value doubleValue]));
     self.player.volume = self.volume;
     [self.youTubePlayer setVolume:self.volume];
-    [NSUserDefaults.standardUserDefaults setDouble:self.volume forKey:DeskMusicVolumeKey];
+    [NSUserDefaults.standardUserDefaults setDouble:self.volume forKey:StintMusicVolumeKey];
     result([self state]);
     return;
   }
@@ -362,18 +362,18 @@ static FlutterError *DeskMusicError(NSString *code, NSString *message) {
     NSString *identifier = selecting
         ? ([call.arguments isKindOfClass:NSString.class] ? call.arguments : nil)
         : ([args[@"id"] isKindOfClass:NSString.class] ? args[@"id"] : nil);
-    if (!identifier) { result(DeskMusicError(@"invalid_arguments", @"Choose a music track.")); return; }
-    if (![self knownTrack:identifier]) { result(DeskMusicError(@"unknown_track", @"This music track is no longer in your library.")); return; }
+    if (!identifier) { result(StintMusicError(@"invalid_arguments", @"Choose a music track.")); return; }
+    if (![self knownTrack:identifier]) { result(StintMusicError(@"unknown_track", @"This music track is no longer in your library.")); return; }
     if (selecting) {
       result = [self resultByCancellingFade:result];
       [self stopAllPlayers];
       self.selectedId = identifier;
-      [NSUserDefaults.standardUserDefaults setObject:identifier forKey:DeskMusicSelectionKey];
+      [NSUserDefaults.standardUserDefaults setObject:identifier forKey:StintMusicSelectionKey];
       result([self state]);
     } else {
       id fade = args[@"fade"];
       if (fade && (![fade isKindOfClass:NSNumber.class] || CFGetTypeID((__bridge CFTypeRef)fade) != CFBooleanGetTypeID())) {
-        result(DeskMusicError(@"invalid_arguments", @"Fade must be a Boolean."));
+        result(StintMusicError(@"invalid_arguments", @"Fade must be a Boolean."));
         return;
       }
       [self playTrack:identifier data:args[@"data"] fade:[fade boolValue] result:result];
@@ -387,13 +387,13 @@ static FlutterError *DeskMusicError(NSString *code, NSString *message) {
   NSDictionary *youTube = [self youTubeTrack:identifier];
   if (youTube) {
     if (data && data != NSNull.null) {
-      result(DeskMusicError(@"invalid_arguments", @"YouTube tracks play in the visible YouTube player."));
+      result(StintMusicError(@"invalid_arguments", @"YouTube tracks play in the visible YouTube player."));
       return;
     }
     result = [self resultByCancellingFade:result];
     [self stopPlayer];
     self.selectedId = identifier;
-    [NSUserDefaults.standardUserDefaults setObject:identifier forKey:DeskMusicSelectionKey];
+    [NSUserDefaults.standardUserDefaults setObject:identifier forKey:StintMusicSelectionKey];
     [self prepareYouTubeTrack:youTube];
     [self.youTubePlayer play];
     result([self state]);
@@ -401,20 +401,20 @@ static FlutterError *DeskMusicError(NSString *code, NSString *message) {
   }
   NSError *error = nil;
   AVAudioPlayer *candidate = nil;
-  BOOL builtin = DeskBuiltinTrack(identifier);
+  BOOL builtin = StintBuiltinTrack(identifier);
   NSData *bytes = nil;
   if (builtin) {
     if (![data isKindOfClass:FlutterStandardTypedData.class] || ((FlutterStandardTypedData *)data).type != FlutterStandardDataTypeUInt8) {
-      result(DeskMusicError(@"invalid_arguments", @"The built-in track's audio data is missing."));
+      result(StintMusicError(@"invalid_arguments", @"The built-in track's audio data is missing."));
       return;
     }
     bytes = ((FlutterStandardTypedData *)data).data;
-    if (bytes.length == 0 || bytes.length > DeskMusicMaximumBytes) {
-      result(DeskMusicError(@"invalid_audio", @"Choose nonempty audio no larger than 200 MB."));
+    if (bytes.length == 0 || bytes.length > StintMusicMaximumBytes) {
+      result(StintMusicError(@"invalid_audio", @"Choose nonempty audio no larger than 200 MB."));
       return;
     }
   } else if (data && data != NSNull.null) {
-    result(DeskMusicError(@"invalid_arguments", @"Imported tracks play from your saved music library."));
+    result(StintMusicError(@"invalid_arguments", @"Imported tracks play from your saved music library."));
     return;
   }
   result = [self resultByCancellingFade:result];
@@ -424,7 +424,7 @@ static FlutterError *DeskMusicError(NSString *code, NSString *message) {
     if (resuming && fade) self.player.volume = 0;
     if (!self.player.isPlaying && ![self.player play]) {
       self.player.volume = self.volume;
-      result(DeskMusicError(@"playback_failed", @"The audio could not resume. Try choosing the track again."));
+      result(StintMusicError(@"playback_failed", @"The audio could not resume. Try choosing the track again."));
     } else {
       if (resuming && fade) [self fadePlayerToVolume:self.volume pauseOnCompletion:NO];
       result([self state]);
@@ -437,14 +437,14 @@ static FlutterError *DeskMusicError(NSString *code, NSString *message) {
     NSURL *directory = [self musicDirectory:&error];
     NSURL *url = [directory URLByAppendingPathComponent:[self customTrack:identifier][@"filename"]];
     NSDictionary *values = [url resourceValuesForKeys:@[NSURLFileSizeKey, NSURLIsRegularFileKey] error:&error];
-    if (!values || ![values[NSURLIsRegularFileKey] boolValue] || [values[NSURLFileSizeKey] unsignedLongLongValue] > DeskMusicMaximumBytes) {
-      result(DeskMusicError(@"audio_unavailable", @"This imported audio file is unavailable or exceeds 200 MB. Import it again."));
+    if (!values || ![values[NSURLIsRegularFileKey] boolValue] || [values[NSURLFileSizeKey] unsignedLongLongValue] > StintMusicMaximumBytes) {
+      result(StintMusicError(@"audio_unavailable", @"This imported audio file is unavailable or exceeds 200 MB. Import it again."));
       return;
     }
     candidate = [[AVAudioPlayer alloc] initWithContentsOfURL:url error:&error];
   }
   if (!candidate || candidate.duration <= 0 || !isfinite(candidate.duration) || ![candidate prepareToPlay]) {
-    result(DeskMusicError(@"unsupported_audio", error.localizedDescription ?: @"This audio file cannot be played. Try MP3, M4A, WAV, or AIFF."));
+    result(StintMusicError(@"unsupported_audio", error.localizedDescription ?: @"This audio file cannot be played. Try MP3, M4A, WAV, or AIFF."));
     return;
   }
   candidate.numberOfLoops = -1;
@@ -453,11 +453,11 @@ static FlutterError *DeskMusicError(NSString *code, NSString *message) {
   [self stopAllPlayers];
   self.player = candidate;
   self.selectedId = identifier;
-  [NSUserDefaults.standardUserDefaults setObject:identifier forKey:DeskMusicSelectionKey];
+  [NSUserDefaults.standardUserDefaults setObject:identifier forKey:StintMusicSelectionKey];
   if (![candidate play]) {
     [self stopPlayer];
     [self.channel invokeMethod:@"state" arguments:[self state]];
-    result(DeskMusicError(@"playback_failed", @"The audio output could not start. Try playing the track again."));
+    result(StintMusicError(@"playback_failed", @"The audio output could not start. Try playing the track again."));
     return;
   }
   if (fade) [self fadePlayerToVolume:self.volume pauseOnCompletion:NO];
@@ -487,14 +487,14 @@ static FlutterError *DeskMusicError(NSString *code, NSString *message) {
   AVAudioPlayer *player = self.player;
   float initialVolume = player.volume;
   NSTimeInterval started = NSProcessInfo.processInfo.systemUptime;
-  __weak DeskMusic *weakSelf = self;
+  __weak StintMusic *weakSelf = self;
   NSTimer *timer = [NSTimer timerWithTimeInterval:1.0 / 60.0 repeats:YES block:^(NSTimer *timer) {
-    DeskMusic *self = weakSelf;
+    StintMusic *self = weakSelf;
     if (!self || self.fadeTimer != timer || self.player != player) {
       [timer invalidate];
       return;
     }
-    double progress = MIN(1, MAX(0, (NSProcessInfo.processInfo.systemUptime - started) / DeskMusicFadeDuration));
+    double progress = MIN(1, MAX(0, (NSProcessInfo.processInfo.systemUptime - started) / StintMusicFadeDuration));
     player.volume = initialVolume + (volume - initialVolume) * progress;
     if (progress < 1) return;
     [timer invalidate];
@@ -518,9 +518,9 @@ static FlutterError *DeskMusicError(NSString *code, NSString *message) {
 }
 
 - (void)importTracks:(FlutterResult)result {
-  if (self.importing) { result(DeskMusicError(@"import_busy", @"Finish the current music import first.")); return; }
+  if (self.importing) { result(StintMusicError(@"import_busy", @"Finish the current music import first.")); return; }
   NSWindow *window = self.window;
-  if (!window) { result(DeskMusicError(@"closed", @"Open Stint to import audio.")); return; }
+  if (!window) { result(StintMusicError(@"closed", @"Open Stint to import audio.")); return; }
   self.importing = YES;
   [NSApp activateIgnoringOtherApps:YES];
   if (window.miniaturized) [window deminiaturize:nil];
@@ -533,10 +533,10 @@ static FlutterError *DeskMusicError(NSString *code, NSString *message) {
   panel.allowsMultipleSelection = YES;
   panel.canChooseFiles = YES;
   panel.canChooseDirectories = NO;
-  __weak DeskMusic *weakSelf = self;
+  __weak StintMusic *weakSelf = self;
   [panel beginSheetModalForWindow:window completionHandler:^(NSModalResponse response) {
-    DeskMusic *self = weakSelf;
-    if (!self) { result(DeskMusicError(@"closed", @"Stint closed before the import finished.")); return; }
+    StintMusic *self = weakSelf;
+    if (!self) { result(StintMusicError(@"closed", @"Stint closed before the import finished.")); return; }
     if (response != NSModalResponseOK) {
       self.importing = NO;
       result([self state]);
@@ -546,7 +546,7 @@ static FlutterError *DeskMusicError(NSString *code, NSString *message) {
     NSURL *directory = [self musicDirectory:&directoryError];
     if (!directory) {
       self.importing = NO;
-      result(DeskMusicError(@"import_failed", directoryError.localizedDescription ?: @"Your music folder could not be created."));
+      result(StintMusicError(@"import_failed", directoryError.localizedDescription ?: @"Your music folder could not be created."));
       return;
     }
     NSArray<NSURL *> *sources = panel.URLs;
@@ -564,7 +564,7 @@ static FlutterError *DeskMusicError(NSString *code, NSString *message) {
             break;
           }
           unsigned long long size = [values[NSURLFileSizeKey] unsignedLongLongValue];
-          if (size == 0 || size > DeskMusicMaximumBytes) {
+          if (size == 0 || size > StintMusicMaximumBytes) {
             failure = [NSString stringWithFormat:@"“%@” must contain audio and be no larger than 200 MB.", source.lastPathComponent];
             break;
           }
@@ -579,7 +579,7 @@ static FlutterError *DeskMusicError(NSString *code, NSString *message) {
             break;
           }
           NSDictionary *copiedValues = [destination resourceValuesForKeys:@[NSURLFileSizeKey] error:&error];
-          if (!copiedValues || [copiedValues[NSURLFileSizeKey] unsignedLongLongValue] > DeskMusicMaximumBytes) {
+          if (!copiedValues || [copiedValues[NSURLFileSizeKey] unsignedLongLongValue] > StintMusicMaximumBytes) {
             failure = [NSString stringWithFormat:@"“%@” could not be imported within the 200 MB limit.", source.lastPathComponent];
             break;
           }
@@ -598,9 +598,9 @@ static FlutterError *DeskMusicError(NSString *code, NSString *message) {
       if (failure) for (NSURL *url in created) [NSFileManager.defaultManager removeItemAtURL:url error:NULL];
       dispatch_async(dispatch_get_main_queue(), ^{
         self.importing = NO;
-        if (failure) { result(DeskMusicError(@"import_failed", failure)); return; }
+        if (failure) { result(StintMusicError(@"import_failed", failure)); return; }
         [self.tracks addObjectsFromArray:imported];
-        [NSUserDefaults.standardUserDefaults setObject:self.tracks forKey:DeskMusicTracksKey];
+        [NSUserDefaults.standardUserDefaults setObject:self.tracks forKey:StintMusicTracksKey];
         result([self state]);
       });
     });
@@ -627,7 +627,7 @@ static FlutterError *DeskMusicError(NSString *code, NSString *message) {
 
 - (void)dealloc {
   [_fadeTimer invalidate];
-  if (_fadePauseResult) _fadePauseResult(DeskMusicError(@"closed", @"Stint closed before the music fade finished."));
+  if (_fadePauseResult) _fadePauseResult(StintMusicError(@"closed", @"Stint closed before the music fade finished."));
   _player.delegate = nil;
   [_player stop];
   _suppressYouTubeEvents = YES;

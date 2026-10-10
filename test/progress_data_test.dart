@@ -1,10 +1,10 @@
 import 'dart:collection';
 import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:focus_desk/data/controller.dart';
-import 'package:focus_desk/data/models.dart';
-import 'package:focus_desk/data/progress.dart';
-import 'package:focus_desk/data/store.dart';
+import 'package:stint/data/controller.dart';
+import 'package:stint/data/models.dart';
+import 'package:stint/data/progress.dart';
+import 'package:stint/data/store.dart';
 
 FocusSession stint(DateTime end, {int minutes = 25, String? id}) =>
     FocusSession(
@@ -185,11 +185,11 @@ void main() {
   group('controller', () {
     late DateTime now;
     late MemoryWorkspaceStore store;
-    late DeskController c;
+    late StintController c;
     setUp(() {
       now = DateTime(2026, 10, 9, 9);
       store = MemoryWorkspaceStore();
-      c = DeskController(store, now: () => now, tickAutomatically: false);
+      c = StintController(store, now: () => now, tickAutomatically: false);
     });
     tearDown(() => c.dispose());
 

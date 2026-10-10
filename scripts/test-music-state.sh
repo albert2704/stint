@@ -11,6 +11,6 @@ xcrun clang -Wall -Wextra -Werror -arch "$(uname -m)" -fobjc-arc -fmodules \
   -isysroot "$(xcrun --sdk macosx --show-sdk-path)" \
   -F"$FRAMEWORK_DIR" -framework Cocoa -framework FlutterMacOS -framework AVFoundation \
   -framework UniformTypeIdentifiers -framework WebKit \
-  -Wl,-rpath,"$FRAMEWORK_DIR" scripts/test-music-state.m macos/Runner/DeskYouTubePlayer.m \
+  -Wl,-rpath,"$FRAMEWORK_DIR" scripts/test-music-state.m macos/Runner/StintYouTubePlayer.m \
   -o build/native-tests/music-state
 build/native-tests/music-state

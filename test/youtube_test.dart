@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:focus_desk/data/controller.dart';
-import 'package:focus_desk/data/store.dart';
-import 'package:focus_desk/music.dart';
-import 'package:focus_desk/timer_music.dart';
-import 'package:focus_desk/ui/music_panel.dart';
+import 'package:stint/data/controller.dart';
+import 'package:stint/data/store.dart';
+import 'package:stint/music.dart';
+import 'package:stint/timer_music.dart';
+import 'package:stint/ui/music_panel.dart';
 import 'music_test.dart' show FakeMusicAssets, FakeMusicHost;
 
 class YouTubeHost extends FakeMusicHost {
@@ -77,7 +77,7 @@ class YouTubeHost extends FakeMusicHost {
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   const videoId = 'M7lc1UVf-VE';
-  const channel = MethodChannel('focus_desk/youtube-test');
+  const channel = MethodChannel('stint/youtube-test');
   final messenger =
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
   late YouTubeHost host;
@@ -220,7 +220,7 @@ void main() {
     () async {
       await music.addYouTube('https://youtu.be/$videoId');
       await music.setFollowTimer(true);
-      final controller = DeskController(
+      final controller = StintController(
         MemoryWorkspaceStore(),
         tickAutomatically: false,
       );

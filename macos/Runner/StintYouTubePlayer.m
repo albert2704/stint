@@ -1,10 +1,10 @@
-#import "DeskYouTubePlayer.h"
+#import "StintYouTubePlayer.h"
 #import <WebKit/WebKit.h>
 #import <math.h>
 
-static NSString *const DeskYouTubeMessageName = @"deskYouTube";
+static NSString *const StintYouTubeMessageName = @"stintYouTube";
 
-static BOOL DeskValidYouTubeId(NSString *value) {
+static BOOL StintValidYouTubeId(NSString *value) {
   if (![value isKindOfClass:NSString.class] || value.length != 11) return NO;
   NSCharacterSet *allowed = [NSCharacterSet characterSetWithCharactersInString:
       @"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-"];
@@ -12,7 +12,7 @@ static BOOL DeskValidYouTubeId(NSString *value) {
 }
 
 // Also safe inside an HTML script element, including titles containing </script>.
-static NSString *DeskYouTubeJSON(id object) {
+static NSString *StintYouTubeJSON(id object) {
   NSData *data = [NSJSONSerialization dataWithJSONObject:object options:0 error:nil];
   NSString *json = data ? [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding] : @"{}";
   json = [json stringByReplacingOccurrencesOfString:@"<" withString:@"\\u003c"];
@@ -20,10 +20,10 @@ static NSString *DeskYouTubeJSON(id object) {
   return [json stringByReplacingOccurrencesOfString:@"\u2029" withString:@"\\u2029"];
 }
 
-@interface DeskYouTubeMessageProxy : NSObject <WKScriptMessageHandler>
+@interface StintYouTubeMessageProxy : NSObject <WKScriptMessageHandler>
 @property(nonatomic, weak) id<WKScriptMessageHandler> target;
 @end
-@implementation DeskYouTubeMessageProxy
+@implementation StintYouTubeMessageProxy
 - (void)userContentController:(WKUserContentController *)controller didReceiveScriptMessage:(WKScriptMessage *)message {
   [self.target userContentController:controller didReceiveScriptMessage:message];
 }
@@ -31,14 +31,14 @@ static NSString *DeskYouTubeJSON(id object) {
 
 // WKWebView's suspension API is paired. Repeated YES calls accumulate even
 // though its Objective-C name looks like a plain Boolean setter.
-@interface DeskYouTubeSuspension : NSObject
+@interface StintYouTubeSuspension : NSObject
 @property(nonatomic) BOOL requestedSuspended;
 @property(nonatomic, strong) NSMutableArray<void (^)(void)> *pendingCompletions;
 @end
-@implementation DeskYouTubeSuspension
+@implementation StintYouTubeSuspension
 @end
 
-@interface DeskYouTubePlayer () <WKNavigationDelegate, WKUIDelegate, WKScriptMessageHandler>
+@interface StintYouTubePlayer () <WKNavigationDelegate, WKUIDelegate, WKScriptMessageHandler>
 @property(nonatomic, readwrite) BOOL playing;
 @property(nonatomic, readwrite) BOOL starting;
 @property(nonatomic, copy, readwrite, nullable) NSString *videoId;
@@ -61,10 +61,10 @@ static NSString *DeskYouTubeJSON(id object) {
 @property(nonatomic) double volume;
 @property(nonatomic) BOOL waitingForVisibility;
 @property(nonatomic) NSTimeInterval visibilityDeadline;
-@property(nonatomic, strong) NSMapTable<WKWebView *, DeskYouTubeSuspension *> *mediaSuspensions;
+@property(nonatomic, strong) NSMapTable<WKWebView *, StintYouTubeSuspension *> *mediaSuspensions;
 @end
 
-@implementation DeskYouTubePlayer
+@implementation StintYouTubePlayer
 
 - (instancetype)initWithStateChanged:(void (^)(BOOL, BOOL, NSString *_Nullable))stateChanged {
   self = [super init];
@@ -74,7 +74,7 @@ static NSString *DeskYouTubeJSON(id object) {
   NSString *bundleId = NSBundle.mainBundle.bundleIdentifier.lowercaseString;
   NSCharacterSet *hostCharacters = [NSCharacterSet characterSetWithCharactersInString:@"abcdefghijklmnopqrstuvwxyz0123456789.-"];
   if (!bundleId.length || [bundleId rangeOfCharacterFromSet:hostCharacters.invertedSet].location != NSNotFound) {
-    bundleId = @"com.focusdesk.focusdesk";
+    bundleId = @"io.github.albert2704.stint";
   }
   _origin = [@"https://" stringByAppendingString:bundleId];
   [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(applicationWillHide:)
@@ -89,7 +89,7 @@ static NSString *DeskYouTubeJSON(id object) {
   if (_inputMonitor) [NSEvent removeMonitor:_inputMonitor];
   [_loadTimer invalidate];
   [_playTimer invalidate];
-  [_webView.configuration.userContentController removeScriptMessageHandlerForName:DeskYouTubeMessageName];
+  [_webView.configuration.userContentController removeScriptMessageHandlerForName:StintYouTubeMessageName];
   [_webView pauseAllMediaPlaybackWithCompletionHandler:nil];
   [_webView stopLoading];
 }
@@ -123,10 +123,10 @@ static NSString *DeskYouTubeJSON(id object) {
 
   // This observes ordinary input without overlaying or replacing YouTube controls.
   // A new interaction lets the user resume using the embedded controls after a pause.
-  __weak DeskYouTubePlayer *weakSelf = self;
+  __weak StintYouTubePlayer *weakSelf = self;
   self.inputMonitor = [NSEvent addLocalMonitorForEventsMatchingMask:NSEventMaskLeftMouseDown | NSEventMaskKeyDown
       handler:^NSEvent *(NSEvent *event) {
-    DeskYouTubePlayer *self = weakSelf;
+    StintYouTubePlayer *self = weakSelf;
     if (!self || event.window != self.contentView.window || ![self isPlaybackVisible] || !self.webView) return event;
     BOOL playerInput = NO;
     if (event.type == NSEventTypeLeftMouseDown) {
@@ -169,7 +169,7 @@ static NSString *DeskYouTubeJSON(id object) {
 }
 
 - (void)setVideoId:(NSString *)videoId title:(NSString *)title volume:(double)volume {
-  if (!DeskValidYouTubeId(videoId)) {
+  if (!StintValidYouTubeId(videoId)) {
     [self pause];
     [self publishPlaying:NO starting:NO error:@"The YouTube video ID is invalid."];
     return;
@@ -197,7 +197,7 @@ static NSString *DeskYouTubeJSON(id object) {
   [self.playTimer invalidate];
   self.playTimer = nil;
   [self setMediaSuspended:YES webView:self.webView completion:nil];
-  [self.webView.configuration.userContentController removeScriptMessageHandlerForName:DeskYouTubeMessageName];
+  [self.webView.configuration.userContentController removeScriptMessageHandlerForName:StintYouTubeMessageName];
   self.webView.navigationDelegate = nil;
   self.webView.UIDelegate = nil;
   [self.webView stopLoading];
@@ -217,9 +217,9 @@ static NSString *DeskYouTubeJSON(id object) {
   WKWebViewConfiguration *configuration = [[WKWebViewConfiguration alloc] init];
   configuration.mediaTypesRequiringUserActionForPlayback = WKAudiovisualMediaTypeNone;
   if (@available(macOS 12.3, *)) configuration.preferences.elementFullscreenEnabled = YES;
-  DeskYouTubeMessageProxy *proxy = [[DeskYouTubeMessageProxy alloc] init];
+  StintYouTubeMessageProxy *proxy = [[StintYouTubeMessageProxy alloc] init];
   proxy.target = self;
-  [configuration.userContentController addScriptMessageHandler:proxy name:DeskYouTubeMessageName];
+  [configuration.userContentController addScriptMessageHandler:proxy name:StintYouTubeMessageName];
   self.webView = [[WKWebView alloc] initWithFrame:NSZeroRect configuration:configuration];
   self.webView.navigationDelegate = self;
   self.webView.UIDelegate = self;
@@ -243,9 +243,9 @@ static NSString *DeskYouTubeJSON(id object) {
        "iframe{display:block;border:0}</style></head><body><div id='player'></div><script>"
        "'use strict';const config=%@;let player,ready=false,version=config.version;"
        "let wants=false,controls=false,visible=false,awaitingPlay=false,volume=config.volume;"
-       "function emit(type,data){window.webkit.messageHandlers.deskYouTube.postMessage("
+       "function emit(type,data){window.webkit.messageHandlers.stintYouTube.postMessage("
        "{token:config.token,version:version,type:type,data:data});}"
-       "window.deskYouTubeCommand=function(c){"
+       "window.stintYouTubeCommand=function(c){"
        "if(c.token!==config.token||c.version<version)return;version=c.version;volume=c.volume;visible=c.visible;"
        "if(c.action==='play'){wants=visible;controls=visible;awaitingPlay=visible;}"
        "else if(c.action==='pause'){wants=false;controls=false;awaitingPlay=false;}"
@@ -262,13 +262,13 @@ static NSString *DeskYouTubeJSON(id object) {
        "onAutoplayBlocked:function(){emit('blocked',null);}}});};"
        "const script=document.createElement('script');script.src='https://www.youtube.com/iframe_api';"
        "script.onerror=function(){emit('loadError',null);};document.head.appendChild(script);"
-       "</script></body></html>", DeskYouTubeJSON(settings)];
+       "</script></body></html>", StintYouTubeJSON(settings)];
   self.pageNavigation = [self.webView loadHTMLString:html baseURL:[NSURL URLWithString:self.origin]];
   NSString *token = self.pageToken;
-  __weak DeskYouTubePlayer *weakSelf = self;
+  __weak StintYouTubePlayer *weakSelf = self;
   self.loadTimer = [NSTimer scheduledTimerWithTimeInterval:25 repeats:NO block:^(NSTimer *timer) {
     (void)timer;
-    DeskYouTubePlayer *self = weakSelf;
+    StintYouTubePlayer *self = weakSelf;
     if (self && [self.pageToken isEqualToString:token] && !self.ready) {
       [self fail:@"YouTube did not load. Check your connection and press Play to retry."];
     }
@@ -327,9 +327,9 @@ static NSString *DeskYouTubeJSON(id object) {
 - (void)setMediaSuspended:(BOOL)suspended webView:(WKWebView *)webView completion:(void (^)(void))completion {
   if (!webView) { if (completion) completion(); return; }
   if (!self.mediaSuspensions) self.mediaSuspensions = [NSMapTable weakToStrongObjectsMapTable];
-  DeskYouTubeSuspension *state = [self.mediaSuspensions objectForKey:webView];
+  StintYouTubeSuspension *state = [self.mediaSuspensions objectForKey:webView];
   if (!state) {
-    state = [[DeskYouTubeSuspension alloc] init];
+    state = [[StintYouTubeSuspension alloc] init];
     [self.mediaSuspensions setObject:state forKey:webView];
   }
   if (state.requestedSuspended == suspended) {
@@ -368,7 +368,7 @@ static NSString *DeskYouTubeJSON(id object) {
     if (play) [self pause];
     return;
   }
-  __weak DeskYouTubePlayer *weakSelf = self;
+  __weak StintYouTubePlayer *weakSelf = self;
   // Cocoa may report an ordered-front panel as occluded for several run-loop
   // turns. Keep the explicit intent pending, without starting hidden media.
   dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.05 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
@@ -379,10 +379,10 @@ static NSString *DeskYouTubeJSON(id object) {
 - (void)resumeVisibleMediaForVersion:(NSUInteger)version token:(NSString *)token action:(NSString *)action {
   WKWebView *webView = self.webView;
   if (![self matchesVersion:version token:token webView:webView] || ![self isPlaybackVisible]) return;
-  __weak DeskYouTubePlayer *weakSelf = self;
+  __weak StintYouTubePlayer *weakSelf = self;
   __weak WKWebView *weakWebView = webView;
   [self setMediaSuspended:NO webView:webView completion:^{
-    DeskYouTubePlayer *self = weakSelf;
+    StintYouTubePlayer *self = weakSelf;
     if (!self || ![self matchesVersion:version token:token webView:weakWebView]) return;
     if (![self isPlaybackVisible]) { [self pause]; return; }
     if ([action isEqualToString:@"play"] && !self.wantsPlayback) return;
@@ -394,17 +394,17 @@ static NSString *DeskYouTubeJSON(id object) {
 - (void)settlePausedMediaForVersion:(NSUInteger)version token:(NSString *)token {
   WKWebView *webView = self.webView;
   if (![self matchesVersion:version token:token webView:webView]) return;
-  __weak DeskYouTubePlayer *weakSelf = self;
+  __weak StintYouTubePlayer *weakSelf = self;
   __weak WKWebView *weakWebView = webView;
   // First quiesce queued playback, then remove the suspension only for a
   // visible, still-paused player. This supports accessibility Play actions,
   // which do not pass through an NSEvent monitor.
   [self setMediaSuspended:YES webView:webView completion:^{
-    DeskYouTubePlayer *self = weakSelf;
+    StintYouTubePlayer *self = weakSelf;
     WKWebView *pausedView = weakWebView;
     if (!self || ![self matchesVersion:version token:token webView:pausedView] || self.wantsPlayback) return;
     [pausedView pauseAllMediaPlaybackWithCompletionHandler:^{
-      DeskYouTubePlayer *self = weakSelf;
+      StintYouTubePlayer *self = weakSelf;
       if (!self || ![self matchesVersion:version token:token webView:weakWebView] || self.wantsPlayback) return;
       if ([self isPlaybackVisible]) [self resumeVisibleMediaForVersion:version token:token action:@"controls"];
     }];
@@ -439,13 +439,13 @@ static NSString *DeskYouTubeJSON(id object) {
   if (!self.webView || !self.pageToken) return;
   NSDictionary *command = @{@"token": self.pageToken, @"version": @(self.intentVersion),
       @"action": action, @"volume": @(self.volume * 100), @"visible": @([self isPlaybackVisible])};
-  NSString *script = [NSString stringWithFormat:@"window.deskYouTubeCommand && window.deskYouTubeCommand(%@);", DeskYouTubeJSON(command)];
+  NSString *script = [NSString stringWithFormat:@"window.stintYouTubeCommand && window.stintYouTubeCommand(%@);", StintYouTubeJSON(command)];
   NSString *token = self.pageToken;
   NSUInteger version = self.intentVersion;
-  __weak DeskYouTubePlayer *weakSelf = self;
+  __weak StintYouTubePlayer *weakSelf = self;
   [self.webView evaluateJavaScript:script completionHandler:^(id result, NSError *error) {
     (void)result;
-    DeskYouTubePlayer *self = weakSelf;
+    StintYouTubePlayer *self = weakSelf;
     if (error && self && self.ready && self.intentVersion == version && [self.pageToken isEqualToString:token] && self.wantsPlayback) {
       [self fail:@"The YouTube player stopped responding. Press Play to reload it."];
     }
@@ -456,10 +456,10 @@ static NSString *DeskYouTubeJSON(id object) {
   [self.playTimer invalidate];
   NSString *token = self.pageToken;
   NSUInteger version = self.intentVersion;
-  __weak DeskYouTubePlayer *weakSelf = self;
+  __weak StintYouTubePlayer *weakSelf = self;
   self.playTimer = [NSTimer scheduledTimerWithTimeInterval:25 repeats:NO block:^(NSTimer *timer) {
     (void)timer;
-    DeskYouTubePlayer *self = weakSelf;
+    StintYouTubePlayer *self = weakSelf;
     if (self && self.starting && self.intentVersion == version && [self.pageToken isEqualToString:token]) {
       [self fail:@"YouTube could not start. Check your connection, or press Play in the player."];
     }

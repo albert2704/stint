@@ -29,7 +29,7 @@ final _progressNavigators = <NavigatorState>{};
 
 Future<void> showStintProgress(
   BuildContext context,
-  DeskController controller,
+  StintController controller,
 ) async {
   final navigator = Navigator.of(context, rootNavigator: true);
   if (!_progressNavigators.add(navigator)) return;
@@ -50,7 +50,7 @@ class ProgressButton extends StatelessWidget {
     required this.controller,
     required this.onPressed,
   });
-  final DeskController controller;
+  final StintController controller;
   final VoidCallback onPressed;
 
   @override
@@ -100,7 +100,7 @@ class ProgressButton extends StatelessWidget {
 
 class StintProgress extends StatefulWidget {
   const StintProgress({super.key, required this.controller});
-  final DeskController controller;
+  final StintController controller;
   @override
   State<StintProgress> createState() => _StintProgressState();
 }
@@ -293,7 +293,7 @@ class _StepButton extends StatelessWidget {
 class _TodaySection extends StatelessWidget {
   const _TodaySection({required this.summary, required this.controller});
   final ProgressSummary summary;
-  final DeskController controller;
+  final StintController controller;
 
   @override
   Widget build(BuildContext context) {
@@ -431,7 +431,7 @@ class _TodaySection extends StatelessWidget {
                   key: const Key('daily-goal-up'),
                   tooltip: 'Raise daily goal',
                   icon: Icons.add_rounded,
-                  onPressed: goal < DeskSettings.maxDailyGoal
+                  onPressed: goal < StintPreferences.maxDailyGoal
                       ? () => controller.setDailyGoal(goal + 1)
                       : null,
                 ),

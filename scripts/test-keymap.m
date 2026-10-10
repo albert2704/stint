@@ -1,14 +1,14 @@
 // Exercise the production helper without global registration, event monitoring,
 // input capture, windows, or user preference access.
-#import "../macos/Runner/DeskKeymap.m"
+#import "../macos/Runner/StintKeymap.m"
 
-@interface DeskKeyDefaultsProbe : NSObject
+@interface StintKeyDefaultsProbe : NSObject
 @property(nonatomic, strong) NSMutableDictionary *values;
 @property(nonatomic) NSUInteger writes;
 - (id)objectForKey:(NSString *)key;
 - (void)setObject:(id)value forKey:(NSString *)key;
 @end
-@implementation DeskKeyDefaultsProbe
+@implementation StintKeyDefaultsProbe
 - (instancetype)init { if ((self = [super init])) _values = [NSMutableDictionary dictionary]; return self; }
 - (id)objectForKey:(NSString *)key { return self.values[key]; }
 - (void)setObject:(id)value forKey:(NSString *)key {
@@ -23,7 +23,7 @@ static BOOL startupMonitorFails;
 static OSStatus startupHandlerFailure;
 static BOOL useRealCarbonHandler;
 
-@interface DeskKeymapProbe : DeskKeymap
+@interface StintKeymapProbe : StintKeymap
 @property(nonatomic, strong) NSMutableSet<NSNumber *> *failedKeys;
 @property(nonatomic, strong) NSMutableSet<NSValue *> *activeReferences;
 @property(nonatomic) NSUInteger registrationCalls;
@@ -31,7 +31,7 @@ static BOOL useRealCarbonHandler;
 @property(nonatomic) NSUInteger removedMonitors;
 @property(nonatomic) UInt32 lastCarbonModifiers;
 @end
-@implementation DeskKeymapProbe
+@implementation StintKeymapProbe
 - (id)installLocalMonitor { return startupMonitorFails ? nil : [NSObject new]; }
 - (void)removeLocalMonitor:(id)monitor { (void)monitor; self.removedMonitors++; }
 - (OSStatus)installHotKeyHandler {
@@ -53,13 +53,13 @@ static BOOL useRealCarbonHandler;
 }
 @end
 
-@interface DeskKeyEventProbe : NSObject
+@interface StintKeyEventProbe : NSObject
 @property(nonatomic) NSEventType type;
 @property(nonatomic) unsigned short keyCode;
 @property(nonatomic) BOOL isARepeat;
 @property(nonatomic) NSEventModifierFlags modifierFlags;
 @end
-@implementation DeskKeyEventProbe
+@implementation StintKeyEventProbe
 @end
 
 static NSUInteger checks;
@@ -68,7 +68,7 @@ static void Check(BOOL condition, NSString *message) {
   checks++;
 }
 
-static id Call(DeskKeymap *keymap, NSString *method, id arguments) {
+static id Call(StintKeymap *keymap, NSString *method, id arguments) {
   __block id response;
   __block BOOL completed = NO;
   BOOL handled = [keymap handleCall:[FlutterMethodCall methodCallWithMethodName:method arguments:arguments]
@@ -78,19 +78,19 @@ static id Call(DeskKeymap *keymap, NSString *method, id arguments) {
 }
 
 static NSMutableDictionary *Configuration(BOOL global) {
-  NSMutableDictionary *configuration = [DeskShortcutDefaults() mutableCopy];
+  NSMutableDictionary *configuration = [StintShortcutDefaults() mutableCopy];
   configuration[@"global"] = @(global);
   configuration[@"bindings"] = [configuration[@"bindings"] mutableCopy];
   return configuration;
 }
 
-static UInt32 Identifier(DeskKeymap *keymap, NSString *action) {
+static UInt32 Identifier(StintKeymap *keymap, NSString *action) {
   for (NSNumber *identifier in keymap.hotKeyActions) if ([keymap.hotKeyActions[identifier] isEqual:action]) return identifier.unsignedIntValue;
   return 0;
 }
 
 static NSEvent *Event(NSInteger key, NSUInteger modifiers, BOOL down, BOOL repeat) {
-  DeskKeyEventProbe *event = [DeskKeyEventProbe new];
+  StintKeyEventProbe *event = [StintKeyEventProbe new];
   event.keyCode = (unsigned short)key;
   event.modifierFlags = ((modifiers & 1) ? NSEventModifierFlagControl : 0) |
       ((modifiers & 2) ? NSEventModifierFlagOption : 0) |
@@ -121,9 +121,9 @@ static OSStatus DeliverCarbonNotification(UInt32 identifier, OSType signature, B
 
 int main(void) {
   @autoreleasepool {
-    DeskKeyDefaultsProbe *defaults = [DeskKeyDefaultsProbe new];
+    StintKeyDefaultsProbe *defaults = [StintKeyDefaultsProbe new];
     NSMutableArray *actions = [NSMutableArray array];
-    DeskKeymapProbe *keymap = [[DeskKeymapProbe alloc] initWithDefaults:(NSUserDefaults *)defaults
+    StintKeymapProbe *keymap = [[StintKeymapProbe alloc] initWithDefaults:(NSUserDefaults *)defaults
         action:^(NSString *action) { [actions addObject:action]; }];
     Check(keymap.hotKeys.count == 4 && keymap.activeReferences.count == 4, @"Default global shortcuts register");
     Check(defaults.writes == 0, @"Launch does not mutate saved preferences");
@@ -136,13 +136,13 @@ int main(void) {
     NSDictionary *decoded = [codec decode:[codec encode:state]];
     Check(CFGetTypeID((__bridge CFTypeRef)decoded[@"global"]) == CFBooleanGetTypeID(), @"Scope survives codec as Boolean");
 
-    for (NSNumber *key in DeskShortcutKeys()) {
+    for (NSNumber *key in StintShortcutKeys()) {
       NSString *error;
-      NSDictionary *binding = DeskShortcutBinding(@{@"keyCode": key, @"modifiers": @3, @"label": @"untrusted"}, &error);
+      NSDictionary *binding = StintShortcutBinding(@{@"keyCode": key, @"modifiers": @3, @"label": @"untrusted"}, &error);
       Check(binding != nil && error == nil, [NSString stringWithFormat:@"Catalogue key %@ is supported", key]);
       Check(![binding[@"label"] isEqual:@"untrusted"], @"Native key catalogue owns labels");
     }
-    Check(DeskShortcutModifiers(NSEventModifierFlagControl | NSEventModifierFlagCommand |
+    Check(StintShortcutModifiers(NSEventModifierFlagControl | NSEventModifierFlagCommand |
         NSEventModifierFlagCapsLock | NSEventModifierFlagFunction) == 9, @"Caps lock/function do not contaminate modifiers");
     NSArray *invalidBindings = @[
       NSNull.null, @[], @{}, @{@"keyCode": @YES, @"modifiers": @3},
@@ -162,7 +162,7 @@ int main(void) {
     ];
     for (id binding in invalidBindings) {
       NSString *error;
-      Check(!DeskShortcutBinding(binding, &error) && error.length > 0, [NSString stringWithFormat:@"Malformed/reserved binding rejected: %@", binding]);
+      Check(!StintShortcutBinding(binding, &error) && error.length > 0, [NSString stringWithFormat:@"Malformed/reserved binding rejected: %@", binding]);
     }
     for (id malformed in @[NSNull.null, @[], @{}, @{@"global": @1, @"bindings": @{}},
                           @{@"global": @YES, @"bindings": @[]}, @{@"global": @YES, @"bindings": @{}}]) {
@@ -176,7 +176,7 @@ int main(void) {
     Check([duplicateError.message containsString:@"Start/Pause and Reset"], @"Duplicate error names both actions");
     Check(defaults.writes == 0, @"Duplicate draft is not persisted");
 
-    for (NSString *action in DeskShortcutActions()) {
+    for (NSString *action in StintShortcutActions()) {
       UInt32 identifier = Identifier(keymap, action);
       NSUInteger before = actions.count;
       [keymap handleHotKeyIdentifier:identifier pressed:YES];
@@ -196,7 +196,7 @@ int main(void) {
     state = Call(keymap, @"setShortcutSettings", canonical);
     Check([state[@"bindings"][@"toggle"][@"label"] isEqual:@"⌃⌥⌘A"], @"Save derives labels from keys");
     Check(defaults.writes == 1 && keymap.activeReferences.count == 4, @"Successful save commits after registration");
-    NSDictionary *previousSaved = defaults.values[DeskKeymapPreference];
+    NSDictionary *previousSaved = defaults.values[StintKeymapPreference];
     NSDictionary *previousConfig = keymap.configuration;
     UInt32 staleIdentifier = Identifier(keymap, @"toggle");
     NSMutableDictionary *conflict = Configuration(YES);
@@ -204,7 +204,7 @@ int main(void) {
     keymap.failedKeys = [NSMutableSet setWithObject:@11];
     FlutterError *conflictError = Call(keymap, @"setShortcutSettings", conflict);
     Check([conflictError isKindOfClass:FlutterError.class] && [conflictError.message containsString:@"Start/Pause"], @"OS conflict reports action and readable error");
-    Check(defaults.writes == 1 && [defaults.values[DeskKeymapPreference] isEqual:previousSaved], @"Failed registration never commits preferences");
+    Check(defaults.writes == 1 && [defaults.values[StintKeymapPreference] isEqual:previousSaved], @"Failed registration never commits preferences");
     Check([keymap.configuration isEqual:previousConfig] && keymap.activeReferences.count == 4, @"Failed save restores previous registration");
     NSUInteger beforeStale = actions.count;
     [keymap handleHotKeyIdentifier:staleIdentifier pressed:YES];
@@ -299,11 +299,11 @@ int main(void) {
     Check([keymap handleLocalEvent:freshUnbound] == freshUnbound, @"Unbound key is not swallowed after switching apps");
 
     NSMutableDictionary *cleared = Configuration(YES);
-    for (NSString *action in DeskShortcutActions()) cleared[@"bindings"][action] = NSNull.null;
+    for (NSString *action in StintShortcutActions()) cleared[@"bindings"][action] = NSNull.null;
     state = Call(keymap, @"setShortcutSettings", cleared);
     Check(keymap.activeReferences.count == 0 && [state[@"bindings"] isEqual:cleared[@"bindings"]], @"All shortcuts may be disabled");
-    Check([defaults.values[DeskKeymapPreference][@"bindings"] count] == 0, @"Disabled bindings persist as valid empty property list");
-    DeskKeymapProbe *relaunched = [[DeskKeymapProbe alloc] initWithDefaults:(NSUserDefaults *)defaults action:^(NSString *action) { (void)action; }];
+    Check([defaults.values[StintKeymapPreference][@"bindings"] count] == 0, @"Disabled bindings persist as valid empty property list");
+    StintKeymapProbe *relaunched = [[StintKeymapProbe alloc] initWithDefaults:(NSUserDefaults *)defaults action:^(NSString *action) { (void)action; }];
     Check([[relaunched state][@"bindings"] isEqual:cleared[@"bindings"]] && relaunched.activeReferences.count == 0, @"Disabled bindings survive relaunch as channel nulls");
     [relaunched invalidate];
 
@@ -319,29 +319,29 @@ int main(void) {
     Check(keymap.activeReferences.count == 0 && keymap.removedMonitors == 1, @"Disposal unregisters and removes monitor once");
     Check([Call(keymap, @"getShortcutSettings", nil) isKindOfClass:FlutterError.class], @"Disposed helper fails visibly");
 
-    DeskKeyDefaultsProbe *fresh = [DeskKeyDefaultsProbe new];
+    StintKeyDefaultsProbe *fresh = [StintKeyDefaultsProbe new];
     startupFailedKey = 15;
-    DeskKeymapProbe *startupConflict = [[DeskKeymapProbe alloc] initWithDefaults:(NSUserDefaults *)fresh action:^(NSString *action) { (void)action; }];
+    StintKeymapProbe *startupConflict = [[StintKeymapProbe alloc] initWithDefaults:(NSUserDefaults *)fresh action:^(NSString *action) { (void)action; }];
     Check([[startupConflict state][@"error"] containsString:@"Reset"] && startupConflict.activeReferences.count == 0, @"Startup conflict is visible and rolls back partial registration");
     Check(fresh.writes == 0, @"Startup conflict does not replace preference");
     startupFailedKey = -1;
     [startupConflict invalidate];
     startupHandlerFailure = eventInternalErr;
-    DeskKeymapProbe *handlerFailure = [[DeskKeymapProbe alloc] initWithDefaults:(NSUserDefaults *)fresh action:^(NSString *action) { (void)action; }];
+    StintKeymapProbe *handlerFailure = [[StintKeymapProbe alloc] initWithDefaults:(NSUserDefaults *)fresh action:^(NSString *action) { (void)action; }];
     Check([[handlerFailure state][@"error"] containsString:@"global shortcuts"], @"Missing global platform support is visible");
     state = Call(handlerFailure, @"setShortcutSettings", Configuration(NO));
     Check([state[@"global"] isEqual:@NO] && !state[@"error"], @"App scope remains available when global handler fails");
     [handlerFailure invalidate];
     startupHandlerFailure = noErr;
     startupMonitorFails = YES;
-    DeskKeymapProbe *monitorFailure = [[DeskKeymapProbe alloc] initWithDefaults:(NSUserDefaults *)fresh action:^(NSString *action) { (void)action; }];
+    StintKeymapProbe *monitorFailure = [[StintKeymapProbe alloc] initWithDefaults:(NSUserDefaults *)fresh action:^(NSString *action) { (void)action; }];
     Check([[monitorFailure state][@"error"] containsString:@"listen for shortcuts"], @"Missing local platform support is visible");
     Check([Call(monitorFailure, @"recordShortcut", nil) isKindOfClass:FlutterError.class], @"Unavailable recording returns a useful failure");
     [monitorFailure invalidate];
     startupMonitorFails = NO;
-    fresh.values[DeskKeymapPreference] = @{@"global": @"corrupt", @"bindings": @{}};
+    fresh.values[StintKeymapPreference] = @{@"global": @"corrupt", @"bindings": @{}};
     NSUInteger writesBeforeCorrupt = fresh.writes;
-    DeskKeymapProbe *corrupt = [[DeskKeymapProbe alloc] initWithDefaults:(NSUserDefaults *)fresh action:^(NSString *action) { (void)action; }];
+    StintKeymapProbe *corrupt = [[StintKeymapProbe alloc] initWithDefaults:(NSUserDefaults *)fresh action:^(NSString *action) { (void)action; }];
     Check([[corrupt state][@"error"] containsString:@"could not be read"] && fresh.writes == writesBeforeCorrupt, @"Malformed saved settings are reported without overwriting them");
     [corrupt invalidate];
 
@@ -349,32 +349,32 @@ int main(void) {
     // decoding, and application target dispatch. No real hotkeys are registered
     // and no keyboard input is sent to the system or any running application.
     useRealCarbonHandler = YES;
-    DeskKeyDefaultsProbe *carbonDefaults = [DeskKeyDefaultsProbe new];
+    StintKeyDefaultsProbe *carbonDefaults = [StintKeyDefaultsProbe new];
     NSMutableArray *carbonActions = [NSMutableArray array];
-    DeskKeymapProbe *carbon = [[DeskKeymapProbe alloc] initWithDefaults:(NSUserDefaults *)carbonDefaults
+    StintKeymapProbe *carbon = [[StintKeymapProbe alloc] initWithDefaults:(NSUserDefaults *)carbonDefaults
         action:^(NSString *action) { [carbonActions addObject:action]; }];
     Check(carbon.eventHandler != NULL && ![carbon state][@"error"], @"Production Carbon handler installs on application target");
-    for (NSString *action in DeskShortcutActions()) {
+    for (NSString *action in StintShortcutActions()) {
       UInt32 identifier = Identifier(carbon, action);
       NSUInteger before = carbonActions.count;
-      Check(DeliverCarbonNotification(identifier, DeskKeymapSignature, YES, YES) == noErr,
+      Check(DeliverCarbonNotification(identifier, StintKeymapSignature, YES, YES) == noErr,
             @"Application target delivers Carbon press to production callback");
       Check(carbonActions.count == before + 1 && [carbonActions.lastObject isEqual:action],
             @"Production Carbon callback decodes identifier and routes the correct action");
-      DeliverCarbonNotification(identifier, DeskKeymapSignature, YES, YES);
+      DeliverCarbonNotification(identifier, StintKeymapSignature, YES, YES);
       Check(carbonActions.count == before + 1, @"Repeated Carbon press is suppressed through actual event handler");
-      Check(DeliverCarbonNotification(identifier, DeskKeymapSignature, NO, YES) == noErr,
+      Check(DeliverCarbonNotification(identifier, StintKeymapSignature, NO, YES) == noErr,
             @"Application target delivers Carbon release to production callback");
-      DeliverCarbonNotification(identifier, DeskKeymapSignature, YES, YES);
+      DeliverCarbonNotification(identifier, StintKeymapSignature, YES, YES);
       Check(carbonActions.count == before + 2, @"Carbon release permits a new press through actual handler");
-      DeliverCarbonNotification(identifier, DeskKeymapSignature, NO, YES);
+      DeliverCarbonNotification(identifier, StintKeymapSignature, NO, YES);
     }
     NSUInteger beforeIgnored = carbonActions.count;
     Check(DeliverCarbonNotification(Identifier(carbon, @"toggle"), 'OTHR', YES, YES) == eventNotHandledErr,
           @"Production handler declines other hotkey signatures");
-    Check(DeliverCarbonNotification(Identifier(carbon, @"toggle"), DeskKeymapSignature, YES, NO) == eventNotHandledErr,
+    Check(DeliverCarbonNotification(Identifier(carbon, @"toggle"), StintKeymapSignature, YES, NO) == eventNotHandledErr,
           @"Production handler declines missing identifier payload");
-    DeliverCarbonNotification(99999, DeskKeymapSignature, YES, YES);
+    DeliverCarbonNotification(99999, StintKeymapSignature, YES, YES);
     Check(carbonActions.count == beforeIgnored, @"Foreign, malformed, and stale Carbon notifications never route an action");
     [carbon invalidate];
     Check(carbon.eventHandler == NULL, @"Disposal removes the actual Carbon event handler");

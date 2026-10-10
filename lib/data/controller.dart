@@ -30,8 +30,8 @@ class PendingTimerAction {
   };
 }
 
-class DeskController extends ChangeNotifier {
-  DeskController(
+class StintController extends ChangeNotifier {
+  StintController(
     this.store, {
     DateTime Function()? now,
     bool tickAutomatically = true,
@@ -180,7 +180,7 @@ class DeskController extends ChangeNotifier {
 
   /// Saves immediately; the Progress sheet has no Save button.
   void setDailyGoal(int goal) {
-    final bounded = goal.clamp(1, DeskSettings.maxDailyGoal);
+    final bounded = goal.clamp(1, StintPreferences.maxDailyGoal);
     if (workspace.settings.dailyGoal == bounded) return;
     workspace.settings.dailyGoal = bounded;
     persist();
@@ -567,7 +567,7 @@ class DeskController extends ChangeNotifier {
     }
     // Settings apply from the next interval, including when this one is idle.
     final s = workspace.settings;
-    final previous = DeskSettings(
+    final previous = StintPreferences(
       focusMinutes: s.focusMinutes,
       shortBreakMinutes: s.shortBreakMinutes,
       longBreakMinutes: s.longBreakMinutes,

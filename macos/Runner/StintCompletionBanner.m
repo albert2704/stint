@@ -1,7 +1,7 @@
-#import "DeskCompletionBanner.h"
+#import "StintCompletionBanner.h"
 #import <QuartzCore/QuartzCore.h>
 
-static NSFont *DeskBannerFont(CGFloat size, NSInteger weight, BOOL mono) {
+static NSFont *StintBannerFont(CGFloat size, NSInteger weight, BOOL mono) {
   NSString *name = mono ? @"MartianMono-SemiExpanded"
       : weight >= 700 ? @"HankenGrotesk-Bold"
       : weight >= 600 ? @"HankenGrotesk-SemiBold" : @"HankenGrotesk-Regular";
@@ -12,11 +12,11 @@ static NSFont *DeskBannerFont(CGFloat size, NSInteger weight, BOOL mono) {
       : [NSFont systemFontOfSize:size weight:fallback]);
 }
 
-static NSString *DeskBannerAnnouncement(NSString *title, NSString *body) {
+static NSString *StintBannerAnnouncement(NSString *title, NSString *body) {
   return [NSString stringWithFormat:@"Stint, %@. %@", title, body];
 }
 
-static NSRect DeskBannerFrame(NSRect visibleFrame, NSRect anchor, CGFloat height) {
+static NSRect StintBannerFrame(NSRect visibleFrame, NSRect anchor, CGFloat height) {
   CGFloat width = MIN(340, MAX(1, NSWidth(visibleFrame) - 24));
   if (NSIsEmptyRect(anchor)) {
     return NSMakeRect(NSMaxX(visibleFrame) - width - 16,
@@ -29,12 +29,12 @@ static NSRect DeskBannerFrame(NSRect visibleFrame, NSRect anchor, CGFloat height
   return NSMakeRect(x, y, width, height);
 }
 
-@interface DeskBannerPanel : NSPanel
+@interface StintBannerPanel : NSPanel
 @property(nonatomic, copy) void (^dismissAction)(void);
 @property(nonatomic, copy) void (^focusChanged)(void);
 @end
 
-@implementation DeskBannerPanel
+@implementation StintBannerPanel
 - (BOOL)canBecomeKeyWindow { return YES; }
 - (BOOL)canBecomeMainWindow { return NO; }
 - (void)cancelOperation:(id)sender { if (self.dismissAction) self.dismissAction(); }
@@ -62,12 +62,12 @@ static NSRect DeskBannerFrame(NSRect visibleFrame, NSRect anchor, CGFloat height
 }
 @end
 
-@interface DeskBannerCardView : NSView
+@interface StintBannerCardView : NSView
 @property(nonatomic, copy) void (^hoverChanged)(BOOL);
 @property(nonatomic, strong) NSTrackingArea *hoverTracking;
 @end
 
-@implementation DeskBannerCardView
+@implementation StintBannerCardView
 - (BOOL)isFlipped { return YES; }
 - (void)updateTrackingAreas {
   if (self.hoverTracking) [self removeTrackingArea:self.hoverTracking];
@@ -81,11 +81,11 @@ static NSRect DeskBannerFrame(NSRect visibleFrame, NSRect anchor, CGFloat height
 - (void)mouseExited:(NSEvent *)event { if (self.hoverChanged) self.hoverChanged(NO); }
 @end
 
-@interface DeskBannerButton : NSButton
+@interface StintBannerButton : NSButton
 @property(nonatomic, strong) NSColor *focusColor;
 @end
 
-@implementation DeskBannerButton
+@implementation StintBannerButton
 - (BOOL)needsPanelToBecomeKey { return YES; }
 - (BOOL)acceptsFirstResponder { return self.enabled && !self.hidden; }
 - (BOOL)canBecomeKeyView { return self.enabled && !self.hidden && !self.isHiddenOrHasHiddenAncestor; }
@@ -111,7 +111,7 @@ static NSRect DeskBannerFrame(NSRect visibleFrame, NSRect anchor, CGFloat height
 }
 @end
 
-@interface DeskBannerTrack : NSView
+@interface StintBannerTrack : NSView
 @property(nonatomic, copy) NSArray<NSNumber *> *minutes;
 @property(nonatomic) NSInteger nextStep;
 @property(nonatomic) NSInteger finishedStep;
@@ -120,7 +120,7 @@ static NSRect DeskBannerFrame(NSRect visibleFrame, NSRect anchor, CGFloat height
 @property(nonatomic, copy) NSDictionary<NSString *, NSColor *> *colors;
 @end
 
-@implementation DeskBannerTrack
+@implementation StintBannerTrack
 - (BOOL)isAccessibilityElement { return NO; }
 - (void)drawRect:(NSRect)dirtyRect {
   NSInteger segments = self.goalMet ? MAX(1, self.goal) : 8;
@@ -154,18 +154,18 @@ static NSRect DeskBannerFrame(NSRect visibleFrame, NSRect anchor, CGFloat height
 }
 @end
 
-@interface DeskCompletionBanner ()
-@property(nonatomic, strong) DeskBannerPanel *panel;
-@property(nonatomic, strong) DeskBannerCardView *card;
+@interface StintCompletionBanner ()
+@property(nonatomic, strong) StintBannerPanel *panel;
+@property(nonatomic, strong) StintBannerCardView *card;
 @property(nonatomic, strong) NSImageView *icon;
 @property(nonatomic, strong) NSTextField *titleLabel;
 @property(nonatomic, strong) NSTextField *bodyLabel;
 @property(nonatomic, strong) NSTextField *detailLabel;
 @property(nonatomic, strong) NSImageView *goalCheck;
-@property(nonatomic, strong) DeskBannerTrack *track;
-@property(nonatomic, strong) DeskBannerButton *closeButton;
-@property(nonatomic, strong) DeskBannerButton *actionButton;
-@property(nonatomic, strong) DeskBannerButton *secondaryButton;
+@property(nonatomic, strong) StintBannerTrack *track;
+@property(nonatomic, strong) StintBannerButton *closeButton;
+@property(nonatomic, strong) StintBannerButton *actionButton;
+@property(nonatomic, strong) StintBannerButton *secondaryButton;
 @property(nonatomic, copy) void (^action)(void);
 @property(nonatomic, copy) void (^secondaryAction)(void);
 @property(nonatomic, readwrite) BOOL hasContent;
@@ -178,19 +178,19 @@ static NSRect DeskBannerFrame(NSRect visibleFrame, NSRect anchor, CGFloat height
 @property(nonatomic) NSTimeInterval hintRemaining;
 @end
 
-@implementation DeskCompletionBanner
+@implementation StintCompletionBanner
 
 - (BOOL)isVisible { return self.panel.isVisible; }
 
 - (NSTextField *)labelWithSize:(CGFloat)size weight:(NSInteger)weight {
   NSTextField *label = [NSTextField wrappingLabelWithString:@""];
-  label.font = DeskBannerFont(size, weight, NO);
+  label.font = StintBannerFont(size, weight, NO);
   label.selectable = NO;
   return label;
 }
 
-- (DeskBannerButton *)buttonWithAction:(SEL)action {
-  DeskBannerButton *button = [[DeskBannerButton alloc] initWithFrame:NSZeroRect];
+- (StintBannerButton *)buttonWithAction:(SEL)action {
+  StintBannerButton *button = [[StintBannerButton alloc] initWithFrame:NSZeroRect];
   button.bordered = NO;
   button.bezelStyle = NSBezelStyleInline;
   button.buttonType = NSButtonTypeMomentaryPushIn;
@@ -204,7 +204,7 @@ static NSRect DeskBannerFrame(NSRect visibleFrame, NSRect anchor, CGFloat height
 
 - (void)createPanelIfNeeded {
   if (self.panel) return;
-  self.panel = [[DeskBannerPanel alloc] initWithContentRect:NSMakeRect(0, 0, 340, 200)
+  self.panel = [[StintBannerPanel alloc] initWithContentRect:NSMakeRect(0, 0, 340, 200)
       styleMask:NSWindowStyleMaskBorderless | NSWindowStyleMaskNonactivatingPanel
       backing:NSBackingStoreBuffered defer:NO];
   self.panel.releasedWhenClosed = NO;
@@ -221,11 +221,11 @@ static NSRect DeskBannerFrame(NSRect visibleFrame, NSRect anchor, CGFloat height
   self.panel.title = @"Stint notification";
   self.panel.autorecalculatesKeyViewLoop = NO;
   self.panel.accessibilitySubrole = NSAccessibilityDialogSubrole;
-  __weak DeskCompletionBanner *weakSelf = self;
+  __weak StintCompletionBanner *weakSelf = self;
   self.panel.dismissAction = ^{ [weakSelf dismiss]; };
   self.panel.focusChanged = ^{ [weakSelf dismissExpiredHintIfPossible]; };
 
-  self.card = [[DeskBannerCardView alloc] initWithFrame:NSMakeRect(0, 0, 340, 200)];
+  self.card = [[StintBannerCardView alloc] initWithFrame:NSMakeRect(0, 0, 340, 200)];
   self.card.wantsLayer = YES;
   self.card.layer.cornerRadius = 18;
   self.card.layer.borderWidth = 1;
@@ -241,7 +241,7 @@ static NSRect DeskBannerFrame(NSRect visibleFrame, NSRect anchor, CGFloat height
   self.titleLabel = [self labelWithSize:15 weight:700];
   self.bodyLabel = [self labelWithSize:14 weight:400];
   self.detailLabel = [self labelWithSize:12 weight:400];
-  self.track = [[DeskBannerTrack alloc] initWithFrame:NSZeroRect];
+  self.track = [[StintBannerTrack alloc] initWithFrame:NSZeroRect];
   self.goalCheck = [[NSImageView alloc] initWithFrame:NSZeroRect];
   self.goalCheck.image = [NSImage imageWithSystemSymbolName:@"checkmark" accessibilityDescription:nil];
   self.goalCheck.symbolConfiguration = [NSImageSymbolConfiguration configurationWithPointSize:11 weight:NSFontWeightSemibold];
@@ -255,9 +255,9 @@ static NSRect DeskBannerFrame(NSRect visibleFrame, NSRect anchor, CGFloat height
   self.closeButton.toolTip = @"Dismiss (Escape)";
   self.actionButton = [self buttonWithAction:@selector(startNextFromButton:)];
   self.actionButton.keyEquivalent = @"\r";
-  self.actionButton.font = DeskBannerFont(14, 700, NO);
+  self.actionButton.font = StintBannerFont(14, 700, NO);
   self.secondaryButton = [self buttonWithAction:@selector(secondaryFromButton:)];
-  self.secondaryButton.font = DeskBannerFont(13, 600, NO);
+  self.secondaryButton.font = StintBannerFont(13, 600, NO);
   self.closeButton.nextKeyView = self.secondaryButton;
   self.secondaryButton.nextKeyView = self.actionButton;
   self.actionButton.nextKeyView = self.closeButton;
@@ -296,7 +296,7 @@ static NSRect DeskBannerFrame(NSRect visibleFrame, NSRect anchor, CGFloat height
 
 - (void)setButton:(NSButton *)button title:(NSString *)title color:(NSColor *)color size:(CGFloat)size weight:(NSInteger)weight {
   NSDictionary *attributes = @{
-    NSFontAttributeName:DeskBannerFont(size, weight, NO), NSForegroundColorAttributeName:color,
+    NSFontAttributeName:StintBannerFont(size, weight, NO), NSForegroundColorAttributeName:color,
   };
   NSAttributedString *styledTitle = [[NSAttributedString alloc] initWithString:title attributes:attributes];
   if (button == self.actionButton) {
@@ -334,7 +334,7 @@ static NSRect DeskBannerFrame(NSRect visibleFrame, NSRect anchor, CGFloat height
 - (void)placeOnScreen:(NSScreen *)screen anchor:(NSRect)anchor height:(CGFloat)height {
   NSScreen *target = screen ?: NSScreen.mainScreen ?: NSScreen.screens.firstObject;
   NSRect visibleFrame = target ? target.visibleFrame : NSMakeRect(0, 0, 1440, 900);
-  [self.panel setFrame:DeskBannerFrame(visibleFrame, anchor, height) display:YES];
+  [self.panel setFrame:StintBannerFrame(visibleFrame, anchor, height) display:YES];
   self.card.frame = NSMakeRect(0, 0, NSWidth(self.panel.frame), height);
   CGPathRef shadowPath = CGPathCreateWithRoundedRect(self.card.bounds, 18, 18, NULL);
   self.card.layer.shadowPath = shadowPath;
@@ -355,7 +355,7 @@ static NSRect DeskBannerFrame(NSRect visibleFrame, NSRect anchor, CGFloat height
 }
 
 - (void)announceTitle:(NSString *)title body:(NSString *)body {
-  NSString *announcement = DeskBannerAnnouncement(title, body);
+  NSString *announcement = StintBannerAnnouncement(title, body);
   self.panel.accessibilityLabel = announcement;
   if (!self.temporarilyHidden) {
     NSAccessibilityPostNotificationWithUserInfo(NSApp, NSAccessibilityAnnouncementRequestedNotification, @{
@@ -386,9 +386,9 @@ static NSRect DeskBannerFrame(NSRect visibleFrame, NSRect anchor, CGFloat height
   NSInteger nextStep = [content[@"nextStep"] integerValue];
   BOOL goalMet = [content[@"goalMet"] boolValue];
   self.titleLabel.stringValue = title;
-  self.titleLabel.font = DeskBannerFont(15, 700, NO);
+  self.titleLabel.font = StintBannerFont(15, 700, NO);
   self.bodyLabel.stringValue = body;
-  self.bodyLabel.font = DeskBannerFont(14, 400, NO);
+  self.bodyLabel.font = StintBannerFont(14, 400, NO);
   self.icon.image = NSApp.applicationIconImage;
   self.track.minutes = [content[@"stepMinutes"] count] == 8 ? content[@"stepMinutes"] : @[@25,@5,@25,@5,@25,@5,@25,@15];
   self.track.nextStep = nextStep;
@@ -406,14 +406,14 @@ static NSRect DeskBannerFrame(NSRect visibleFrame, NSRect anchor, CGFloat height
   [self applyColors:colors nextStep:nextStep];
   NSColor *detailColor = colors[goalMet ? @"focusText" : @"muted"] ?: NSColor.secondaryLabelColor;
   NSMutableAttributedString *styledDetail = [[NSMutableAttributedString alloc] initWithString:detail attributes:@{
-    NSFontAttributeName:DeskBannerFont(12, goalMet ? 600 : 400, NO), NSForegroundColorAttributeName:detailColor,
+    NSFontAttributeName:StintBannerFont(12, goalMet ? 600 : 400, NO), NSForegroundColorAttributeName:detailColor,
   }];
   if (!goalMet) {
     NSString *countText = [NSString stringWithFormat:@"%ld of %ld today",
         (long)[content[@"count"] integerValue], (long)[content[@"goal"] integerValue]];
     NSRange countRange = [detail rangeOfString:countText];
     if (countRange.location != NSNotFound) {
-      [styledDetail addAttributes:@{NSFontAttributeName:DeskBannerFont(12, 400, YES),
+      [styledDetail addAttributes:@{NSFontAttributeName:StintBannerFont(12, 400, YES),
           NSForegroundColorAttributeName:colors[@"ink"] ?: NSColor.labelColor} range:countRange];
     }
   }
@@ -463,9 +463,9 @@ static NSRect DeskBannerFrame(NSRect visibleFrame, NSRect anchor, CGFloat height
   NSString *title = @"Stint is still running";
   NSString *body = @"Your timer lives in the menu bar. Click it any time.";
   self.titleLabel.stringValue = title;
-  self.titleLabel.font = DeskBannerFont(14, 700, NO);
+  self.titleLabel.font = StintBannerFont(14, 700, NO);
   self.bodyLabel.stringValue = body;
-  self.bodyLabel.font = DeskBannerFont(12, 400, NO);
+  self.bodyLabel.font = StintBannerFont(12, 400, NO);
   self.icon.image = NSApp.applicationIconImage;
   self.track.hidden = YES;
   self.goalCheck.hidden = YES;
@@ -493,7 +493,7 @@ static NSRect DeskBannerFrame(NSRect visibleFrame, NSRect anchor, CGFloat height
   [self.hintTimer invalidate];
   if (!self.hint || !self.hasContent || self.temporarilyHidden) return;
   self.hintDeadline = [NSDate dateWithTimeIntervalSinceNow:MAX(0, self.hintRemaining)];
-  __weak DeskCompletionBanner *weakSelf = self;
+  __weak StintCompletionBanner *weakSelf = self;
   self.hintTimer = [NSTimer timerWithTimeInterval:MAX(0.001, self.hintRemaining) repeats:NO block:^(NSTimer *timer) {
     (void)timer;
     weakSelf.hintTimer = nil;

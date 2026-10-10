@@ -7,6 +7,12 @@ if [ "$(uname -m)" != arm64 ]; then
   echo "This local development helper currently targets Apple Silicon. Use flutter build macos with Xcode on Intel."
   exit 1
 fi
+STINT_VERSION="$(sed -n 's/^version:[[:space:]]*\([^+[:space:]]*\).*/\1/p' pubspec.yaml)"
+STINT_BUILD_NUMBER="$(sed -n 's/^version:[[:space:]]*[^+]*+\([0-9][0-9]*\)[[:space:]]*$/\1/p' pubspec.yaml)"
+STINT_BUILD_NUMBER="${STINT_BUILD_NUMBER:-1}"
+case "$STINT_VERSION" in
+  ''|*[!0-9.]*) echo 'Expected a numeric x.y.z version in pubspec.yaml.' >&2; exit 1 ;;
+esac
 bash scripts/flutter.sh pub get
 bash scripts/flutter.sh precache --macos --no-ios --no-android --no-web --no-linux --no-windows --no-fuchsia
 bash scripts/flutter.sh assemble -dTargetPlatform=darwin -dBuildMode=debug -dDarwinArchs=arm64 -dTargetFile=lib/main.dart --output=build/local/frameworks debug_macos_bundle_flutter_assets
@@ -15,20 +21,25 @@ mkdir -p "$APP_DIR/Contents/MacOS" "$APP_DIR/Contents/Frameworks" "$APP_DIR/Cont
 rsync -a --delete build/local/frameworks/FlutterMacOS.framework "$APP_DIR/Contents/Frameworks/"
 rsync -a --delete build/local/frameworks/App.framework "$APP_DIR/Contents/Frameworks/"
 SDK_DIR="$(xcrun --sdk macosx --show-sdk-path)"
+# Link in an empty staging directory first. Replace only the generated executable
+# directory after linking succeeds, so an explicit rebuild retains no stale host.
+STINT_EXECUTABLE_DIR="$(mktemp -d "$PROJECT_DIR/build/local/stint-executable.XXXXXX")"
+trap 'rm -rf "$STINT_EXECUTABLE_DIR"' EXIT
 xcrun clang -arch arm64 -fobjc-arc -fmodules -fmodules-cache-path=build/local/clang-module-cache -mmacosx-version-min=12.0 -isysroot "$SDK_DIR" \
   -Fbuild/local/frameworks -framework Cocoa -framework Carbon -framework QuartzCore -framework CoreText -framework FlutterMacOS -framework UserNotifications -framework AVFoundation -framework UniformTypeIdentifiers -framework WebKit \
-  -Wl,-rpath,@executable_path/../Frameworks scripts/local_macos_runner.m macos/Runner/DeskMenuBar.m macos/Runner/DeskAlertSound.m macos/Runner/DeskCompletionBanner.m macos/Runner/DeskKeymap.m macos/Runner/DeskMusic.m macos/Runner/DeskYouTubePlayer.m -o "$APP_DIR/Contents/MacOS/FocusDesk"
-cat > "$APP_DIR/Contents/Info.plist" <<'PLIST'
+  -Wl,-rpath,@executable_path/../Frameworks scripts/local_macos_runner.m macos/Runner/StintMenuBar.m macos/Runner/StintAlertSound.m macos/Runner/StintCompletionBanner.m macos/Runner/StintKeymap.m macos/Runner/StintMusic.m macos/Runner/StintYouTubePlayer.m -o "$STINT_EXECUTABLE_DIR/Stint"
+rsync -a --delete "$STINT_EXECUTABLE_DIR/" "$APP_DIR/Contents/MacOS/"
+cat > "$APP_DIR/Contents/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0"><dict>
-<key>CFBundleExecutable</key><string>FocusDesk</string>
-<key>CFBundleIdentifier</key><string>com.focusdesk.focusDesk</string>
+<key>CFBundleExecutable</key><string>Stint</string>
+<key>CFBundleIdentifier</key><string>io.github.albert2704.stint</string>
 <key>CFBundleName</key><string>Stint</string>
 <key>CFBundleDisplayName</key><string>Stint</string>
 <key>CFBundlePackageType</key><string>APPL</string>
-<key>CFBundleShortVersionString</key><string>0.1.0</string>
-<key>CFBundleVersion</key><string>1</string>
+<key>CFBundleShortVersionString</key><string>$STINT_VERSION</string>
+<key>CFBundleVersion</key><string>$STINT_BUILD_NUMBER</string>
 <key>CFBundleIconFile</key><string>AppIcon</string>
 <key>LSMinimumSystemVersion</key><string>12.0</string>
 <key>NSPrincipalClass</key><string>NSApplication</string>

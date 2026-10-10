@@ -57,7 +57,7 @@ class MusicTrack {
 
 class FocusMusic extends ChangeNotifier {
   FocusMusic({MethodChannel? channel, AssetBundle? assets})
-    : channel = channel ?? const MethodChannel('focus_desk/music'),
+    : channel = channel ?? const MethodChannel('stint/music'),
       assets = assets ?? rootBundle {
     this.channel.setMethodCallHandler(_handle);
   }
