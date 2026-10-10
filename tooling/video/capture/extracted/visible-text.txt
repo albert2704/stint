@@ -1,0 +1,1 @@
+Stint. Focus. Rest. Repeat. A Pomodoro timer for macOS. Adjustable rhythms, music that follows the timer, daily goals, and progress. MIT licensed.

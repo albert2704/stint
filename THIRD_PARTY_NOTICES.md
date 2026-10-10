@@ -1,0 +1,30 @@
+# Licenses and asset credits
+
+Stint's source code, documentation, app artwork, generated demo media, and original music are available under the [MIT License](LICENSE), except for components identified below. Keep these notices when redistributing the corresponding assets.
+
+## Bundled fonts
+
+| Font | Copyright and source | License |
+| --- | --- | --- |
+| Hanken Grotesk | The Hanken Grotesk Project Authors, 2021. [Upstream project](https://github.com/marcologous/hanken-grotesk) | [SIL Open Font License 1.1](assets/fonts/HankenGrotesk/OFL.txt) |
+| Martian Mono | The Martian Mono Project Authors. [Upstream project](https://github.com/evilmartians/mono) | [SIL Open Font License 1.1](assets/fonts/MartianMono/OFL.txt) |
+
+The bundled TTF files are static instances derived from the variable fonts. Hanken Grotesk uses weights 400, 500, 600, and 700. Martian Mono uses weights 300, 400, and 500 at width 112.5. Their licenses remain OFL, rather than becoming MIT.
+
+## Original Stint assets
+
+- Quiet Keys, Warm Drift, and Night Study are synthesized instrumental loops. [The generator](scripts/generate_focus_music.py) uses NumPy, deterministic seeds, and mathematical oscillators. It uses no external recordings or samples. NumPy is needed only to regenerate the committed WAV files.
+- App icons and menu bar artwork live in `macos/Runner/Assets.xcassets`. The supplied Stint design artwork is included under the project license. Some image files retain content credentials from their creation tools.
+- Documentation screenshots show the actual Flutter interface with synthetic demonstration data. The overview video is an edited sequence of these app renders, rather than a recording of a personal desktop.
+
+## Frameworks and development tools
+
+Flutter and Dart are external SDK dependencies, not vendored in this repository. They include their own licenses and third-party notices. See the [Flutter license](https://github.com/flutter/flutter/blob/master/LICENSE) and the licenses supplied with your SDK. Material icon fonts come from Flutter and retain their own notices. Flutter's package license registry remains available to code using the framework.
+
+The optional video source has its own pinned tool dependencies and lockfile under [tooling/video](tooling/video). Those tools and their bundled libraries retain their upstream licenses; installing them does not change the app's license.
+
+## System sounds and YouTube
+
+Alert sounds such as Glass and Ping are loaded from macOS at runtime. Apple system audio files and generated copies of those sounds are not distributed in this repository. The app generates its two-chime notification file on the user's Mac.
+
+YouTube playback uses the official embedded player. YouTube videos, thumbnails, music, and service content are not included under Stint's MIT license. Adding a link does not download or redistribute the video's audio.
