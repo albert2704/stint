@@ -6,7 +6,7 @@
 <p align="center">One stint at a time. A focused Pomodoro app for your Mac.</p>
 <p align="center">
   <a href="LICENSE">MIT license</a> ·
-  <a href="https://github.com/albert2704/stint/releases/tag/v0.1.0">Download for Mac</a> ·
+  <a href="https://github.com/albert2704/stint/releases/tag/v0.1.1">Download for Mac</a> ·
   <a href="docs/user-guide.md">User guide</a> ·
   <a href="docs/development.md">Build from source</a> ·
   <a href="CONTRIBUTING.md">Contribute</a>
@@ -20,9 +20,11 @@ Stint keeps your countdown in the macOS menu bar, pairs focus sessions with musi
 
 ## Download and install
 
-[**Download Stint 0.1.0 for Mac (.dmg)**](https://github.com/albert2704/stint/releases/download/v0.1.0/Stint-0.1.0-macos-universal.dmg) · [ZIP alternative](https://github.com/albert2704/stint/releases/download/v0.1.0/Stint-0.1.0-macos-universal.zip) · [Release notes and checksums](https://github.com/albert2704/stint/releases/tag/v0.1.0)
+[**Download Stint 0.1.1 for Mac (.dmg)**](https://github.com/albert2704/stint/releases/download/v0.1.1/Stint-0.1.1-macos-universal.dmg) · [ZIP alternative](https://github.com/albert2704/stint/releases/download/v0.1.1/Stint-0.1.1-macos-universal.zip) · [Release notes and checksums](https://github.com/albert2704/stint/releases/tag/v0.1.1)
 
 Open the DMG, drag **Stint.app** to **Applications**, then open it there. Flutter and developer tools are not required. See the [installation guide](docs/install.md) for first-launch approval, checksums, and updates.
+
+**Upgrading from 0.1.0:** quit the old app first. Version 0.1.1 uses a new Stint app identity and starts with fresh settings, history, music library, and permissions. Your previous data is left untouched and is not imported automatically. See the [0.1.1 release notes](docs/releases/v0.1.1.md).
 
 ## See it in action
 
