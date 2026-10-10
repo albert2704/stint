@@ -6,6 +6,7 @@
 <p align="center">One stint at a time. A focused Pomodoro app for your Mac.</p>
 <p align="center">
   <a href="LICENSE">MIT license</a> ·
+  <a href="https://github.com/albert2704/stint/releases/tag/v0.1.0">Download for Mac</a> ·
   <a href="docs/user-guide.md">User guide</a> ·
   <a href="docs/development.md">Build from source</a> ·
   <a href="CONTRIBUTING.md">Contribute</a>
@@ -15,7 +16,13 @@
 
 Stint keeps your countdown in the macOS menu bar, pairs focus sessions with music, and makes breaks part of the same rhythm. It is built with Flutter and native macOS integrations. Your timer and history stay local; no Stint account is required.
 
-**Early development release:** macOS 12 or later. The local development build is verified on Apple Silicon. A signed, notarized download is not available yet. Android is a possible future direction, not a supported target in this repository.
+**macOS preview:** macOS 12 or later, with one universal app for Apple Silicon and Intel. This preview is ad hoc signed and **not notarized by Apple**, so macOS may block the first launch. Physical Intel testing remains unverified. Android is not currently supported.
+
+## Download and install
+
+[**Download Stint 0.1.0 for Mac (.dmg)**](https://github.com/albert2704/stint/releases/download/v0.1.0/Stint-0.1.0-macos-universal.dmg) · [ZIP alternative](https://github.com/albert2704/stint/releases/download/v0.1.0/Stint-0.1.0-macos-universal.zip) · [Release notes and checksums](https://github.com/albert2704/stint/releases/tag/v0.1.0)
+
+Open the DMG, drag **Stint.app** to **Applications**, then open it there. Flutter and developer tools are not required. See the [installation guide](docs/install.md) for first-launch approval, checksums, and updates.
 
 ## See it in action
 
@@ -51,7 +58,7 @@ open build/local/Stint.app
 
 The helper uses the official Flutter macOS engine, compiles the native host with Apple's tools, and signs a debug bundle locally. It does not install Stint in Applications or change your system's security settings. Install Command Line Tools with `xcode-select --install` if needed.
 
-For full Xcode development, follow the [standard Flutter macOS setup](https://docs.flutter.dev/platform-integration/macos/setup), then use `bash scripts/flutter.sh run -d macos`. The standard Xcode project is included, but that release path and Intel hardware have not yet been verified by the maintainer. See [development](docs/development.md) for prerequisites, safe rebuilds, native checks, and packaging limits.
+For full Xcode development, follow the [standard Flutter macOS setup](https://docs.flutter.dev/platform-integration/macos/setup), then use `bash scripts/flutter.sh run -d macos`. The downloadable preview uses the Xcode release host. See [development](docs/development.md) for prerequisites, reproducible packaging, safe rebuilds, and verification limits.
 
 ## Your first stint
 
@@ -78,6 +85,7 @@ Change them in **Settings → Keyboard shortcuts**. Stint must be running. Confl
 
 | Guide | Contents |
 | --- | --- |
+| [Install](docs/install.md) | Downloads, first launch, checksums, updates, and removal |
 | [User guide](docs/user-guide.md) | Timers, rhythms, music, alerts, shortcuts, and progress |
 | [Development](docs/development.md) | Toolchain setup, commands, local builds, and debugging |
 | [Architecture](docs/architecture.md) | Flutter state, native bridges, audio, persistence, and lifecycle |

@@ -99,14 +99,24 @@ Data is stored in macOS's Application Support location for this app, potentially
 | --- | --- |
 | “Install Flutter and add it to PATH” | Install Flutter, or provide `.tooling/flutter/bin/flutter`. Confirm `bash scripts/flutter.sh --version` works. |
 | `xcrun` cannot locate the macOS SDK | Install/configure Command Line Tools or full Xcode, then check `xcode-select -p` and `xcrun --sdk macosx --show-sdk-path`. |
-| Local helper rejects the architecture | The helper targets Apple Silicon. The standard Xcode route exists but is not verified for Intel. |
+| Local helper rejects the architecture | The debug helper targets Apple Silicon. The separate full Xcode package includes both architectures and passed its build checks; physical Intel testing remains unverified. |
 | Flutter framework missing for a native test | Run the development build or macOS precache first, and check which SDK the scripts resolve. |
 | First build fails while fetching dependencies | Check network access and retry. Dependencies and engine artifacts are needed before an offline build. |
 | Missing native channel / plugin response | Use one of the supplied Mac hosts. A generic Flutter host or another platform does not provide these services. |
 | App UI does not include recent code | Quit the old bundle, rebuild, then open the exact newly built path. Avoid running local and verified copies together. |
-| macOS warns about a downloaded build | The project does not yet publish a Developer ID signed/notarized release. Use a source build or a release whose provenance and signing you can verify. |
+| macOS warns about a downloaded build | The prerelease has an ad hoc signature, without Apple Developer ID signing or notarization. Read the [installation guide](install.md#first-launch-and-gatekeeper) and Apple's guidance before deciding whether you trust it. |
 
 The Command Line Tools helper and standard Xcode runner are different hosts. A successful local helper build does not establish a successful Xcode release build. See [development](development.md) for the supported commands and limits.
+
+## Packaging a download fails
+
+`scripts/package-macos.sh` needs full Xcode. If it reports that Xcode is missing, install/configure full Xcode or use the manual **Package macOS** GitHub workflow. The Apple Silicon debug helper is a separate development route and does not create universal release archives.
+
+The package script deliberately fails when it cannot verify the expected architecture slices, release entitlements, app version, signature, or disk image. Keep the failure and build log when reporting a problem; do not upload a partially generated archive as a release.
+
+The release bootstrap script runs only on a disposable GitHub runner. A refusal on your Mac is intentional. It checks the app's startup and sandbox data directory without using your existing profile. Do not bypass its environment checks.
+
+GitHub workflow artifacts expire after 14 days and are separate from permanent release assets. If a completed run's artifact has expired, rerun the workflow against the intended commit. A published prerelease should expose its DMG, ZIP, and checksum file on the versioned release page.
 
 ## Useful information in a bug report
 
