@@ -28,6 +28,8 @@ jobs:
           test "$(git -C "$RUNNER_TEMP/flutter" rev-parse HEAD)" = "$FLUTTER_REVISION"
           echo "$RUNNER_TEMP/flutter/bin" >> "$GITHUB_PATH"
       - name: Build and verify universal packages
+        env:
+          STINT_PACKAGE_SMOKE_TEST: '1'
         run: bash scripts/package-macos.sh
       - name: Preserve packages
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
@@ -38,5 +40,6 @@ jobs:
             build/distribution/*.zip
             build/distribution/SHA256SUMS.txt
             build/distribution/entitlements.plist
+            build/distribution/bootstrap.log
           if-no-files-found: error
           retention-days: 14
