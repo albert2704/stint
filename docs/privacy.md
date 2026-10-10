@@ -1,6 +1,14 @@
 # Privacy and local data
 
-Stint has no account system, app backend, advertising SDK, or app analytics service. Timer and progress data stay on your Mac. This describes Stint's code; third-party services such as YouTube have their own policies.
+The Stint macOS app has no account system, app backend, advertising SDK, or app analytics service. Timer and progress data stay on your Mac. The public website is described separately below; third-party hosting, download, and playback services have their own policies.
+
+## Public website
+
+The [Stint website](https://stint-focus.vercel.app/) is a static feature tour and download page hosted on Vercel. Its fonts are served with the site. Its current code does not include an analytics client, account form, or connection to your Mac's workspace.
+
+The site starts with your system appearance. If you choose light or dark using its header toggle, it saves only that choice in your browser's `localStorage`, under `stint-theme`. This preference is separate from the Mac app's appearance setting. Clearing the site's browser data removes the saved choice.
+
+The animated countdown is an illustration. It does not run or record your focus sessions, play music, or read your app history. Visiting the site sends normal web requests to its hosting provider; following download and source links sends requests to GitHub. These services operate independently of the app's local storage.
 
 ## What is stored
 

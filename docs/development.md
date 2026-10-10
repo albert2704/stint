@@ -179,3 +179,11 @@ Version 0.1.1 passed [CI checks](https://github.com/albert2704/stint/actions/run
 For later releases, check the exact artifacts and their checksums, review the bootstrap log, and document the install/upgrade checks actually performed before publishing. A successful CI run does not replace device testing or establish Apple approval.
 
 Ad hoc signing verifies bundle integrity but does not establish an Apple Developer ID. This workflow does not notarize or staple the app, and a downloaded build can trigger Gatekeeper. Publish it as a prerelease with that limitation stated clearly. A future trusted distribution route needs Developer ID signing and notarization; keep signing credentials out of the repository and preserve the compatibility rules in [CONTRIBUTING.md](../CONTRIBUTING.md).
+
+### Keep the website in sync with a release
+
+The public site is [stint-focus.vercel.app](https://stint-focus.vercel.app/). It is deployed separately to Vercel and links to the app assets on GitHub Releases. Changing `pubspec.yaml` or publishing a GitHub release does not update the site automatically.
+
+For each app release, update the website's DMG link, release page link, displayed version and file size, macOS requirements, and first launch guidance. Keep the ad hoc signing and notarization disclosure aligned with the actual package. The README and [installation guide](install.md) should point to the same release as the site's **Download for Mac** button.
+
+After the website is deployed, check its public URL and download links. For changes to the page itself, also check phone and desktop layouts, the light/dark toggle and its saved choice, keyboard access, FAQ disclosures, and Reduce Motion. The animated countdown illustrates the Mac app; it must not be described as a working browser timer or evidence of native behavior.

@@ -5,6 +5,7 @@
 <h1 align="center">Stint</h1>
 <p align="center">One stint at a time. A focused Pomodoro app for your Mac.</p>
 <p align="center">
+  <a href="https://stint-focus.vercel.app/">Website</a> ·
   <a href="LICENSE">MIT license</a> ·
   <a href="https://github.com/albert2704/stint/releases/tag/v0.1.1">Download for Mac</a> ·
   <a href="docs/user-guide.md">User guide</a> ·
@@ -15,6 +16,8 @@
 ![Stint's dark timer with focus music beside the words Focus. Rest. Repeat.](docs/media/stint-overview.png)
 
 Stint keeps your countdown in the macOS menu bar, pairs focus sessions with music, and makes breaks part of the same rhythm. It is built with Flutter and native macOS integrations. Your timer and history stay local; no Stint account is required.
+
+Explore the [Stint website](https://stint-focus.vercel.app/) for an animated feature tour, light and dark previews, FAQs, and the Mac download. The website's countdown illustrates the app; focus sessions run in the installed macOS app.
 
 **macOS preview:** macOS 12 or later, with one universal app for Apple Silicon and Intel. This preview is ad hoc signed and **not notarized by Apple**, so macOS may block the first launch. Physical Intel testing remains unverified. Android is not currently supported.
 
