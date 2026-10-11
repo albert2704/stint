@@ -6,7 +6,7 @@ The download includes the app and its runtime. You do not need Flutter, Xcode, o
 
 ## Choose a download
 
-You can download the blocker beta directly from GitHub below. The [Stint website](https://stint-focus.vercel.app/#download) may still link to the earlier [0.1.1 preview](https://github.com/albert2704/stint/releases/tag/v0.1.1), which does not include the blocker.
+Choose Download for Mac on the [Stint website](https://stint-focus.vercel.app/#download), or use the GitHub links below, for the blocker beta. The earlier [0.1.1 preview](https://github.com/albert2704/stint/releases/tag/v0.1.1) remains available without the blocker.
 
 You can find these files under **Assets** on the [Stint v0.2.0-beta.1 release page](https://github.com/albert2704/stint/releases/tag/v0.2.0-beta.1):
 
