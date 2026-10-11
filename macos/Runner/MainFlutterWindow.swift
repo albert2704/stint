@@ -5,6 +5,7 @@ class MainFlutterWindow: NSWindow {
   private var filesChannel: FlutterMethodChannel?
   private var menuBar: StintMenuBar?
   private var music: StintMusic?
+  private var blocker: StintBlocker?
 
   override func close() {
     menuBar?.windowWillClose()
@@ -39,6 +40,7 @@ class MainFlutterWindow: NSWindow {
 
     menuBar = StintMenuBar(window: self, messenger: flutterViewController.engine.binaryMessenger)
     music = StintMusic(window: self, messenger: flutterViewController.engine.binaryMessenger)
+    blocker = StintBlocker(window: self, messenger: flutterViewController.engine.binaryMessenger)
     music?.youTubeViewChanged = { [weak self] view in
       self?.menuBar?.setYouTubeView(view)
     }

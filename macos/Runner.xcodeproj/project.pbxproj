@@ -21,6 +21,8 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
+		FD0000130000000000000001 /* StintLocalProxy.m in Sources */ = {isa = PBXBuildFile; fileRef = FD0000130000000000000002; };
+		FD0000100000000000000001 /* StintBlocker.m in Sources */ = {isa = PBXBuildFile; fileRef = FD0000100000000000000002 /* StintBlocker.m */; };
 		FD0000090000000000000001 /* StintKeymap.m in Sources */ = {isa = PBXBuildFile; fileRef = FD0000090000000000000002 /* StintKeymap.m */; };
 		FD0000090000000000000004 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FD0000090000000000000005 /* Carbon.framework */; };
 		FD0000080000000000000001 /* StintCompletionBanner.m in Sources */ = {isa = PBXBuildFile; fileRef = FD0000080000000000000002 /* StintCompletionBanner.m */; };
@@ -39,6 +41,9 @@
 		33CC10F62044A3C60003C045 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 33CC10F42044A3C60003C045 /* MainMenu.xib */; };
 		33CC11132044BFA00003C045 /* MainFlutterWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33CC11122044BFA00003C045 /* MainFlutterWindow.swift */; };
 		78A318202AECB46A00862997 /* FlutterGeneratedPluginSwiftPackage in Frameworks */ = {isa = PBXBuildFile; productRef = 78A3181F2AECB46A00862997 /* FlutterGeneratedPluginSwiftPackage */; };
+		FD0000110000000000000001 /* StintWebsiteBlocker.m in Sources */ = {isa = PBXBuildFile; fileRef = FD0000110000000000000002 /* StintWebsiteBlocker.m */; };
+		FD0000110000000000000003 /* StintBlockerPolicy.m in Sources */ = {isa = PBXBuildFile; fileRef = FD0000110000000000000004 /* StintBlockerPolicy.m */; };
+		FD0000120000000000000001 /* StintHostsFile.m in Sources */ = {isa = PBXBuildFile; fileRef = FD0000120000000000000002; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -72,6 +77,9 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		FD0000130000000000000002 /* StintLocalProxy.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "../ProxyBlocker/StintLocalProxy.m"; sourceTree = "<group>"; };
+		FD0000100000000000000002 /* StintBlocker.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = StintBlocker.m; sourceTree = "<group>"; };
+		FD0000100000000000000003 /* StintBlocker.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = StintBlocker.h; sourceTree = "<group>"; };
 		FD0000090000000000000002 /* StintKeymap.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = StintKeymap.m; sourceTree = "<group>"; };
 		FD0000090000000000000003 /* StintKeymap.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = StintKeymap.h; sourceTree = "<group>"; };
 		FD0000090000000000000005 /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = System/Library/Frameworks/Carbon.framework; sourceTree = SDKROOT; };
@@ -109,6 +117,9 @@
 		78E0A7A72DC9AD7400C4905E /* FlutterGeneratedPluginSwiftPackage */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = FlutterGeneratedPluginSwiftPackage; path = ephemeral/Packages/FlutterGeneratedPluginSwiftPackage; sourceTree = "<group>"; };
 		7AFA3C8E1D35360C0083082E /* Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Release.xcconfig; sourceTree = "<group>"; };
 		9740EEB21CF90195004384FC /* Debug.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Debug.xcconfig; sourceTree = "<group>"; };
+		FD0000110000000000000002 /* StintWebsiteBlocker.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "StintWebsiteBlocker.m"; sourceTree = "<group>"; };
+		FD0000110000000000000004 /* StintBlockerPolicy.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "../HostsBlocker/StintBlockerPolicy.m"; sourceTree = "<group>"; };
+		FD0000120000000000000002 /* StintHostsFile.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "../HostsBlocker/StintHostsFile.m"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -200,6 +211,12 @@
 		33FAB671232836740065AC1E /* Runner */ = {
 			isa = PBXGroup;
 			children = (
+				FD0000100000000000000002 /* StintBlocker.m */,
+				FD0000120000000000000002 /* StintHostsFile.m */,
+				FD0000110000000000000004 /* StintBlockerPolicy.m */,
+				FD0000110000000000000002 /* StintWebsiteBlocker.m */,
+				FD0000130000000000000002 /* StintLocalProxy.m */,
+				FD0000100000000000000003 /* StintBlocker.h */,
 				FD0000090000000000000002 /* StintKeymap.m */,
 				FD0000090000000000000003 /* StintKeymap.h */,
 				FD0000080000000000000002 /* StintCompletionBanner.m */,
@@ -265,6 +282,7 @@
 				33CC10EB2044A3C60003C045 /* Resources */,
 				33CC110E2044A8840003C045 /* Bundle Framework */,
 				3399D490228B24CF009A79C7 /* ShellScript */,
+				FD0000110000000000000005 /* Build website helper */,
 			);
 			buildRules = (
 			);
@@ -391,6 +409,17 @@
 			shellPath = /bin/sh;
 			shellScript = "\"$FLUTTER_ROOT\"/packages/flutter_tools/bin/macos_assemble.sh && touch Flutter/ephemeral/tripwire";
 		};
+		FD0000110000000000000005 /* Build website helper */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = ();
+			inputPaths = ();
+			outputPaths = ();
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/bash;
+			shellScript = "bash \"$PROJECT_DIR/../scripts/build-hosts-helper.sh\" \"$TARGET_BUILD_DIR/$WRAPPER_NAME\" \"$ARCHS\"";
+		};
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -406,6 +435,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				FD0000100000000000000001 /* StintBlocker.m in Sources */,
+				FD0000120000000000000001 /* StintHostsFile.m in Sources */,
+				FD0000110000000000000003 /* StintBlockerPolicy.m in Sources */,
+				FD0000110000000000000001 /* StintWebsiteBlocker.m in Sources */,
+				FD0000130000000000000001 /* StintLocalProxy.m in Sources */,
 				FD0000090000000000000001 /* StintKeymap.m in Sources */,
 				FD0000080000000000000001 /* StintCompletionBanner.m in Sources */,
 				FD0000050000000000000001 /* StintAlertSound.m in Sources */,

@@ -21,6 +21,8 @@ bash scripts/test-completion-alert.sh
 bash scripts/test-notification-card.sh
 bash scripts/test-music-state.sh
 bash scripts/test-youtube-presentation.sh
+bash scripts/test-blocker.sh
+bash scripts/test-hosts-blocker.sh
 ```
 
 The framework locator supports the local build output, the repository SDK, `FLUTTER_ROOT`, and a Flutter executable on `PATH`. For custom SDK layouts, set `STINT_FLUTTER_FRAMEWORK_DIR` to the directory containing `FlutterMacOS.framework`. See [development](development.md).
@@ -38,8 +40,33 @@ The framework locator supports the local build output, the repository SDK, `FLUT
 | Completion card | Geometry, screen anchoring, keyboard actions, persistent card lifecycle, and first-close hint timing |
 | Native music | Playback snapshots, codec types, settings, and source state |
 | YouTube | Embedded panel visibility, suspension pairing, pending playback cancellation, and stale callbacks |
+| Blocker policy and UI | App/domain validation, saved drafts, focus-only transitions, confirmed session override, helper setup status, and explicit setup/removal controls |
+| Native blocker | Cooperative app hiding, deadline/lease release and confirmed override |
+| Hosts helper | Exact restoration, aliases, conflicting mappings, malformed markers, expiry/restart, ownership, links, metadata and staged executable verification using temporary fixtures |
 
 The native harnesses compile production source with warnings treated as errors. They replace operating-system side effects with fakes. The Carbon routing test delivers in-process events to the real application event target, but does not synthesize physical keyboard input.
+
+## Blocker preview verification (0.2.0 source)
+
+The current source uses the free administrator-installed hosts helper. The paid Network Extension implementation and browser-hiding guard are removed. `test-hosts-blocker.sh` exercises production transform/file adapters, policy engine and host bridge with temporary files. It does not install privileged software or edit real hosts.
+
+Coverage includes IPv4/IPv6 and `www` aliases, exact preservation of LF/CRLF/no-final-newline/non-ASCII bytes, repeated updates, external suffixes, conflicting mappings, malformed markers, bounded input, restart recovery, wall/monotonic expiry, ownership mismatch, symlinks, hardlinks, FIFOs, permissions, extended metadata and staged code identity. The Flutter tests cover exact matching, independent setup/removal actions, draft preservation and timer lifecycle.
+
+On 11 October 2026, static analysis and all **170 Flutter tests** passed. Native checks passed **117 hosts helper**, **69 app blocker**, and **835 existing shortcut, completion, card, music and YouTube** checks. The hosts suite also rejects immutable files before staging replacements. The helper compiled for both `arm64` and `x86_64`, and the Apple Silicon development app passed deep, strict signature verification.
+
+The running sandboxed app displayed the free setup controls and successfully wrote an inactive policy in the dedicated home directory (directory mode 0700, file mode 0600). The relaunch retained the paused 05:00 short break and music settings, with one Stint process. At this checkpoint no privileged helper was installed and the real hosts file had no Stint entries.
+
+The user then completed administrator installation. A live check confirmed the root LaunchDaemon running, a recent root-owned status, and **Helper ready** in Stint. During a short focus test, `youtube.com` and `www.youtube.com` had both IPv4/IPv6 hosts entries and resolved to `127.0.0.1` and `::1`. Pause removed the Stint section, restored the original hosts checksum, mode, owner, group, flags and extended attributes, and restored non-loopback YouTube resolution. The original paused 05:00 short break, progress and music state were restored. An additional allowed-domain lookup for `example.com` failed at the resolver and does not establish allowed-site behavior; no browser/cache guarantees are inferred from these DNS checks.
+
+The initial direct Terminal handoff was rejected by the sandbox. The corrected setup/removal flow reveals the command in Finder for the user to open. The rebuilt sandboxed app visibly selected the removal command in Finder without executing it or removing the helper. **123 hosts checks**, **69 app blocker checks**, all **24 focused Flutter blocker tests**, static analysis and the rebuilt app's deep, strict signature verification passed after this fix. Tests cover both command names, pending Finder instructions, missing resources and unchanged focus policy. The first-install launchd presence probe now suppresses its expected missing-service output; real install/bootout errors remain visible.
+
+**Browser enforcement failure found on 11 October 2026:** with focus running, valid helper heartbeats and both YouTube hosts entries present, an existing Edge profile still loaded YouTube in a new window and after a cache-bypassing reload. Edge's own `edge://net-internals/#dns` lookup returned `::1` and `127.0.0.1`, matching macOS. No system web proxy was configured. A fresh InPrivate window failed with `ERR_CONNECTION_REFUSED`. This demonstrates that the hosts implementation does not reliably interrupt an existing browser session. Connection reuse is the leading explanation; the test did not flush the profile's sockets or capture a network log, so it does not identify an individual reused connection. Only temporary test windows were closed, and the user's running focus timer and existing tabs were left alone.
+
+DNS success and **Helper ready** must not be reported as proof of immediate browser blocking. Chromium can [reuse existing HTTP/2 sessions](https://chromium.googlesource.com/chromium/src/+/HEAD/net/spdy/spdy_session_pool.cc) without a new hostname lookup. A stronger design is needed to meet immediate blocking across an already-open browser session; the hosts implementation is still a basic name-resolution aid.
+
+Launchd crash restart, live removal and recovery remain separate checks. See [setup and recovery](blocking.md). The full universal Xcode packaging workflow, physical Intel/macOS 12 testing and downloaded-app Gatekeeper flow remain unverified for this source change. Public downloads remain 0.1.1.
+
+Earlier app-hiding checks with a temporary sandboxed fixture still describe that component. Previous Edge tab-chooser and network-filter checks describe removed implementations and do not establish hosts-helper behavior.
 
 ## Version 0.1.1 status
 
@@ -98,3 +125,19 @@ The downloaded v0.1.0 DMG and ZIP passed SHA256 comparison on an Apple Silicon M
 - Version 0.1.1 passed CI, universal Xcode packaging, and runner bootstrap checks. Physical Intel and macOS 12 testing, Gatekeeper interaction, and a manual upgrade remain unverified. The prerelease uses ad hoc signing; Apple Developer ID signing and notarization are not provided. Android is not implemented.
 
 CI runs the same automated suites on a GitHub-hosted Mac. A green run is useful evidence for the tested commit, not a claim that all hardware and OS behaviors have been exercised.
+
+
+## Local proxy beta verification (2026-10-11)
+
+The replacement keeps a local HTTP/CONNECT server inside the unprivileged app and uses the existing root helper only for proxy selection and recovery. It has not been published.
+
+* Full Flutter suite: 170 tests passed. The status test confirms that helper readiness alone does not display active protection.
+* Legacy hosts cleanup and native publication harness: 124 checks passed with temporary fixtures and version 2 policy.
+* Native app blocker: 69 checks passed.
+* Local transport: 710 checks passed with loopback fixtures, including HTTP forwarding, authenticated health checks, malformed requests, a real verified TLS handshake, both half close directions, domain updates, lease expiry, twelve simultaneous DNS lookups, health at full capacity and shutdown.
+* Proxy preferences: 631 checks passed using a fake SystemConfiguration backend and real temporary journal files. They cover commit/apply uncertainty, crash recovery, external edits, service changes and unsafe files. No real system proxy preferences are changed by this harness.
+* The separate Apple Silicon development bundle compiled and passed deep strict ad hoc signature verification. This debug bundle is for local verification, not a downloadable release.
+
+Pending release gates: updated administrator helper installation, real Chrome and Edge navigation with tabs open before focus, allowed navigation, pause/app crash/helper restart restoration, and universal AOT package verification. The earlier hosts browser failure remains evidence for the replacement, not proof of proxy behavior.
+
+The reviewed local build is running at the canonical app path with one instance. The paused 5 minute break, progress and music selection survived replacement. It recognizes the installed version 1 helper as needing an upgrade and reveals the correct install command in Finder. Administrator upgrade is pending.

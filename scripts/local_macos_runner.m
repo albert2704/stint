@@ -5,6 +5,7 @@
 #import <UserNotifications/UserNotifications.h>
 #import "../macos/Runner/StintMenuBar.h"
 #import "../macos/Runner/StintMusic.h"
+#import "../macos/Runner/StintBlocker.h"
 
 static NSURL *StintDirectory(NSError **error) {
   NSURL *support = [NSFileManager.defaultManager URLForDirectory:NSApplicationSupportDirectory
@@ -36,6 +37,7 @@ static NSImage *StintIcon(void) {
 @property(nonatomic, strong) FlutterMethodChannel *files;
 @property(nonatomic, strong) StintMenuBar *menuBar;
 @property(nonatomic, strong) StintMusic *music;
+@property(nonatomic, strong) StintBlocker *blocker;
 @end
 
 @implementation StintDelegate
@@ -84,6 +86,7 @@ static NSImage *StintIcon(void) {
   self.menuBar = [[StintMenuBar alloc] initWithWindow:self.window messenger:self.controller.engine.binaryMessenger];
   ((StintWindow *)self.window).menuBar = self.menuBar;
   self.music = [[StintMusic alloc] initWithWindow:self.window messenger:self.controller.engine.binaryMessenger];
+  self.blocker = [[StintBlocker alloc] initWithWindow:self.window messenger:self.controller.engine.binaryMessenger];
   self.music.youTubeViewChanged = ^(NSView *view) {
     [weakSelf.menuBar setYouTubeView:view];
   };

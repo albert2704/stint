@@ -313,6 +313,7 @@ static void StintUpdateFocusRing(NSControl *control, NSColor *accent, BOOL focus
   _statusItem.button.imagePosition = NSImageLeft;
   _statusItem.button.title = @" --:--";
   NSMenu *menu = [[NSMenu alloc] initWithTitle:@"Stint"];
+  [self addItem:@"Block distractions…" action:@selector(openBlocker:) toMenu:menu];
   menu.autoenablesItems = NO;
   menu.delegate = self;
   _phaseItem = [self addItem:@"Opening Stint…" action:nil toMenu:menu];
@@ -921,6 +922,7 @@ static void StintUpdateFocusRing(NSControl *control, NSColor *accent, BOOL focus
 - (void)confirmPending:(id)sender { [self.channel invokeMethod:@"confirm" arguments:nil]; }
 - (void)cancelPending:(id)sender { [self.channel invokeMethod:@"cancel" arguments:nil]; }
 - (void)openSettings:(id)sender { [self showWindow]; [self.channel invokeMethod:@"settings" arguments:nil]; }
+- (void)openBlocker:(id)sender { [self showWindow]; [self.channel invokeMethod:@"blocker" arguments:nil]; }
 - (void)openProgress:(id)sender { [self showWindow]; [self.channel invokeMethod:@"progress" arguments:nil]; }
 - (void)toggleMusic:(id)sender { [self.channel invokeMethod:@"musicToggle" arguments:nil]; }
 - (void)changeVolume:(NSSlider *)sender {

@@ -21,6 +21,13 @@ flowchart LR
     NativeMusic --> Audio[AVAudioPlayer]
     NativeMusic --> YouTube[StintYouTubePlayer / WKWebView]
     YouTube --> Menu
+    Controller --> Blocker[BlockerController]
+    Blocker --> BlockerStore[FileBlockerStore]
+    Blocker <--> NativeBlocker[StintBlocker]
+    NativeBlocker --> Policy[Local policy file]
+    Policy --> Helper[Administrator installed routing helper]
+    Helper --> Routing[Temporary HTTP and HTTPS proxy settings]
+    Routing --> Proxy[Unprivileged local proxy in Stint]
 ```
 
 | Location | Responsibility |
@@ -33,6 +40,9 @@ flowchart LR
 | [`lib/native_timer.dart`](../lib/native_timer.dart) | Native timer snapshots and validated commands coming back to Dart. |
 | [`lib/music.dart`](../lib/music.dart), [`lib/timer_music.dart`](../lib/timer_music.dart) | Music view state, commands, and timer transition coordination. |
 | [`lib/alert_sounds.dart`](../lib/alert_sounds.dart), [`lib/keymap.dart`](../lib/keymap.dart) | Typed alert and shortcut settings interfaces on the timer channel. |
+| [`lib/blocker.dart`](../lib/blocker.dart) | Focus-only blocker policy, session override, native updates, and website helper setup state. |
+| [`lib/blocking/`](../lib/blocking/) | Validated app/domain models and atomic blocklist storage. |
+| [`lib/ui/blocker_settings.dart`](../lib/ui/blocker_settings.dart) | Blocklist draft, confirmations, helper status, and explicit setup/removal controls. |
 | [`lib/ui/`](../lib/ui/) | Timer, cycle track, settings, shortcuts, music, and Progress widgets. |
 | [`macos/Runner/StintMenuBar.m`](../macos/Runner/StintMenuBar.m) | Status item, timer panel, notification scheduling, action routing, completion coordination. |
 | [`macos/Runner/StintCompletionBanner.m`](../macos/Runner/StintCompletionBanner.m) | Branded completion card and first-close hint. |
@@ -40,6 +50,7 @@ flowchart LR
 | [`macos/Runner/StintKeymap.m`](../macos/Runner/StintKeymap.m) | Shortcut validation, registration, recording and saved preferences. |
 | [`macos/Runner/StintMusic.m`](../macos/Runner/StintMusic.m) | Import library, local playback, fades, selection, and YouTube coordination. |
 | [`macos/Runner/StintYouTubePlayer.m`](../macos/Runner/StintYouTubePlayer.m) | Visible embedded playback, WebKit lifecycle, and stale-event protection. |
+| [`macos/Runner/StintBlocker.m`](../macos/Runner/StintBlocker.m) | App selection, activation observation, cooperative hiding, app focus screen, and website helper bridge. |
 
 Two hosts wire up these same services. [`MainFlutterWindow.swift`](../macos/Runner/MainFlutterWindow.swift) belongs to the standard Flutter/Xcode app. [`scripts/local_macos_runner.m`](../scripts/local_macos_runner.m) is the Command Line Tools development host. Both must remain aligned when channel setup, window lifecycle, or service wiring changes.
 
@@ -65,6 +76,7 @@ Flutter and native code use the `stint` namespace and the standard method codec.
 | `stint/timer` | Dart sends `update` snapshots; native sends toggle/reset/skip/jump/rhythm/confirmation/Progress/Settings and music-panel actions. | `NativeTimerBridge` and `StintMenuBar`. |
 | `stint/timer` | Alert choices, preview and save; shortcut load/save/record/cancel. | `AlertSounds`, `StintKeymap`, native helpers. |
 | `stint/music` | Dart requests load/import/select/play/pause/fade/volume/YouTube operations; native publishes state or error. | `FocusMusic` and `StintMusic`. |
+| `stint/blocker` | Dart sends `update`, `chooseApps`, `filterStatus`, and explicit `enableFilter` / `removeFilter`; native sends confirmed `unblock` with a session ID, `status`, and `filter` updates. | `BlockerController` and `StintBlocker`. |
 
 The timer snapshot includes phase, deadline, remaining and total time, IDs, cycle position, saved durations, appearance, pending confirmation, rhythms, daily progress, and optional music state. JSON-equivalent snapshots are suppressed to avoid redundant method calls.
 
@@ -102,6 +114,30 @@ Saving attempts the new registration before committing preferences. If registrat
 
 The Flutter editor owns a draft and saves independently of parent Settings drafts. Global registration/routing is automated-tested; physical global delivery remains a separate live check.
 
+## App and website blocking
+
+The blocker is part of the upcoming 0.2.0 source build, not the published 0.1.1 package. [The setup guide](blocking.md) covers the user-facing flow.
+
+`BlockerController` listens to the existing timer. Effective protection requires a loaded, enabled blocklist, a running focus interval, a future deadline, and a session ID that has not been bypassed. Breaks, pauses, reset, skip and expiry release protection. A confirmed early override is stored against the current session ID, so it survives pause/resume without affecting the next session. A stale native or dialog confirmation cannot unblock a newer session.
+
+The editor saves its enabled setting, apps and domains together before changing policy. A failed write leaves the previous blocklist effective. Timer-driven release does not depend on a successful settings write. Removing protection during an active stint asks for confirmation. Repeated editor requests share one dialog so an older draft cannot remain behind a newer editor.
+
+Native `NSWorkspace` activation observation compares bundle identifiers with the selected apps. `NSRunningApplication.hide()` preserves the process and its documents; Stint never force quits selected apps. A native focus screen gives a countdown and confirmed escape. Native deadline and lease guards release stale protection independently of the Dart tick. Recovery utilities, Stint, Chrome and Edge are excluded from app selection, and hide failures are reported to Dart. Neither Accessibility access nor a privileged helper is used.
+
+### Local website proxy and routing helper
+
+`StintWebsiteBlocker` owns `StintLocalProxy` on IPv4 loopback port 48197 and atomically writes version 2 focus policy to `~/Library/Application Support/Stint Website Blocker/policy.json`. The app's scoped home relative sandbox exception allows this folder. Policy contains session, UID, domains, deadline, issue time, a maximum 30 second lease, proxy port and a per launch health token. Dart renews every ten seconds. A version 1 installed helper is shown as needing an upgrade.
+
+The unprivileged proxy supports a single HTTP request per connection on port 80 and opaque CONNECT tunnels on port 443. It checks domain label boundaries and closes handled tunnels when they become blocked. It bounds headers, buffers, connection count and timeouts. HTTPS bytes are relayed unchanged. Local health checks authenticate the running listener using its token. The app has ordinary network client and server sandbox entitlements, without Network Extension or Apple Events capabilities.
+
+Setup and removal reveal the bundled command in Finder. The user explicitly opens it and enters their administrator password in Terminal. `StintHostsHelper` retains its existing installation identifier to upgrade one daemon. It validates the owning UID and secure policy path, expires policy by wall and monotonic clocks, ignores startup policy until refreshed, and probes the local server before routing. It never parses internet traffic. Its status is root owned, version 2, and checked for freshness by the app.
+
+`StintProxyPreferences` uses SystemConfiguration to change only the HTTP and HTTPS proxy keys of eligible enabled network services. It refuses an existing enabled proxy or unsupported exception list. It saves exact original key presence and values to a root owned recovery journal before committing. Restoration preserves external edits and removes the journal only after commit and apply succeed. Network changes during a focus release routing and require a new focus to retry.
+
+The daemon restores previous settings on inactive or stale policy, server failure, shutdown and restart. Permanently disabling it can leave the selected proxy in place; see [manual recovery](blocking.md#remove-or-recover-the-helper). `StintHostsFile` is retained only for removing the earlier preview's marked hosts entries on upgrade and recovery, preserving unrelated bytes and metadata.
+
+System proxy settings affect all users of the network service. Apps ignoring those settings are outside protection. Preloaded content and buffered media remain visible, and already running direct streams may continue. No URL, payload or DNS activity is logged. See [verification](testing.md#blocker-preview-verification-020-source).
+
 ## Persistence and compatibility
 
 Version 0.1.1 uses **Stint** throughout its application identity:
@@ -121,6 +157,7 @@ Both hosts ask macOS for the user Application Support URL and append `Stint`. Be
 | `Stint/workspace.json` beneath the resolved Application Support directory | Versioned workspace: timer, duration/appearance settings, custom rhythms, daily goal, focus sessions, and preserved legacy records. |
 | `workspace.backup.json` beside it | Previous valid workspace saved before replacing the current file. |
 | `workspace.json.damaged-*` beside it | Preserved corrupt input encountered while saving recovery data. |
+| `Stint/blocker.json` | Separate versioned enabled setting, selected app names/IDs and domains, and the current-stint override. |
 | `Stint/Music/` | App-owned imported audio copies and built-in playback cache files. |
 | Native `NSUserDefaults` domain | Music list/selection/volume/follow option, alert choice, hint state, and `StintKeyboardShortcuts`. |
 | macOS-resolved Library `Sounds/` | Generated two-chime notification WAV cache. |
@@ -130,17 +167,21 @@ Both hosts ask macOS for the user Application Support URL and append `Stint`. Be
 
 The JSON schema remains version 1. Decoding validates duration bounds, identifiers, references, cycle/phase agreement, and timer invariants. Optional newer fields receive compatibility defaults. Legacy projects, tasks, notes, and their references remain round-trippable even though the current UI exposes only Pomodoro and music. This schema compatibility does not import a workspace from the previous app identity. Do not remove those record types without an explicit migration plan.
 
+Blocker storage is separate and does not change the workspace schema or identity. It validates limits of 100 apps and 200 domains, excludes protected app IDs, and rejects malformed or duplicate saved entries. Saving uses a flushed temporary file and atomic rename. It does not use the workspace's previous-save backup.
+
+The proxy replacement preserves version 1 `blocker.json`, with matching covering each domain and its subdomains. Old `browser-pairing.json` files and exported extension folders are ignored and left untouched. Their owner can remove them and any previously installed extension manually; the app does not delete user data during this change.
+
 Progress is derived from saved completed focus records, grouped by the local day of completion. The current goal and locale week start are view preferences. Aggregates are cached across countdown ticks and invalidated for history, local-day, or timezone changes. Goals are not stored historically; changing today's target also changes how past goal days are classified.
 
 ## Privacy and platform boundaries
 
-There is no Stint account, app backend, cloud sync, analytics client, or remote workspace upload in the current source. Core timer, progress, bundled audio, and local imports work without a network connection after installation. Local data is not separately encrypted by Stint; it relies on the operating system's user and disk protections.
+There is no Stint account, hosted app backend, cloud sync, analytics client, or remote workspace upload in the current source. Core timer, progress, bundled audio, and local imports work without an internet connection after installation. Browser inspection uses local macOS Apple Events. Local data is not separately encrypted by Stint; it relies on the operating system's user and disk protections.
 
 YouTube is a network-dependent third-party embed. Loading it contacts YouTube and may use cookies or other WebKit storage under that service's behavior. A privacy-enhanced input URL is parsed to a video ID; it does not switch the implementation to a separate privacy-enhanced player mode. Do not describe the entire app as making no network requests.
 
-Entitlements enable sandboxing, user-selected file access, and network client access. The debug profile also enables JIT and network server capabilities needed by the development runtime. Global shortcuts use registered keys and explicit local recording; they do not add an event tap or broad keyboard-monitoring permission flow.
+Entitlements enable sandboxing, user-selected file access, and network client access. No Automation, Network Extension or system-extension installation entitlements are present. A narrowly scoped home-relative file exception permits the helper settings directory. Website helper installation requires an explicit administrator-approved Terminal command. No release network-server entitlement, Accessibility access or JavaScript from Apple Events is used. The debug profile retains its development JIT and network-server capabilities. Global shortcuts use registered keys and explicit local recording; they do not add an event tap or broad keyboard-monitoring permission flow.
 
-Although much Dart logic can be reused on another platform, the filesystem channel, menu panel, alerts, audio import/playback, YouTube host, and keymap need platform implementations. Android is an architectural possibility, not an implemented feature.
+Although much Dart logic can be reused on another platform, the filesystem channel, menu panel, alerts, audio import/playback, YouTube host, keymap, and app-blocking service need platform implementations. Android is an architectural possibility, not an implemented feature.
 
 ## Public website
 

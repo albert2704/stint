@@ -60,6 +60,18 @@ Duration, rhythm-list, alert, and appearance edits are drafts until **Save setti
 
 Keyboard shortcuts have their own **Save shortcuts** button. Saving that editor is independent of the parent Settings sheet. The daily goal in Progress saves immediately.
 
+## Block distractions
+
+**Source preview:** this feature is in the upcoming 0.2.0 source build. It is not included in the published 0.1.1 download. Follow the [build instructions](development.md) and [complete blocker setup guide](blocking.md).
+
+Open **Settings → Block distractions…** or the timer's shield control. Turn on **Block during focus**, use **Choose apps**, and add website domains or HTTP/HTTPS URLs. Choose **Save blocklist** to apply the draft; this save is independent of the parent Settings sheet. Each name covers itself and its subdomains.
+
+Mac apps are hidden when you switch to them; their documents stay open. For websites, choose **Set up website blocker**, double-click the command revealed in Finder, complete its one-time administrator setup in Terminal, and return to **Refresh**. No Apple subscription or browser extension is needed. See [setup and recovery](blocking.md#set-up-the-website-helper).
+
+The local proxy keeps browsers open and HTTPS encrypted. It affects browsers using macOS proxy settings, including Stint’s YouTube music. Use a built-in or local track when blocking YouTube. Loaded pages and buffered media can remain visible. Existing custom proxies, VPNs and apps that ignore system proxy settings are unsupported.
+
+Pause, reset, skip, completion and breaks release protection. **Unblock this stint** requires confirmation and stays effective through pause/resume of that interval. If Stint crashes, a running helper detects the missing local server and restores proxy settings. A stalled timer heartbeat expires within 30 seconds. A permanently stopped helper needs [recovery](blocking.md#remove-or-recover-the-helper), because system proxy settings cannot expire themselves. Reload failed pages after release. App blocking remains independent of helper setup.
+
 ## Completion alerts
 
 While Stint is running, a completion produces a Stint card beneath the countdown and plays the selected sound **twice**, separated by a short gap. The direct chime is separate from macOS notification permission, but still depends on your Mac's audio output and volume.

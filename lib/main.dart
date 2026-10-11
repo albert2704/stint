@@ -6,6 +6,8 @@ import 'native_files.dart';
 import 'native_timer.dart';
 import 'music.dart';
 import 'timer_music.dart';
+import 'blocker.dart';
+import 'ui/blocker_settings.dart';
 import 'ui/routines.dart';
 import 'ui/pomodoro.dart';
 import 'ui/progress.dart';
@@ -29,6 +31,7 @@ class _BootstrapState extends State<Bootstrap> {
   NativeTimerBridge? timerBridge;
   FocusMusic? music;
   TimerMusicCoordinator? timerMusic;
+  BlockerController? blocker;
   final navigatorKey = GlobalKey<NavigatorState>();
   @override
   void initState() {
@@ -50,7 +53,13 @@ class _BootstrapState extends State<Bootstrap> {
       final loaded = StintController(store!);
       final loadedMusic = FocusMusic();
       await loadedMusic.load();
+      final loadedBlocker = BlockerController(
+        loaded,
+        store: FileBlockerStore(store!.directory),
+      );
+      await loadedBlocker.initialize();
       if (!mounted) {
+        loadedBlocker.dispose();
         loadedMusic.dispose();
         loaded.dispose();
         return;
@@ -58,6 +67,7 @@ class _BootstrapState extends State<Bootstrap> {
       setState(() {
         controller = loaded;
         music = loadedMusic;
+        blocker = loadedBlocker;
       });
       timerMusic = TimerMusicCoordinator(loaded, loadedMusic);
       timerBridge = NativeTimerBridge(
@@ -66,7 +76,13 @@ class _BootstrapState extends State<Bootstrap> {
         onSettings: () async {
           final context = navigatorKey.currentContext;
           if (context != null && context.mounted) {
-            await showStintSettings(context, loaded);
+            await showStintSettings(context, loaded, blocker: loadedBlocker);
+          }
+        },
+        onBlocker: () async {
+          final context = navigatorKey.currentContext;
+          if (context != null && context.mounted) {
+            await showBlockerSettings(context, loadedBlocker);
           }
         },
         onProgress: () async {
@@ -90,6 +106,7 @@ class _BootstrapState extends State<Bootstrap> {
   void dispose() {
     timerBridge?.dispose();
     timerMusic?.dispose();
+    blocker?.dispose();
     music?.dispose();
     controller?.dispose();
     super.dispose();
@@ -102,6 +119,7 @@ class _BootstrapState extends State<Bootstrap> {
         controller: controller!,
         navigatorKey: navigatorKey,
         music: music,
+        blocker: blocker,
       );
     }
     return MaterialApp(
@@ -165,10 +183,12 @@ class StintApp extends StatelessWidget {
     required this.controller,
     this.navigatorKey,
     this.music,
+    this.blocker,
   });
   final StintController controller;
   final GlobalKey<NavigatorState>? navigatorKey;
   final FocusMusic? music;
+  final BlockerController? blocker;
   @override
   Widget build(BuildContext context) => ListenableBuilder(
     listenable: controller,
@@ -183,7 +203,11 @@ class StintApp extends StatelessWidget {
         'light' => ThemeMode.light,
         _ => ThemeMode.system,
       },
-      home: PomodoroScreen(controller: controller, music: music),
+      home: PomodoroScreen(
+        controller: controller,
+        music: music,
+        blocker: blocker,
+      ),
     ),
   );
 }
