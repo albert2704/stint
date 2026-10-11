@@ -62,7 +62,7 @@ Keyboard shortcuts have their own **Save shortcuts** button. Saving that editor 
 
 ## Block distractions
 
-**Source preview:** this feature is in the upcoming 0.2.0 source build. It is not included in the published 0.1.1 download. Follow the [build instructions](development.md) and [complete blocker setup guide](blocking.md).
+**Beta feature:** app and website blocking are included in [0.2.0 beta](https://github.com/albert2704/stint/releases/tag/v0.2.0-beta.1). The older 0.1.1 download does not include them. Follow the [installation guide](install.md) and [complete blocker setup guide](blocking.md).
 
 Open **Settings → Block distractions…** or the timer's shield control. Turn on **Block during focus**, use **Choose apps**, and add website domains or HTTP/HTTPS URLs. Choose **Save blocklist** to apply the draft; this save is independent of the parent Settings sheet. Each name covers itself and its subdomains.
 

@@ -85,7 +85,7 @@ If a saved goal reports an error, keep Progress open and use **Retry save**. Do 
 
 ## Distraction blocking is not working
 
-First check your build. The blocker is in the upcoming 0.2.0 source build; it is not present in the published 0.1.1 download. [Build the current source](development.md), then follow the [setup guide](blocking.md).
+First check your build. The blocker is included in [0.2.0 beta](https://github.com/albert2704/stint/releases/tag/v0.2.0-beta.1); the older 0.1.1 download does not include it. Install the beta or [build the current source](development.md), then follow the [setup guide](blocking.md).
 
 In **Block distractions**, turn on **Block during focus**, choose apps or websites, and use **Save blocklist**. Blocking runs only during an unexpired focus timer. It deliberately releases on pause, breaks, reset, skip or completion. If you chose **Unblock this stint**, it stays released through pause/resume of that interval and returns for the next focus interval. Closing the main window keeps Stint running; quitting it stops protection.
 
@@ -131,7 +131,7 @@ Quit the old app before running the new one, then choose your rhythm and music a
 | --- | --- |
 | “Install Flutter and add it to PATH” | Install Flutter, or provide `.tooling/flutter/bin/flutter`. Confirm `bash scripts/flutter.sh --version` works. |
 | `xcrun` cannot locate the macOS SDK | Install/configure Command Line Tools or full Xcode, then check `xcode-select -p` and `xcrun --sdk macosx --show-sdk-path`. |
-| Local helper rejects the architecture | The debug helper targets Apple Silicon. The separate full Xcode package includes both architectures and passed v0.1.1 package checks; physical Intel testing remains unverified. |
+| Local helper rejects the architecture | The debug helper targets Apple Silicon. The separate full Xcode package includes both architectures and passed 0.2.0 beta package checks; physical Intel testing remains unverified. |
 | Flutter framework missing for a native test | Run the development build or macOS precache first, and check which SDK the scripts resolve. |
 | First build fails while fetching dependencies | Check network access and retry. Dependencies and engine artifacts are needed before an offline build. |
 | Missing native channel / plugin response | Use one of the supplied Mac hosts. A generic Flutter host or another platform does not provide these services. |

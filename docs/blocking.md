@@ -1,6 +1,6 @@
 # Distraction blocking beta
 
-The upcoming 0.2.0 build adds app blocking and a local website proxy. The published 0.1.1 download does not include these features. The new proxy is undergoing verification and has not been published yet.
+Version 0.2.0 beta adds app blocking and a local website proxy. You can get the beta from [GitHub Releases](https://github.com/albert2704/stint/releases/tag/v0.2.0-beta.1). The earlier 0.1.1 download does not include these features.
 
 ## Set up
 
@@ -45,4 +45,4 @@ External edits are preserved. If network settings change while focus is running,
 
 ## Verification status
 
-See [testing](testing.md) for the actual checks performed. Hosts resolution alone was insufficient in the previous implementation: an existing Edge session still loaded YouTube. The proxy beta must pass real browser, pause and recovery checks before publication.
+See [testing](testing.md#version-020-beta-verification) for the actual checks performed. Live Edge checks verified blocked YouTube navigation, allowed GitHub navigation and access returning on pause. App crash recovery restored the saved proxy settings. Chrome was not installed and remains unverified. The previous hosts approach was replaced after it failed to block an existing Edge session reliably.

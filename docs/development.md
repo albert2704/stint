@@ -2,7 +2,7 @@
 
 Stint combines a Flutter interface with small native macOS services. The local development route builds an Apple Silicon debug app using Apple's Command Line Tools. A separate full Xcode workflow builds a universal release app and downloadable DMG and ZIP files. Version 0.1.1 passed the [packaging workflow](https://github.com/albert2704/stint/actions/runs/38021166173) and [CI checks](https://github.com/albert2704/stint/actions/runs/38021166305).
 
-The upcoming 0.2.0 source build adds app and website blocking. These source changes are not included in the published 0.1.1 downloads. Build the current checkout to try the feature; do not infer a published release from the source version. See [blocker setup](blocking.md).
+Version 0.2.0 beta adds app and website blocking. Download the [beta release](https://github.com/albert2704/stint/releases/tag/v0.2.0-beta.1) or build the current checkout. The older 0.1.1 downloads do not include the blocker. See [blocker setup](blocking.md).
 
 [Architecture](architecture.md) · [Contributing](../CONTRIBUTING.md) · [Troubleshooting](troubleshooting.md) · [README](../README.md)
 
@@ -179,7 +179,7 @@ bash scripts/package-macos.sh
 
 The script configures the macOS release project through Flutter, then calls Xcode directly for both `arm64` and `x86_64`. This produces ahead-of-time compiled Dart code, without a debug kernel. The direct Xcode step preserves the checked-in release sandbox entitlements instead of allowing Flutter's CI development override to replace them.
 
-It copies the generated app to `build/package-stage/Stint.app`, includes project, font, Flutter, and engine license notices, applies an ad hoc signature, and creates files named from the source version. For the upcoming 0.2.0 build, these are:
+It copies the generated app to `build/package-stage/Stint.app`, includes project, font, Flutter, and engine license notices, applies an ad hoc signature, and creates files named from the source version. For the 0.2.0 beta build, these are:
 
 | Output in `build/distribution/` | Purpose |
 | --- | --- |
