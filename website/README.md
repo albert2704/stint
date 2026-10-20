@@ -41,6 +41,12 @@ Validation during delivery covered desktop and phone layouts down to 320 CSS pix
 
 ## Current app release
 
-The primary download is Stint 0.2.0 Beta 1, a 28.4 MB universal DMG. The blocker section and FAQ describe focus-only app hiding, website setup, Edge verification, Chrome testing limits and recovery. Release assets, setup instructions and verification records are linked directly to the public GitHub release and docs.
+The download links target Stint **0.3.0 Beta 1**, a universal DMG for macOS 12 or later. The page describes the five additions: saved focus profiles, a Flow count up timer, independent ambient layers, weekly focus targets, and the optional Pick up here sentence. The verified DMG is 33,942,029 bytes, displayed as 33.9 MB.
 
-The blocker update was checked in dark and light themes at desktop and phone sizes, including 320, 390, 780 and 1440 CSS pixels. No horizontal overflow or browser console errors were observed. Keyboard activation opened the setup FAQ, and the download and documentation links point to the current beta. The existing reduced motion rules also apply to the new section.
+The hero’s countdown and existing timer illustrations continue to demonstrate Pomodoro. The Sound illustration includes example ambient levels; these are decorative examples, not controls or evidence of app playback. The page uses the existing fonts, palettes, responsive grids and reduced motion rules.
+
+The blocker FAQ distinguishes the live Edge checks performed for 0.2.0 from 0.3.0, whose real browser enforcement has not been re-tested. Chrome, physical Intel hardware and macOS 12 remain unverified. The release remains ad hoc signed and not notarized; its first launch guidance and disclosures are retained. Publishing the GitHub release and deploying this folder are separate steps.
+
+The previous blocker website update was checked in dark and light themes at desktop and phone sizes, including 320, 390, 780 and 1440 CSS pixels. No horizontal overflow or browser console errors were observed. Keyboard activation opened the setup FAQ, and the download and documentation links point to the current beta. The existing reduced motion rules also apply to the new section.
+
+The 0.3.0 update passed local Chromium checks at 320, 390, 780 and 1440 CSS pixels in both themes: no horizontal or feature-card overflow, valid in-page anchors, unique IDs, working keyboard FAQ activation, saved theme selection, and reduced motion. No browser console errors were observed. Download URLs target the new release; public asset availability is checked after publication, separately from these local layout checks.

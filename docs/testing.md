@@ -60,7 +60,7 @@ The Apple Silicon development app built successfully at `build/focus-experience/
 
 The live walkthrough verified Flow counting upward, cancelling a profile switch during Flow, recording one completed session and preparing a one-minute break, applying Writing silently, editing Pick up here, changing the weekly target, playing and pausing ambience alone, and opening the mixer from the native menu bar. After quitting and relaunching, the continuation sentence, idle timer, saved mix and 630-minute weekly target persisted, with audio paused.
 
-These results apply to the local source build, not the published 0.2.0 beta package. Real website enforcement, physical sleep/wake, physical Intel hardware and release packaging were not re-tested for this change. Flow resumes paused from 15-second checkpoints after relaunch; quitting or crashing can lose time since the last checkpoint. Pausing first saves exact elapsed time.
+This walkthrough used a development copy; universal release package evidence appears below. Real website enforcement, physical sleep/wake and physical Intel hardware were not re-tested for this change. Flow resumes paused from 15-second checkpoints after relaunch; quitting or crashing can lose time since the last checkpoint. Pausing first saves exact elapsed time.
 
 ## Version 0.2.0 beta verification
 
@@ -114,6 +114,16 @@ The initial public source files also built successfully in a clean temporary che
 
 ## Downloadable package verification
 
+### Version 0.3.0 beta
+
+**Passed on 20 October 2026:** [Checks run 39441390296](https://github.com/albert2704/stint/actions/runs/39441390296) and [Package macOS run 39441391289](https://github.com/albert2704/stint/actions/runs/39441391289), both at source commit `7f67189599904867aad32d1cfacd9491d1efffaa`, tagged `v0.3.0-beta.1`.
+
+CI passed static analysis, all **216 Flutter tests**, and all nine native suites totaling **2,447 checks**. The 274 completion checks also passed in a second timezone. The full Xcode workflow produced the universal AOT app and passed its exact-app startup smoke check on the disposable Mac runner.
+
+Both downloaded archives matched `SHA256SUMS.txt`. The ZIP app passed deep, strict signature verification. Independent inspection confirmed version `0.3.0` (build `4`), bundle identity `io.github.albert2704.stint`, macOS 12 minimum, `arm64` and `x86_64` slices in the executable, both frameworks and website helper, and no debug Dart kernel. Release entitlements retain the sandbox without JIT or debugger access. All three ambient WAV files match the source assets. The DMG passed `hdiutil verify` and is 33,942,029 bytes; the ZIP is 30,991,517 bytes.
+
+These package checks complement the isolated development-app walkthrough above. The exact release app was not opened in the user's data profile. Physical Intel and macOS 12 operation, physical sleep/wake, a downloaded upgrade through Gatekeeper and real website enforcement on 0.3.0 remain unverified. The beta is ad hoc signed and not notarized.
+
 ### Version 0.2.0 beta
 
 **Passed on 11 October 2026:** [Package macOS run 38124929655](https://github.com/albert2704/stint/actions/runs/38124929655), at source commit `adeae3c0b5b26d786ef57d1d21619dd65e68eae5`.
@@ -158,6 +168,6 @@ The downloaded v0.1.0 DMG and ZIP passed SHA256 comparison on an Apple Silicon M
 - Test **Control + Option + Command + S** while another app is active. The timer panel should appear. Test Start/Pause next; Reset and Skip should show confirmation when the interval has unfinished time.
 - YouTube needs real network and embedding permission for the chosen video. Headless tests cannot guarantee availability of a third-party stream.
 - System notification presentation depends on macOS permissions and Focus settings. A normal-Quit notification should also be tested on a real Mac.
-- Version 0.2.0 beta passed CI, universal Xcode packaging, runner bootstrap and a local release app session. Physical Intel and macOS 12 testing, Chrome, Gatekeeper interaction and a downloaded app upgrade remain unverified. The prerelease uses ad hoc signing; Apple Developer ID signing and notarization are not provided. Android is not implemented.
+- Version 0.3.0 beta passed CI, universal Xcode packaging and runner bootstrap, with an isolated development-app walkthrough. Physical Intel and macOS 12 testing, Chrome, Gatekeeper interaction and a downloaded app upgrade remain unverified. The prerelease uses ad hoc signing; Apple Developer ID signing and notarization are not provided. Android is not implemented.
 
 CI runs the same automated suites on a GitHub-hosted Mac. A green run is useful evidence for the tested commit, not a claim that all hardware and OS behaviors have been exercised.

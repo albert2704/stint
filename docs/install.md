@@ -1,6 +1,6 @@
 # Install Stint
 
-Stint v0.3.0-beta.1 targets macOS 12 or later, with a universal app for Apple Silicon and Intel. Physical Intel and macOS 12 testing have not been completed; see [verification details](testing.md#downloadable-package-verification).
+Stint v0.3.0-beta.1 targets macOS 12 or later, with a universal app for Apple Silicon and Intel. CI, universal packaging, runner startup, archive checksums and signature verification passed. Physical Intel and macOS 12 testing have not been completed; see [verification details](testing.md#downloadable-package-verification).
 
 The download includes the app and its runtime. You do not need Flutter, Xcode, or developer tools to use it. See [build from source](development.md) if you want to build Stint yourself.
 

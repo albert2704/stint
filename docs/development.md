@@ -181,16 +181,16 @@ bash scripts/package-macos.sh
 
 The script configures the macOS release project through Flutter, then calls Xcode directly for both `arm64` and `x86_64`. This produces ahead-of-time compiled Dart code, without a debug kernel. The direct Xcode step preserves the checked-in release sandbox entitlements instead of allowing Flutter's CI development override to replace them.
 
-It copies the generated app to `build/package-stage/Stint.app`, includes project, font, Flutter, and engine license notices, applies an ad hoc signature, and creates files named from the source version. For the 0.2.0 beta build, these are:
+It copies the generated app to `build/package-stage/Stint.app`, includes project, font, Flutter, and engine license notices, applies an ad hoc signature, and creates files named from the source version. For the 0.3.0 beta build, these are:
 
 | Output in `build/distribution/` | Purpose |
 | --- | --- |
-| `Stint-0.2.0-macos-universal.dmg` | Disk image containing the app, an Applications shortcut, and installation text. |
-| `Stint-0.2.0-macos-universal.zip` | Archive containing the same app and installation text. |
+| `Stint-0.3.0-macos-universal.dmg` | Disk image containing the app, an Applications shortcut, and installation text. |
+| `Stint-0.3.0-macos-universal.zip` | Archive containing the same app and installation text. |
 | `SHA256SUMS.txt` | SHA256 values for the DMG and app ZIP. |
 | `entitlements.plist` | Entitlements extracted from the signed app for verification. |
 
-The versioned filenames change with `pubspec.yaml`. Creating them does not publish a release; the current public download remains 0.1.1 until a later release is explicitly published. Repeating the command replaces generated packaging files; the script clears `build/package-stage/`. It does not install the app in Applications or launch it in your personal profile.
+The versioned filenames change with `pubspec.yaml`. Creating them does not publish a release. Attach the verified artifacts to the intended GitHub release as a separate step. Repeating the command replaces generated packaging files; the script clears `build/package-stage/`. It does not install the app in Applications or launch it in your personal profile.
 
 The script checks the app's signature, both architecture slices in the executable, embedded routing helper and two framework binaries, absence of a debug Dart kernel, the version and macOS 12 minimum in the bundle, and release sandbox entitlements. It rejects debug JIT and debugger entitlements, verifies the disk image, and calculates archive checksums. These checks passed for v0.1.1; see [verification results and limits](testing.md#downloadable-package-verification).
 
