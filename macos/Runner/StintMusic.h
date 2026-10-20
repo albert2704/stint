@@ -3,7 +3,8 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-/// Local looping music and visible YouTube playback with optional timer-follow controls.
+/// Local looping music, independent ambience, and visible YouTube playback.
+/// Saved sound settings restore silently; timer controls share the full mix.
 @interface StintMusic : NSObject
 - (instancetype)initWithWindow:(NSWindow *)window
                      messenger:(id<FlutterBinaryMessenger>)messenger;

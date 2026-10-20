@@ -13,6 +13,9 @@ class PendingTimerAction {
     required this.confirmLabel,
     this.targetStep,
     this.routineId,
+    this.mode,
+    this.externalActionId,
+    this.onConfirm,
   });
 
   final String kind;
@@ -20,6 +23,9 @@ class PendingTimerAction {
   final String confirmLabel;
   final int? targetStep;
   final String? routineId;
+  final FocusMode? mode;
+  final String? externalActionId;
+  final FutureOr<void> Function()? onConfirm;
 
   Map<String, Object?> toJson() => {
     'kind': kind,
@@ -27,6 +33,8 @@ class PendingTimerAction {
     'confirmLabel': confirmLabel,
     if (targetStep != null) 'targetStep': targetStep,
     if (routineId != null) 'routineId': routineId,
+    if (mode != null) 'mode': mode!.name,
+    if (externalActionId != null) 'externalActionId': externalActionId,
   };
 }
 
@@ -53,11 +61,25 @@ class StintController extends ChangeNotifier {
   int _intervalRevision = 0;
   int? _pendingRevision;
   int _lastRemaining = -1;
+  int _lastElapsed = -1;
+  DateTime? _flowRunStartedAt;
+  int _flowRunBaseMilliseconds = 0;
+  bool _externalActionBusy = false;
+  bool get externalActionBusy => _externalActionBusy;
   (int, int, int, Duration, String)? _lastCalendar;
   Object? _progressSourceKey;
   ProgressSummary? _progressSource;
-  final _progress = <(int, int), ProgressSummary>{};
+  final _progress = <(int, int, int), ProgressSummary>{};
   FocusTimer get timer => workspace.timer;
+  bool get isFlowFocus => timer.isFlowFocus;
+  int get _elapsedMilliseconds =>
+      timer.elapsedMilliseconds +
+      (timer.flowStartedAt == null
+          ? 0
+          : max(0, now().difference(timer.flowStartedAt!).inMilliseconds));
+  int get elapsedSeconds => isFlowFocus ? _elapsedMilliseconds ~/ 1000 : 0;
+  int get suggestedFlowBreakMinutes =>
+      (_elapsedMilliseconds / (5 * 60 * 1000)).ceil().clamp(1, 30);
   int get remaining => timer.endsAt == null
       ? timer.remaining
       : min(
@@ -67,8 +89,9 @@ class StintController extends ChangeNotifier {
             (timer.endsAt!.difference(now()).inMilliseconds / 1000).ceil(),
           ),
         );
-  bool get timerHasProgress =>
-      timer.running || timer.remaining < timer.totalSeconds;
+  bool get timerHasProgress => isFlowFocus
+      ? timer.running || _elapsedMilliseconds > 0
+      : timer.running || timer.remaining < timer.totalSeconds;
 
   List<FocusRoutine> get routines => List.unmodifiable([
     ...FocusRoutine.builtIns,
@@ -91,6 +114,7 @@ class StintController extends ChangeNotifier {
   /// Prepares focus at the current focus step, or the next focus after a break.
   /// Interactive callers use requestRoutine so progress is confirmed first.
   void applyRoutine(String id) {
+    if (externalActionBusy) return;
     final routine = _routine(id);
     tick();
     final settings = workspace.settings;
@@ -158,6 +182,7 @@ class StintController extends ChangeNotifier {
       _calendarKey(currentTime),
     );
     final goal = workspace.settings.dailyGoal;
+    final weeklyGoalMinutes = workspace.settings.weeklyGoalMinutes;
     if (_progressSourceKey != sourceKey) {
       _progressSourceKey = sourceKey;
       _progressSource = ProgressSummary.from(
@@ -165,15 +190,18 @@ class StintController extends ChangeNotifier {
         now: currentTime,
         goal: goal,
         firstDayOfWeekIndex: firstDayOfWeekIndex,
+        weeklyGoalMinutes: weeklyGoalMinutes,
       );
       _progress.clear();
-      _progress[(goal, firstDayOfWeekIndex)] = _progressSource!;
+      _progress[(goal, firstDayOfWeekIndex, weeklyGoalMinutes)] =
+          _progressSource!;
     }
     return _progress.putIfAbsent(
-      (goal, firstDayOfWeekIndex),
+      (goal, firstDayOfWeekIndex, weeklyGoalMinutes),
       () => _progressSource!.withPreferences(
         goal: goal,
         firstDayOfWeekIndex: firstDayOfWeekIndex,
+        weeklyGoalMinutes: weeklyGoalMinutes,
       ),
     );
   }
@@ -183,6 +211,31 @@ class StintController extends ChangeNotifier {
     final bounded = goal.clamp(1, StintPreferences.maxDailyGoal);
     if (workspace.settings.dailyGoal == bounded) return;
     workspace.settings.dailyGoal = bounded;
+    persist();
+  }
+
+  void setWeeklyGoalMinutes(int minutes) {
+    final bounded = minutes.clamp(
+      StintPreferences.minWeeklyGoalMinutes,
+      StintPreferences.maxWeeklyGoalMinutes,
+    );
+    final rounded =
+        (bounded / StintPreferences.weeklyGoalStepMinutes).round() *
+        StintPreferences.weeklyGoalStepMinutes;
+    if (workspace.settings.weeklyGoalMinutes == rounded && saveError == null) {
+      return;
+    }
+    workspace.settings.weeklyGoalMinutes = rounded;
+    persist();
+  }
+
+  void setContinuationNote(String note) {
+    final normalized = normalizeContinuationNote(note);
+    if (workspace.settings.continuationNote == normalized &&
+        saveError == null) {
+      return;
+    }
+    workspace.settings.continuationNote = normalized;
     persist();
   }
 
@@ -202,6 +255,7 @@ class StintController extends ChangeNotifier {
   }
 
   void persist() {
+    _checkpointFlow();
     try {
       store.save(workspace);
       saveError = null;
@@ -212,13 +266,26 @@ class StintController extends ChangeNotifier {
     notifyListeners();
   }
 
+  void _checkpointFlow() {
+    if (!isFlowFocus || !timer.running) return;
+    final checkpoint = now();
+    if (checkpoint.isBefore(timer.flowStartedAt!)) return;
+    timer.elapsedMilliseconds += max(
+      0,
+      checkpoint.difference(timer.flowStartedAt!).inMilliseconds,
+    );
+    timer.flowStartedAt = checkpoint;
+  }
+
   void startFocus() {
+    if (externalActionBusy) return;
     selectPhase(TimerPhase.focus);
     startTimer();
   }
 
   /// Compatibility for old callers; cycle-track callers use requestJumpTo.
   void selectPhase(TimerPhase phase) {
+    if (externalActionBusy) return;
     final step = switch (phase) {
       TimerPhase.focus =>
         timer.cycleStep.isEven ? timer.cycleStep : (timer.cycleStep + 1) % 8,
@@ -236,19 +303,34 @@ class StintController extends ChangeNotifier {
   }
 
   void startTimer() {
+    if (externalActionBusy) return;
     final wasRunning = timer.running;
     tick();
     if (wasRunning) return;
     timer.sessionId ??= newId();
     timer.completedSessionId = null;
-    timer.endsAt = now().add(Duration(seconds: timer.remaining));
+    if (isFlowFocus) {
+      _flowRunStartedAt = now();
+      _flowRunBaseMilliseconds = timer.elapsedMilliseconds;
+      timer.flowStartedAt = _flowRunStartedAt;
+    } else {
+      timer.endsAt = now().add(Duration(seconds: timer.remaining));
+    }
     _clearPending();
     notice = null;
     persist();
   }
 
   void pauseTimer() {
+    if (externalActionBusy) return;
     if (!timer.running) return;
+    if (isFlowFocus) {
+      _checkpointFlow();
+      timer.flowStartedAt = null;
+      _flowRunStartedAt = null;
+      persist();
+      return;
+    }
     if (remaining == 0) {
       tick();
       return;
@@ -258,16 +340,42 @@ class StintController extends ChangeNotifier {
     persist();
   }
 
+  /// A native sleep event carries the instant sleep began. Delivery may wait
+  /// until wake, so use the current run's original anchor, even if a resumed
+  /// Dart tick already checkpointed time during sleep.
+  void pauseFlowForSleep(DateTime cutoff) {
+    if (!isFlowFocus || !timer.running) return;
+    final startedAt = _flowRunStartedAt ?? timer.flowStartedAt!;
+    if (cutoff.isBefore(startedAt)) return; // An older run's delayed event.
+    final currentTime = now();
+    final end = cutoff.isAfter(currentTime) ? currentTime : cutoff;
+    final base = _flowRunStartedAt == null
+        ? timer.elapsedMilliseconds
+        : _flowRunBaseMilliseconds;
+    timer.elapsedMilliseconds =
+        base + max(0, end.difference(startedAt).inMilliseconds);
+    timer.flowStartedAt = null;
+    _flowRunStartedAt = null;
+    persist();
+  }
+
   void resetTimer() {
+    if (externalActionBusy) return;
     final revision = _intervalRevision;
     tick();
     if (revision != _intervalRevision) return;
-    _prepareStep(timer.cycleStep);
+    _prepareStep(
+      timer.cycleStep,
+      totalSeconds: timer.mode == FocusMode.flow && !isFlowFocus
+          ? timer.totalSeconds
+          : null,
+    );
     notice = null;
     persist();
   }
 
   void skipToNext() {
+    if (externalActionBusy) return;
     final revision = _intervalRevision;
     tick();
     if (revision != _intervalRevision) return;
@@ -277,6 +385,7 @@ class StintController extends ChangeNotifier {
   }
 
   void jumpToStep(int step) {
+    if (externalActionBusy) return;
     phaseForCycleStep(step); // Validate before settling or changing any state.
     if (step == timer.cycleStep) return;
     final revision = _intervalRevision;
@@ -293,7 +402,7 @@ class StintController extends ChangeNotifier {
 
   /// Adjusts this interval only, retaining elapsed time and the running session.
   void adjustCurrent(int deltaMinutes) {
-    if (deltaMinutes == 0) return;
+    if (externalActionBusy || isFlowFocus || deltaMinutes == 0) return;
     final revision = _intervalRevision;
     tick();
     if (revision != _intervalRevision) return;
@@ -363,7 +472,119 @@ class StintController extends ChangeNotifier {
     );
   }
 
+  void requestMode(FocusMode mode) {
+    if (mode == timer.mode) return;
+    _request(
+      PendingTimerAction(
+        kind: 'mode',
+        title: 'Switch to ${mode == FocusMode.flow ? 'Flow' : 'Pomodoro'}?',
+        confirmLabel: 'Switch',
+        mode: mode,
+      ),
+    );
+  }
+
+  /// Interactive callers use requestMode, which confirms unfinished progress.
+  void applyMode(FocusMode mode) {
+    if (externalActionBusy || mode == timer.mode) return;
+    tick();
+    workspace.settings.focusMode = mode;
+    timer.mode = mode;
+    _prepareStep(
+      timer.cycleStep.isEven ? timer.cycleStep : (timer.cycleStep + 1) % 8,
+    );
+    notice = null;
+    persist();
+  }
+
+  /// A profile's timer is prepared only after its shared confirmation succeeds.
+  /// This is allowed within the external action gate; other timer edits wait.
+  void applyProfileTimer({
+    required int focus,
+    required int shortBreak,
+    required int longBreak,
+    required FocusMode mode,
+  }) {
+    if (focus < 1 ||
+        focus > 120 ||
+        shortBreak < 1 ||
+        shortBreak > 60 ||
+        longBreak < 1 ||
+        longBreak > 60) {
+      throw ArgumentError('Invalid profile durations.');
+    }
+    tick();
+    final settings = workspace.settings;
+    settings.focusMinutes = focus;
+    settings.shortBreakMinutes = shortBreak;
+    settings.longBreakMinutes = longBreak;
+    settings.focusMode = mode;
+    settings.preferredRoutineId = null;
+    timer.mode = mode;
+    _prepareStep(
+      timer.cycleStep.isEven ? timer.cycleStep : (timer.cycleStep + 1) % 8,
+    );
+    notice = null;
+    persist();
+  }
+
+  /// Commit active Flow time once, then offer a manually started break.
+  bool finishFlow() {
+    if (externalActionBusy || !isFlowFocus || timer.sessionId == null) {
+      return false;
+    }
+    final milliseconds = _elapsedMilliseconds;
+    if (milliseconds <= 0) return false;
+    final sessionId = timer.sessionId!;
+    final alreadyRecorded = workspace.sessions.any((s) => s.id == sessionId);
+    final breakMinutes = (milliseconds / (5 * 60 * 1000)).ceil().clamp(1, 30);
+    if (!alreadyRecorded) {
+      workspace.sessions.insert(
+        0,
+        FocusSession(
+          id: sessionId,
+          taskId: timer.taskId,
+          taskTitle: timer.taskTitle,
+          projectName: timer.projectName,
+          seconds: max(1, milliseconds ~/ 1000),
+          finishedAt: now().toUtc(),
+          mode: FocusMode.flow,
+          continuationNote: workspace.settings.continuationNote,
+        ),
+      );
+      timer.completedCount++;
+    }
+    _prepareStep(
+      (timer.cycleStep + 1) % 8,
+      completedSessionId: sessionId,
+      totalSeconds: breakMinutes * 60,
+    );
+    notice = 'Focus complete. Take a break when you are ready.';
+    persist();
+    return !alreadyRecorded;
+  }
+
+  /// Profiles share the same discard confirmation as ordinary timer changes.
+  /// No asynchronous configuration begins until the user confirms.
+  void requestExternalAction({
+    required String id,
+    required String title,
+    String confirmLabel = 'Switch',
+    required FutureOr<void> Function() onConfirm,
+  }) {
+    _request(
+      PendingTimerAction(
+        kind: 'external',
+        title: title,
+        confirmLabel: confirmLabel,
+        externalActionId: id,
+        onConfirm: onConfirm,
+      ),
+    );
+  }
+
   void _request(PendingTimerAction action) {
+    if (externalActionBusy) return;
     final revision = _intervalRevision;
     tick();
     if (revision != _intervalRevision) return;
@@ -409,6 +630,23 @@ class StintController extends ChangeNotifier {
         } else {
           notifyListeners();
         }
+      case 'mode':
+        applyMode(action.mode!);
+      case 'external':
+        unawaited(_applyExternalAction(action.onConfirm!));
+    }
+  }
+
+  Future<void> _applyExternalAction(FutureOr<void> Function() action) async {
+    _externalActionBusy = true;
+    notifyListeners();
+    try {
+      await action();
+    } catch (_) {
+      showNotice('The profile could not be applied. Please try again.');
+    } finally {
+      _externalActionBusy = false;
+      notifyListeners();
     }
   }
 
@@ -453,6 +691,7 @@ class StintController extends ChangeNotifier {
 
   /// Compatibility for the old duration dialog. New UI uses adjustCurrent.
   void setTimerMinutes(int minutes) {
+    if (externalActionBusy || isFlowFocus) return;
     final maxMinutes = timer.phase == TimerPhase.focus ? 120 : 60;
     if (minutes < 1 || minutes > maxMinutes) {
       throw ArgumentError('Invalid timer duration.');
@@ -472,6 +711,7 @@ class StintController extends ChangeNotifier {
     timer.completedSessionId = null;
     timer.endsAt = wasRunning ? now().add(Duration(minutes: minutes)) : null;
     _intervalRevision++;
+    _flowRunStartedAt = null;
     _clearPending();
     notice = null;
     persist();
@@ -487,17 +727,19 @@ class StintController extends ChangeNotifier {
     notifyListeners();
   }
 
-  void _prepareStep(int step, {String? completedSessionId}) {
+  void _prepareStep(int step, {String? completedSessionId, int? totalSeconds}) {
     final phase = phaseForCycleStep(step);
     workspace.timer = FocusTimer(
       phase: phase,
       cycleStep: step,
       completedCount: timer.completedCount,
-      totalSeconds: workspace.settings.secondsFor(phase),
-      remaining: workspace.settings.secondsFor(phase),
+      totalSeconds: totalSeconds ?? workspace.settings.secondsFor(phase),
+      remaining: totalSeconds ?? workspace.settings.secondsFor(phase),
       completedSessionId: completedSessionId,
+      mode: timer.mode,
     );
     _intervalRevision++;
+    _flowRunStartedAt = null;
     _clearPending();
   }
 
@@ -505,6 +747,18 @@ class StintController extends ChangeNotifier {
     final seconds = remaining;
     // Refresh at local midnight and on timezone changes, even while idle.
     final calendarChanged = _calendarChanged();
+    if (isFlowFocus) {
+      final elapsed = elapsedSeconds;
+      if (timer.running &&
+          _elapsedMilliseconds - timer.elapsedMilliseconds >= 15000) {
+        _lastElapsed = elapsed;
+        persist();
+      } else if (_lastElapsed != elapsed || calendarChanged) {
+        _lastElapsed = elapsed;
+        notifyListeners();
+      }
+      return;
+    }
     if (timer.running && seconds <= 0) {
       final completedSessionId = timer.sessionId;
       if (timer.phase == TimerPhase.focus) {
@@ -520,6 +774,7 @@ class StintController extends ChangeNotifier {
               // New records retain their absolute instant across relaunches
               // in another timezone. Legacy records remain untouched.
               finishedAt: timer.endsAt!.toUtc(),
+              continuationNote: workspace.settings.continuationNote,
             ),
           );
           timer.completedCount++;
@@ -583,6 +838,7 @@ class StintController extends ChangeNotifier {
       ..clear()
       ..addAll(custom);
     s.preferredRoutineId = preferredRoutineId;
+    _checkpointFlow();
     try {
       store.save(workspace);
       saveError = null;

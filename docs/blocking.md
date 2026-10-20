@@ -1,6 +1,6 @@
 # Distraction blocking beta
 
-Version 0.2.0 beta adds app blocking and a local website proxy. You can get the beta from [GitHub Releases](https://github.com/albert2704/stint/releases/tag/v0.2.0-beta.1). The earlier 0.1.1 download does not include these features.
+Version 0.2.0 beta adds app blocking and a local website proxy. You can get the beta from [GitHub Releases](https://github.com/albert2704/stint/releases/tag/v0.3.0-beta.1). The earlier 0.1.1 download does not include these features.
 
 ## Set up
 

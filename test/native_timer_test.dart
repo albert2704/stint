@@ -72,6 +72,10 @@ void main() {
         expect(calls.single.method, 'update');
         expect(lastSnapshot(), {
           'remaining': 1500,
+          'flowFocus': false,
+          'flowElapsedSeconds': 0,
+          'continuationNote': '',
+          'externalActionBusy': false,
           'totalSeconds': 1500,
           'running': false,
           'hasProgress': false,
@@ -115,6 +119,73 @@ void main() {
         await messenger.platformMessagesFinished;
         expect(calls, hasLength(count + 1));
         expect(lastSnapshot()['remaining'], 1493);
+      },
+    );
+
+    test(
+      'Flow counts up and accepts only the displayed finish action',
+      () async {
+        controller.applyMode(FocusMode.flow);
+        controller.startTimer();
+        final session = controller.timer.sessionId;
+        final step = controller.timer.cycleStep;
+        now = now.add(const Duration(minutes: 12, seconds: 30));
+        controller.tick();
+        await messenger.platformMessagesFinished;
+        expect(lastSnapshot()['flowFocus'], isTrue);
+        expect(lastSnapshot()['flowElapsedSeconds'], 750);
+        expect(lastSnapshot()['deadlineMilliseconds'], isNull);
+        await nativeCall('finishFlow', {
+          'sessionId': 'stale',
+          'cycleStep': step,
+        });
+        expect(controller.workspace.sessions, isEmpty);
+        await nativeCall('finishFlow', {
+          'sessionId': session,
+          'cycleStep': step,
+        });
+        expect(controller.workspace.sessions.single.seconds, 750);
+        expect(controller.timer.running, isFalse);
+        expect(controller.remaining, 180);
+        await nativeCall('finishFlow', {
+          'sessionId': session,
+          'cycleStep': step,
+        });
+        expect(controller.workspace.sessions, hasLength(1));
+      },
+    );
+
+    test('sleep pauses only Flow focus and note projects to native', () async {
+      controller.setContinuationNote('Next: fix login redirect');
+      controller.applyMode(FocusMode.flow);
+      controller.startTimer();
+      now = now.add(const Duration(seconds: 45));
+      await nativeCall('systemWillSleep');
+      expect(controller.timer.running, isFalse);
+      expect(controller.elapsedSeconds, 45);
+      now = now.add(const Duration(hours: 2));
+      controller.tick();
+      expect(controller.elapsedSeconds, 45);
+      await messenger.platformMessagesFinished;
+      expect(lastSnapshot()['continuationNote'], 'Next: fix login redirect');
+      controller.requestMode(FocusMode.pomodoro);
+      controller.confirmPending();
+      controller.startTimer();
+      await nativeCall('systemWillSleep');
+      expect(controller.timer.running, isTrue);
+    });
+
+    test(
+      'a delayed sleep event excludes time while the Mac was asleep',
+      () async {
+        controller.applyMode(FocusMode.flow);
+        controller.startTimer();
+        final sleepAt = now.add(const Duration(seconds: 45));
+        now = now.add(const Duration(hours: 2));
+        controller.tick();
+        await nativeCall('systemWillSleep', sleepAt.millisecondsSinceEpoch);
+        expect(controller.timer.running, isFalse);
+        expect(controller.elapsedSeconds, 45);
       },
     );
 

@@ -13,8 +13,10 @@ STINT_BUILD_NUMBER="${STINT_BUILD_NUMBER:-1}"
 case "$STINT_VERSION" in
   ''|*[!0-9.]*) echo 'Expected a numeric x.y.z version in pubspec.yaml.' >&2; exit 1 ;;
 esac
-bash scripts/flutter.sh pub get
-bash scripts/flutter.sh precache --macos --no-ios --no-android --no-web --no-linux --no-windows --no-fuchsia
+if [ "${STINT_SKIP_DEPENDENCY_SETUP:-0}" != 1 ]; then
+  bash scripts/flutter.sh pub get
+  bash scripts/flutter.sh precache --macos --no-ios --no-android --no-web --no-linux --no-windows --no-fuchsia
+fi
 bash scripts/flutter.sh assemble -dTargetPlatform=darwin -dBuildMode=debug -dDarwinArchs=arm64 -dTargetFile=lib/main.dart --output=build/local/frameworks debug_macos_bundle_flutter_assets
 APP_DIR="${STINT_APP_DIR:-$PROJECT_DIR/build/local/Stint.app}"
 mkdir -p "$APP_DIR/Contents/MacOS" "$APP_DIR/Contents/Frameworks" "$APP_DIR/Contents/Resources"

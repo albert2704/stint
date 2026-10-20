@@ -234,6 +234,11 @@ static void StintUpdateFocusRing(NSControl *control, NSColor *accent, BOOL focus
 @property(nonatomic, strong) NSButton *openButton;
 @property(nonatomic, strong) NSButton *settingsButton;
 @property(nonatomic, strong) NSButton *progressButton;
+@property(nonatomic, strong) NSButton *profilesButton;
+@property(nonatomic, strong) NSButton *continuationButton;
+@property(nonatomic, strong) NSButton *ambientButton;
+@property(nonatomic, strong) NSTextField *continuationLabel;
+@property(nonatomic, copy) NSString *continuationNote;
 @property(nonatomic, strong) NSMenuItem *showPanelMenuItem;
 @property(nonatomic, strong) NSMenuItem *settingsMenuItem;
 @property(nonatomic, copy) NSDictionary *pendingAction;
@@ -268,6 +273,9 @@ static void StintUpdateFocusRing(NSControl *control, NSColor *accent, BOOL focus
 @property(nonatomic) BOOL ready;
 @property(nonatomic) BOOL running;
 @property(nonatomic) BOOL hasProgress;
+@property(nonatomic) BOOL flowFocus;
+@property(nonatomic) NSInteger flowElapsedSeconds;
+@property(nonatomic) BOOL externalActionBusy;
 @property(nonatomic) BOOL requestedExpiryRefresh;
 @property(nonatomic) NSUInteger generation;
 @property(nonatomic) BOOL authorizationKnown;
@@ -314,6 +322,9 @@ static void StintUpdateFocusRing(NSControl *control, NSColor *accent, BOOL focus
   _statusItem.button.title = @" --:--";
   NSMenu *menu = [[NSMenu alloc] initWithTitle:@"Stint"];
   [self addItem:@"Block distractions…" action:@selector(openBlocker:) toMenu:menu];
+  [self addItem:@"Focus profiles…" action:@selector(openProfiles:) toMenu:menu];
+  [self addItem:@"Pick up here…" action:@selector(openContinuation:) toMenu:menu];
+  [self addItem:@"Ambient mixer…" action:@selector(openAmbient:) toMenu:menu];
   menu.autoenablesItems = NO;
   menu.delegate = self;
   _phaseItem = [self addItem:@"Opening Stint…" action:nil toMenu:menu];
@@ -340,6 +351,7 @@ static void StintUpdateFocusRing(NSControl *control, NSColor *accent, BOOL focus
   [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(installMiniTimerMenuItem:) name:NSApplicationDidFinishLaunchingNotification object:nil];
   [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(prepareNotificationForTermination:) name:NSApplicationWillTerminateNotification object:nil];
   [NSWorkspace.sharedWorkspace.notificationCenter addObserver:self selector:@selector(refreshFromSystem:) name:NSWorkspaceDidWakeNotification object:nil];
+  [NSWorkspace.sharedWorkspace.notificationCenter addObserver:self selector:@selector(systemWillSleep:) name:NSWorkspaceWillSleepNotification object:nil];
   [self installMiniTimerMenuItem:nil];
   [self registerNotificationActions];
   _keymap = [[StintKeymap alloc] initWithDefaults:NSUserDefaults.standardUserDefaults action:^(NSString *action) {
@@ -594,12 +606,23 @@ static void StintUpdateFocusRing(NSControl *control, NSColor *accent, BOOL focus
   self.settingsButton = [self button:@"Settings…" action:@selector(openSettings:)];
   self.settingsButton.alignment = NSTextAlignmentRight;
   self.progressButton = [self button:@"Progress" action:@selector(openProgress:)];
+  self.profilesButton = [self button:@"Profiles…" action:@selector(openProfiles:)];
+  self.continuationButton = [self button:@"Pick up here…" action:@selector(openContinuation:)];
+  self.ambientButton = [self button:@"Mixer…" action:@selector(openAmbient:)];
+  NSStackView *experience = [self row:@[self.profilesButton, self.continuationButton, self.ambientButton]];
+  experience.distribution = NSStackViewDistributionEqualSpacing;
+  [experience.heightAnchor constraintEqualToConstant:28].active = YES;
+  self.continuationLabel = [NSTextField wrappingLabelWithString:@""];
+  self.continuationLabel.font = StintFont(NO, 12, 400);
+  self.continuationLabel.maximumNumberOfLines = 2;
+  self.continuationLabel.hidden = YES;
+  self.continuationLabel.accessibilityLabel = @"Pick up here";
   NSStackView *footer = [self row:@[self.openButton, self.progressButton, self.settingsButton]];
   footer.distribution = NSStackViewDistributionEqualSpacing;
   for (NSButton *button in @[self.openButton, self.progressButton, self.settingsButton]) [button.heightAnchor constraintEqualToConstant:36].active = YES;
   NSView *divider1 = [self separator], *divider2 = [self separator];
   self.dividers = @[divider1, divider2];
-  NSArray<NSView *> *views = @[heading, clock, cycle, self.timerActions, self.confirmBar, divider1, sound, volume, self.youTubeContainer, self.musicError, divider2, footer];
+  NSArray<NSView *> *views = @[heading, clock, cycle, self.timerActions, self.confirmBar, self.continuationLabel, experience, divider1, sound, volume, self.youTubeContainer, self.musicError, divider2, footer];
   NSStackView *stack = [NSStackView stackViewWithViews:views];
   stack.orientation = NSUserInterfaceLayoutOrientationVertical;
   stack.alignment = NSLayoutAttributeLeading;
@@ -770,20 +793,23 @@ static void StintUpdateFocusRing(NSControl *control, NSColor *accent, BOOL focus
   NSColor *accent = [self color:focus ? @"focus" : @"break"];
   panel.layer.backgroundColor = surface.CGColor;
   panel.layer.borderColor = [self color:@"line2"].CGColor;
-  self.miniPhase.stringValue = focus ? [NSString stringWithFormat:@"●  Focus · %ld of 4", (long)(self.cycleStep / 2 + 1)] : [@"●  " stringByAppendingString:self.phase];
+  self.miniPhase.stringValue = focus ? [NSString stringWithFormat:@"●  %@ · %ld of 4", self.flowFocus ? @"Flow" : @"Focus", (long)(self.cycleStep / 2 + 1)] : [@"●  " stringByAppendingString:self.phase];
   self.miniPhase.textColor = [self color:focus ? @"focusText" : @"breakText"];
   NSString *rhythmName = @"Custom";
   for (NSDictionary *routine in [self entries:self.routines titleKey:@"name"]) if ([routine[@"id"] isEqual:self.activeRoutineId]) { rhythmName = routine[@"name"]; break; }
   self.rhythmButton.title = [rhythmName stringByAppendingString:@" ⌄"];
   self.rhythmButton.accessibilityLabel = [@"Rhythms, " stringByAppendingString:rhythmName];
-  self.rhythmButton.enabled = self.ready;
+  self.rhythmButton.enabled = self.ready && !self.externalActionBusy;
   self.rhythmDigits.stringValue = [NSString stringWithFormat:@"%ld·%ld·%ld", (long)self.focusMinutes, (long)self.shortBreakMinutes, (long)self.longBreakMinutes];
   self.rhythmDigits.textColor = muted;
   [self styleButton:self.rhythmButton fill:NSColor.clearColor text:ink];
   self.miniTime.stringValue = time;
   self.miniTime.accessibilityValue = time;
+  self.miniTime.accessibilityLabel = self.flowFocus ? @"Time focused" : @"Time remaining";
+  self.miniTime.font = StintFont(YES, time.length > 5 ? 42 : 52, 300);
   self.miniTime.textColor = ink;
   NSString *detail = self.running ? @"Running" : self.hasProgress ? @"Paused" : @"Ready";
+  if (self.flowFocus && self.running) detail = @"Counting up";
   if (self.deadline) {
     NSString *finish = [NSDateFormatter localizedStringFromDate:self.deadline dateStyle:NSDateFormatterNoStyle timeStyle:NSDateFormatterShortStyle];
     detail = [NSString stringWithFormat:focus ? @"Ends at %@" : @"Back at %@", finish];
@@ -797,7 +823,10 @@ static void StintUpdateFocusRing(NSControl *control, NSColor *accent, BOOL focus
   self.miniToggle.image = [NSImage imageWithSystemSymbolName:self.running ? @"pause.fill" : @"play.fill" accessibilityDescription:nil];
   self.miniToggle.imagePosition = NSImageLeft;
   self.miniToggle.accessibilityLabel = self.miniToggle.toolTip = self.miniToggle.title;
-  for (NSButton *button in @[self.miniToggle, self.miniReset, self.miniSkip]) button.enabled = self.ready;
+  for (NSButton *button in @[self.miniToggle, self.miniReset, self.miniSkip]) button.enabled = self.ready && !self.externalActionBusy;
+  self.miniSkip.image = [NSImage imageWithSystemSymbolName:self.flowFocus ? @"cup.and.saucer.fill" : @"forward.end.fill" accessibilityDescription:nil];
+  self.miniSkip.accessibilityLabel = self.miniSkip.toolTip = self.flowFocus ? @"Take break" : @"Skip to next";
+  if (self.flowFocus && self.flowElapsedSeconds < 1) self.miniSkip.enabled = NO;
   [self styleButton:self.miniToggle fill:accent text:[self color:@"onAccent"]];
   for (NSButton *button in @[self.miniReset, self.miniSkip]) [self styleButton:button fill:raised text:[self color:@"ink2"]];
   BOOL confirming = self.pendingAction != nil;
@@ -815,7 +844,7 @@ static void StintUpdateFocusRing(NSControl *control, NSColor *accent, BOOL focus
         if (newlyShown) [self.popover.contentViewController.view.window makeFirstResponder:self.keepGoingButton];
       }
     }
-    self.confirmDetail.stringValue = [NSString stringWithFormat:@"%@ left will be discarded.", time];
+    self.confirmDetail.stringValue = [NSString stringWithFormat:self.flowFocus ? @"%@ of focus will be discarded." : @"%@ left will be discarded.", time];
     self.confirmButton.title = [self.pendingAction[@"confirmLabel"] isKindOfClass:NSString.class] ? self.pendingAction[@"confirmLabel"] : @"Switch";
     self.confirmButton.accessibilityLabel = self.confirmButton.toolTip = self.confirmButton.title;
   } else {
@@ -848,12 +877,13 @@ static void StintUpdateFocusRing(NSControl *control, NSColor *accent, BOOL focus
     BOOL isFocus = i % 2 == 0;
     NSString *phase = isFocus ? @"Focus" : i == 7 ? @"Long break" : @"Short break";
     button.current = i == self.cycleStep;
-    button.enabled = self.ready && !button.current;
+    button.enabled = self.ready && !button.current && !self.externalActionBusy;
     button.trackColor = [self color:@"track"];
     NSColor *color = [self color:isFocus ? @"focus" : @"break"];
     button.fillColor = i < self.cycleStep ? [color colorWithAlphaComponent:0.45] : color;
     NSInteger remaining = self.deadline ? MIN(self.totalSeconds, MAX(0, (NSInteger)ceil(self.deadline.timeIntervalSinceNow))) : self.remaining;
     button.progress = i < self.cycleStep ? 1 : i == self.cycleStep && self.totalSeconds > 0 ? 1 - remaining / (double)self.totalSeconds : 0;
+    if (self.flowFocus && button.current) button.progress = 0;
     button.accessibilityLabel = button.toolTip = [NSString stringWithFormat:@"%@, %@%@", phase, StintDurationLabel(durations[i]), button.current ? @", current" : @""];
     button.focusAccent = accent;
     button.accessibilityValue = button.current ? @"Current" : @"";
@@ -865,7 +895,7 @@ static void StintUpdateFocusRing(NSControl *control, NSColor *accent, BOOL focus
 
   BOOL busy = [self.music[@"busy"] boolValue];
   BOOL starting = [self.music[@"starting"] boolValue];
-  BOOL playing = [self.music[@"playing"] boolValue] || starting;
+  BOOL playing = [self.music[@"playing"] boolValue] || starting || [self.music[@"ambientPlaying"] boolValue];
   NSString *name = @"Choose a sound";
   for (NSDictionary *track in [self entries:self.music[@"tracks"] titleKey:@"title"]) if ([track[@"id"] isEqual:self.music[@"selectedId"]]) { name = track[@"title"]; break; }
   self.soundTitle.stringValue = name;
@@ -896,8 +926,12 @@ static void StintUpdateFocusRing(NSControl *control, NSColor *accent, BOOL focus
   self.musicError.textColor = [self color:@"error"];
   self.musicError.hidden = error.length == 0;
   for (NSView *divider in self.dividers) divider.layer.backgroundColor = [self color:@"line"].CGColor;
-  for (NSButton *button in @[self.openButton, self.progressButton, self.settingsButton]) [self styleButton:button fill:NSColor.clearColor text:muted];
-  NSSize size = NSMakeSize(340, 428 + (confirming ? 72 : 0) + (error.length ? 42 : 0)
+  for (NSButton *button in @[self.openButton, self.progressButton, self.settingsButton, self.profilesButton, self.continuationButton, self.ambientButton]) [self styleButton:button fill:NSColor.clearColor text:muted];
+  self.continuationLabel.stringValue = self.continuationNote ?: @"";
+  self.continuationLabel.toolTip = self.continuationNote;
+  self.continuationLabel.textColor = muted;
+  self.continuationLabel.hidden = self.continuationNote.length == 0 || !focus;
+  NSSize size = NSMakeSize(340, 470 + (self.continuationLabel.hidden ? 0 : 48) + (confirming ? 72 : 0) + (error.length ? 42 : 0)
       + (self.embeddedYouTubeView ? 252 : 0));
   if (!NSEqualSizes(size, self.popover.contentSize)) self.popover.contentSize = size;
 }
@@ -917,13 +951,27 @@ static void StintUpdateFocusRing(NSControl *control, NSColor *accent, BOOL focus
 }
 - (void)selectRhythm:(NSMenuItem *)sender { [self.channel invokeMethod:@"applyRoutine" arguments:sender.representedObject]; }
 - (void)resetTimer:(id)sender { [self.channel invokeMethod:@"reset" arguments:nil]; }
-- (void)skipTimer:(id)sender { [self.channel invokeMethod:@"skip" arguments:nil]; }
+- (void)skipTimer:(id)sender {
+  if (self.flowFocus) {
+    [self.channel invokeMethod:@"finishFlow" arguments:@{@"sessionId": self.sessionId ?: @"", @"cycleStep": @(self.cycleStep)}];
+  } else {
+    [self.channel invokeMethod:@"skip" arguments:nil];
+  }
+}
 - (void)jumpStep:(NSButton *)sender { [self.channel invokeMethod:@"jumpStep" arguments:@(sender.tag)]; }
 - (void)confirmPending:(id)sender { [self.channel invokeMethod:@"confirm" arguments:nil]; }
 - (void)cancelPending:(id)sender { [self.channel invokeMethod:@"cancel" arguments:nil]; }
 - (void)openSettings:(id)sender { [self showWindow]; [self.channel invokeMethod:@"settings" arguments:nil]; }
 - (void)openBlocker:(id)sender { [self showWindow]; [self.channel invokeMethod:@"blocker" arguments:nil]; }
 - (void)openProgress:(id)sender { [self showWindow]; [self.channel invokeMethod:@"progress" arguments:nil]; }
+- (void)openProfiles:(id)sender { [self showWindow]; [self.channel invokeMethod:@"profiles" arguments:nil]; }
+- (void)openContinuation:(id)sender { [self showWindow]; [self.channel invokeMethod:@"continuation" arguments:nil]; }
+- (void)openAmbient:(id)sender { [self showWindow]; [self.channel invokeMethod:@"ambient" arguments:nil]; }
+- (void)systemWillSleep:(NSNotification *)notification {
+  if (self.flowFocus && self.running) {
+    [self.channel invokeMethod:@"systemWillSleep" arguments:@((long long)(NSDate.date.timeIntervalSince1970 * 1000))];
+  }
+}
 - (void)toggleMusic:(id)sender { [self.channel invokeMethod:@"musicToggle" arguments:nil]; }
 - (void)changeVolume:(NSSlider *)sender {
   self.volumePending = YES;
@@ -946,6 +994,10 @@ static void StintUpdateFocusRing(NSControl *control, NSColor *accent, BOOL focus
   self.ready = YES;
   self.running = [state[@"running"] boolValue];
   self.hasProgress = [state[@"hasProgress"] boolValue];
+  self.flowFocus = [state[@"flowFocus"] boolValue];
+  self.flowElapsedSeconds = MAX(0, [state[@"flowElapsedSeconds"] integerValue]);
+  self.externalActionBusy = [state[@"externalActionBusy"] boolValue];
+  self.continuationNote = [state[@"continuationNote"] isKindOfClass:NSString.class] ? state[@"continuationNote"] : @"";
   self.totalSeconds = MAX(0, [state[@"totalSeconds"] integerValue]);
   self.remaining = MIN(self.totalSeconds, MAX(0, [state[@"remaining"] integerValue]));
   if ([state[@"phase"] isKindOfClass:NSString.class]) self.phase = state[@"phase"];
@@ -1000,7 +1052,7 @@ static void StintUpdateFocusRing(NSControl *control, NSColor *accent, BOOL focus
     if (self.notificationKey || firstUpdate) [self checkAuthorizationForGeneration:self.generation];
     if (!self.notificationKey && firstUpdate) [self removeFutureOrphanForGeneration:self.generation];
   } else if (previousDailyGoal != self.dailyGoal || !((previousCompletionCount == nil && self.completionCount == nil)
-      || [previousCompletionCount isEqualToNumber:self.completionCount])
+      || [previousCompletionCount isEqual:self.completionCount])
       || (!self.completionCount && previousTodayCount != self.todayCount)
       || ![previousDurations isEqual:@[@(self.focusMinutes), @(self.shortBreakMinutes), @(self.longBreakMinutes)]]) {
     [self refreshScheduledNotification];
@@ -1016,17 +1068,18 @@ static void StintUpdateFocusRing(NSControl *control, NSColor *accent, BOOL focus
 - (void)render {
   if ([self.completionGate consumeExpiryAtTime:NSDate.date]) [self completeInterval:self.liveCompletionRequest];
   NSInteger seconds = self.deadline ? MIN(self.totalSeconds, MAX(0, (NSInteger)ceil(self.deadline.timeIntervalSinceNow))) : self.remaining;
+  if (self.flowFocus) seconds = self.flowElapsedSeconds;
   NSString *time = self.ready ? [NSString stringWithFormat:@"%02ld:%02ld", (long)(seconds / 60), (long)(seconds % 60)] : @"--:--";
   self.statusItem.button.title = [@" " stringByAppendingString:time];
   NSString *status = self.running ? @"Running" : (self.hasProgress ? @"Paused" : @"Ready");
-  NSString *description = [NSString stringWithFormat:@"Stint timer, %@", time];
+  NSString *description = [NSString stringWithFormat:self.flowFocus ? @"Stint Flow, %@ focused" : @"Stint timer, %@", time];
   self.statusItem.button.toolTip = description;
   self.statusItem.button.accessibilityLabel = description;
   self.phaseItem.title = self.ready ? [NSString stringWithFormat:@"%@ · %@ · %@", self.phase, time, status] : @"Opening Stint…";
   self.progressButton.title = [NSString stringWithFormat:@"Progress %ld/%ld", (long)self.todayCount, (long)MAX(1, self.dailyGoal)];
   self.progressButton.accessibilityLabel = self.progressButton.toolTip = [NSString stringWithFormat:@"Progress, %ld of %ld stints today", (long)self.todayCount, (long)MAX(1, self.dailyGoal)];
   self.toggleItem.title = self.running ? @"Pause" : (self.hasProgress ? @"Resume" : [self.phase isEqualToString:@"Focus"] ? @"Start focus" : @"Start break");
-  self.toggleItem.enabled = self.ready;
+  self.toggleItem.enabled = self.ready && !self.externalActionBusy;
   self.adjustItem.enabled = self.ready;
   self.notificationItem.enabled = self.authorizationKnown && !self.requestingAuthorization;
   self.notificationItem.title = self.requestingAuthorization ? @"Waiting for notification permission…"

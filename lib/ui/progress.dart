@@ -203,6 +203,12 @@ class _StintProgressState extends State<StintProgress> {
                                 : null,
                           ),
                           const SizedBox(height: 24),
+                          _WeeklyRecap(
+                            summary: summary,
+                            weeksBack: shownWeeksBack,
+                            controller: widget.controller,
+                          ),
+                          const SizedBox(height: 24),
                           _SummaryTiles(
                             summary: summary,
                             week: summary.week(shownWeeksBack),
@@ -967,4 +973,133 @@ class _EmptyBorderPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_EmptyBorderPainter old) => old.color != color;
+}
+
+class _WeeklyRecap extends StatelessWidget {
+  const _WeeklyRecap({
+    required this.summary,
+    required this.weeksBack,
+    required this.controller,
+  });
+  final ProgressSummary summary;
+  final int weeksBack;
+  final StintController controller;
+  @override
+  Widget build(BuildContext context) {
+    final colors = StintColors.of(context);
+    final total = summary.weekTotal(weeksBack);
+    final goal = controller.workspace.settings.weeklyGoalMinutes;
+    final minutes = total.seconds / 60;
+    final ratio = (minutes / goal).clamp(0.0, 1.0);
+    return Container(
+      key: const Key('weekly-recap'),
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: colors.surface,
+        border: Border.all(color: colors.line),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _Eyebrow(
+            weeksBack == 0 ? 'This week in focus' : 'Selected week in focus',
+          ),
+          const SizedBox(height: 14),
+          Wrap(
+            spacing: 28,
+            runSpacing: 14,
+            children: [
+              _WeeklyMetric(
+                label: 'Focus time',
+                value: formatFocusTime(total.seconds),
+              ),
+              _WeeklyMetric(label: 'Finished stints', value: '${total.count}'),
+              _WeeklyMetric(
+                label: 'Mean stint',
+                value: total.count == 0 ? '—' : '${total.typicalMinutes} min',
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          Semantics(
+            label: '${minutes.round()} of $goal focus minutes this week',
+            child: LinearProgressIndicator(
+              value: ratio,
+              minHeight: 6,
+              borderRadius: BorderRadius.circular(8),
+              color: colors.focus,
+              backgroundColor: colors.track,
+            ),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            '${formatFocusTime(total.seconds)} of ${formatFocusTime(goal * 60)} weekly target',
+            style: TextStyle(color: colors.muted, fontSize: 12),
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'Weekly target',
+                  style: TextStyle(fontSize: 13, color: colors.ink2),
+                ),
+              ),
+              IconButton(
+                key: const Key('weekly-goal-down'),
+                tooltip: 'Lower weekly target by 30 minutes',
+                onPressed: goal <= 30
+                    ? null
+                    : () => controller.setWeeklyGoalMinutes(goal - 30),
+                icon: const Icon(Icons.remove, size: 17),
+              ),
+              Text(
+                '${goal}m',
+                key: const Key('weekly-goal-value'),
+                style: const TextStyle(fontFamily: 'MartianMono', fontSize: 13),
+              ),
+              IconButton(
+                key: const Key('weekly-goal-up'),
+                tooltip: 'Raise weekly target by 30 minutes',
+                onPressed: goal >= 6000
+                    ? null
+                    : () => controller.setWeeklyGoalMinutes(goal + 30),
+                icon: const Icon(Icons.add, size: 17),
+              ),
+            ],
+          ),
+          Text(
+            'A time target alongside your daily stint goal. Past weeks use your current target.',
+            style: TextStyle(color: colors.muted, fontSize: 11, height: 1.4),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _WeeklyMetric extends StatelessWidget {
+  const _WeeklyMetric({required this.label, required this.value});
+  final String label, value;
+  @override
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(
+        value,
+        style: const TextStyle(
+          fontFamily: 'MartianMono',
+          fontSize: 22,
+          fontWeight: FontWeight.w500,
+        ),
+      ),
+      const SizedBox(height: 5),
+      Text(
+        label,
+        style: TextStyle(fontSize: 12, color: StintColors.of(context).muted),
+      ),
+    ],
+  );
 }

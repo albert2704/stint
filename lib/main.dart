@@ -7,6 +7,9 @@ import 'native_timer.dart';
 import 'music.dart';
 import 'timer_music.dart';
 import 'blocker.dart';
+import 'focus_profiles.dart';
+import 'ui/focus_profiles.dart';
+import 'ui/ambient_mixer.dart';
 import 'ui/blocker_settings.dart';
 import 'ui/routines.dart';
 import 'ui/pomodoro.dart';
@@ -32,6 +35,7 @@ class _BootstrapState extends State<Bootstrap> {
   FocusMusic? music;
   TimerMusicCoordinator? timerMusic;
   BlockerController? blocker;
+  FocusProfiles? profiles;
   final navigatorKey = GlobalKey<NavigatorState>();
   @override
   void initState() {
@@ -64,7 +68,14 @@ class _BootstrapState extends State<Bootstrap> {
         loaded.dispose();
         return;
       }
+      final loadedProfiles = FocusProfiles(
+        store: FileFocusProfileStore(store!.directory),
+        timer: loaded,
+        music: loadedMusic,
+        blocker: loadedBlocker,
+      );
       setState(() {
+        profiles = loadedProfiles;
         controller = loaded;
         music = loadedMusic;
         blocker = loadedBlocker;
@@ -73,6 +84,24 @@ class _BootstrapState extends State<Bootstrap> {
       timerBridge = NativeTimerBridge(
         loaded,
         music: loadedMusic,
+        onProfiles: () async {
+          final context = navigatorKey.currentContext;
+          if (context != null && context.mounted) {
+            await showFocusProfiles(context, loadedProfiles);
+          }
+        },
+        onContinuation: () async {
+          final context = navigatorKey.currentContext;
+          if (context != null && context.mounted) {
+            await showContinuationNote(context, loaded);
+          }
+        },
+        onAmbient: () async {
+          final context = navigatorKey.currentContext;
+          if (context != null && context.mounted) {
+            await showAmbientMixer(context, loadedMusic);
+          }
+        },
         onSettings: () async {
           final context = navigatorKey.currentContext;
           if (context != null && context.mounted) {
@@ -106,6 +135,7 @@ class _BootstrapState extends State<Bootstrap> {
   void dispose() {
     timerBridge?.dispose();
     timerMusic?.dispose();
+    profiles?.dispose();
     blocker?.dispose();
     music?.dispose();
     controller?.dispose();
@@ -120,6 +150,7 @@ class _BootstrapState extends State<Bootstrap> {
         navigatorKey: navigatorKey,
         music: music,
         blocker: blocker,
+        profiles: profiles,
       );
     }
     return MaterialApp(
@@ -184,11 +215,13 @@ class StintApp extends StatelessWidget {
     this.navigatorKey,
     this.music,
     this.blocker,
+    this.profiles,
   });
   final StintController controller;
   final GlobalKey<NavigatorState>? navigatorKey;
   final FocusMusic? music;
   final BlockerController? blocker;
+  final FocusProfiles? profiles;
   @override
   Widget build(BuildContext context) => ListenableBuilder(
     listenable: controller,
@@ -207,6 +240,7 @@ class StintApp extends StatelessWidget {
         controller: controller,
         music: music,
         blocker: blocker,
+        profiles: profiles,
       ),
     ),
   );

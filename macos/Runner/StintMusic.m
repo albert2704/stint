@@ -9,11 +9,30 @@ static NSString *const StintMusicYouTubeTracksKey = @"StintMusicYouTubeTracks";
 static NSString *const StintMusicSelectionKey = @"StintMusicSelectedId";
 static NSString *const StintMusicVolumeKey = @"StintMusicVolume";
 static NSString *const StintMusicFollowTimerKey = @"StintMusicFollowTimer";
+static NSString *const StintAmbientLevelsKey = @"StintAmbientLevels";
 static NSUInteger const StintMusicMaximumBytes = 200 * 1024 * 1024;
 static NSTimeInterval const StintMusicFadeDuration = 0.7;
 
 static BOOL StintBuiltinTrack(NSString *identifier) {
   return [@[@"quiet_keys", @"warm_drift", @"night_study"] containsObject:identifier];
+}
+
+static NSArray<NSString *> *StintAmbientIdentifiers(void) {
+  return @[@"rain", @"cafe", @"brown_noise"];
+}
+
+static NSDictionary<NSString *, NSNumber *> *StintAmbientLevels(id input) {
+  if (![input isKindOfClass:NSDictionary.class]) return nil;
+  for (id key in input) if (![StintAmbientIdentifiers() containsObject:key]) return nil;
+  NSMutableDictionary *levels = [NSMutableDictionary dictionary];
+  for (NSString *key in StintAmbientIdentifiers()) {
+    id value = input[key] ?: @0;
+    if (![value isKindOfClass:NSNumber.class] ||
+        CFGetTypeID((__bridge CFTypeRef)value) == CFBooleanGetTypeID() ||
+        !isfinite([value doubleValue])) return nil;
+    levels[key] = @(MIN(1, MAX(0, [value doubleValue])));
+  }
+  return levels;
 }
 
 static BOOL StintYouTubeVideoId(id value) {
@@ -38,6 +57,10 @@ static FlutterError *StintMusicError(NSString *code, NSString *message) {
 @property(nonatomic) double volume;
 @property(nonatomic) BOOL followTimer;
 @property(nonatomic) BOOL importing;
+@property(nonatomic, strong) NSUserDefaults *preferences;
+@property(nonatomic, copy) NSDictionary<NSString *, NSNumber *> *ambientLevels;
+@property(nonatomic, strong) NSMutableDictionary<NSString *, AVAudioPlayer *> *ambientPlayers;
+@property(nonatomic) double ambientGain;
 @property(nonatomic, strong) NSTimer *fadeTimer;
 @property(nonatomic, copy) FlutterResult fadePauseResult;
 @end
@@ -51,6 +74,10 @@ static FlutterError *StintMusicError(NSString *code, NSString *message) {
   _tracks = [NSMutableArray array];
   _youTubeTracks = [NSMutableArray array];
   NSUserDefaults *defaults = NSUserDefaults.standardUserDefaults;
+  _preferences = defaults;
+  _ambientLevels = StintAmbientLevels([defaults objectForKey:StintAmbientLevelsKey]) ?: StintAmbientLevels(@{});
+  _ambientPlayers = [NSMutableDictionary dictionary];
+  _ambientGain = 1;
   id savedTracks = [defaults objectForKey:StintMusicTracksKey];
   if ([savedTracks isKindOfClass:NSArray.class]) {
     NSMutableSet *identifiers = [NSMutableSet set];
@@ -113,10 +140,179 @@ static FlutterError *StintMusicError(NSString *code, NSString *message) {
   // Flutter's standard codec sends true/false instead of numeric 1/0.
   BOOL playing = usesYouTube ? self.youTubePlayer.playing : self.player.isPlaying;
   BOOL starting = usesYouTube && self.youTubePlayer.starting;
+  BOOL ambientPlaying = [self isAmbientPlaying];
   return @{@"tracks": tracks, @"selectedId": self.selectedId ?: NSNull.null,
            @"volume": @(self.volume), @"playing": @(playing),
            @"starting": @(starting),
-           @"followTimer": @(self.followTimer)};
+           @"followTimer": @(self.followTimer),
+           @"ambientLevels": self.ambientLevels ?: StintAmbientLevels(@{}),
+           @"ambientPlaying": @(ambientPlaying)};
+}
+
+- (BOOL)isAmbientPlaying {
+  for (NSString *key in self.ambientPlayers) {
+    if ([self.ambientLevels[key] doubleValue] > 0 && self.ambientPlayers[key].isPlaying) return YES;
+  }
+  return NO;
+}
+
+- (double)mixedMusicVolume {
+  // Bundled ambient layers each peak below .10. Reserve .65 for any music
+  // source, including full-scale imported files, while those layers play.
+  return self.volume * ([self isAmbientPlaying] ? .65 : 1);
+}
+
+- (void)updateMusicVolume {
+  self.player.volume = [self mixedMusicVolume];
+  [self.youTubePlayer setVolume:[self mixedMusicVolume]];
+}
+
+// Build all new players before replacing any of the current mixer state.
+- (NSMutableDictionary *)prepareAmbient:(NSDictionary *)levels data:(id)data error:(FlutterError **)failure {
+  NSDictionary *bytes = [data isKindOfClass:NSDictionary.class] ? data : @{};
+  NSMutableDictionary *players = [self.ambientPlayers mutableCopy] ?: [NSMutableDictionary dictionary];
+  for (NSString *key in StintAmbientIdentifiers()) {
+    if ([levels[key] doubleValue] <= 0 || players[key]) continue;
+    id value = bytes[key];
+    if (![value isKindOfClass:FlutterStandardTypedData.class] ||
+        ((FlutterStandardTypedData *)value).type != FlutterStandardDataTypeUInt8 ||
+        ((FlutterStandardTypedData *)value).data.length == 0 ||
+        ((FlutterStandardTypedData *)value).data.length > 8 * 1024 * 1024) {
+      *failure = StintMusicError(@"invalid_ambient", @"This ambient sound could not be loaded. Try playing it again.");
+      return nil;
+    }
+    NSError *error = nil;
+    AVAudioPlayer *candidate = [[AVAudioPlayer alloc] initWithData:((FlutterStandardTypedData *)value).data error:&error];
+    if (!candidate || candidate.duration <= 0 || !isfinite(candidate.duration) || ![candidate prepareToPlay]) {
+      *failure = StintMusicError(@"invalid_ambient", @"This ambient sound could not be prepared.");
+      return nil;
+    }
+    candidate.numberOfLoops = -1;
+    candidate.delegate = self;
+    players[key] = candidate;
+  }
+  return players;
+}
+
+- (void)updateAmbientVolumes {
+  for (NSString *key in self.ambientPlayers) {
+    self.ambientPlayers[key].volume = [self.ambientLevels[key] doubleValue] * self.ambientGain;
+  }
+}
+
+- (BOOL)startAmbient {
+  for (NSString *key in self.ambientPlayers) {
+    AVAudioPlayer *player = self.ambientPlayers[key];
+    if ([self.ambientLevels[key] doubleValue] <= 0) {
+      [player pause];
+    } else if (!player.isPlaying && ![player play]) {
+      [self pauseAmbient];
+      return NO;
+    }
+  }
+  return YES;
+}
+
+- (void)pauseAmbient {
+  for (AVAudioPlayer *player in self.ambientPlayers.allValues) [player pause];
+  [self updateMusicVolume];
+}
+
+- (void)stopAmbient {
+  for (AVAudioPlayer *player in self.ambientPlayers.allValues) {
+    player.delegate = nil;
+    [player stop];
+  }
+  [self.ambientPlayers removeAllObjects];
+}
+
+- (void)handleAmbient:(FlutterMethodCall *)call result:(FlutterResult)result {
+  NSString *method = call.method;
+  if ([method isEqualToString:@"ambientPause"]) {
+    if (call.arguments && call.arguments != NSNull.null) {
+      result(StintMusicError(@"invalid_arguments", @"Pause ambience does not accept arguments."));
+      return;
+    }
+    result = [self resultByCancellingFade:result];
+    [self pauseAmbient];
+    result([self state]);
+    return;
+  }
+  NSDictionary *args = [call.arguments isKindOfClass:NSDictionary.class] ? call.arguments : nil;
+  BOOL setting = [method isEqualToString:@"ambientLevels"];
+  NSDictionary *levels = setting ? StintAmbientLevels(args[@"levels"]) : self.ambientLevels;
+  id fade = args[@"fade"];
+  if (!args || !levels || (fade && (![fade isKindOfClass:NSNumber.class] ||
+      CFGetTypeID((__bridge CFTypeRef)fade) != CFBooleanGetTypeID()))) {
+    result(StintMusicError(@"invalid_arguments", @"Choose valid ambient levels and playback settings."));
+    return;
+  }
+  BOOL shouldPlay = !setting || [self isAmbientPlaying];
+  BOOL wasPlaying = [self isAmbientPlaying];
+  FlutterError *error = nil;
+  NSMutableDictionary *players = shouldPlay ? [self prepareAmbient:levels data:args[@"data"] error:&error] : self.ambientPlayers;
+  if (error) { result(error); return; }
+  result = [self resultByCancellingFade:result];
+  self.ambientLevels = levels;
+  self.ambientPlayers = players;
+  self.ambientGain = [fade boolValue] && !wasPlaying ? 0 : 1;
+  [self updateAmbientVolumes];
+  if (shouldPlay && ![self startAmbient]) {
+    result(StintMusicError(@"playback_failed", @"The ambient audio output could not start. Try again."));
+    return;
+  }
+  [self.preferences setObject:levels forKey:StintAmbientLevelsKey];
+  if ([fade boolValue] && [self isAmbientPlaying]) {
+    [self fadePlayerToVolume:[self mixedMusicVolume] pauseOnCompletion:NO];
+  } else {
+    [self updateMusicVolume];
+  }
+  result([self state]);
+}
+
+- (void)applyProfile:(id)arguments result:(FlutterResult)result {
+  NSDictionary *args = [arguments isKindOfClass:NSDictionary.class] ? arguments : nil;
+  id selected = args[@"selectedId"];
+  id volume = args[@"volume"];
+  id follows = args[@"followTimer"];
+  NSDictionary *levels = StintAmbientLevels(args[@"ambientLevels"]);
+  if (![selected isKindOfClass:NSString.class] || !levels ||
+      ![volume isKindOfClass:NSNumber.class] || CFGetTypeID((__bridge CFTypeRef)volume) == CFBooleanGetTypeID() ||
+      !isfinite([volume doubleValue]) ||
+      ![follows isKindOfClass:NSNumber.class] || CFGetTypeID((__bridge CFTypeRef)follows) != CFBooleanGetTypeID()) {
+    result(StintMusicError(@"invalid_arguments", @"This profile's sound settings are invalid."));
+    return;
+  }
+  BOOL available = [self knownTrack:selected];
+  NSDictionary *custom = available ? [self customTrack:selected] : nil;
+  if (custom) {
+    // A saved library entry can outlive its cached audio. Check without creating
+    // the directory or opening an audio output during silent profile selection.
+    NSURL *support = [NSFileManager.defaultManager URLForDirectory:NSApplicationSupportDirectory
+        inDomain:NSUserDomainMask appropriateForURL:nil create:NO error:NULL];
+    NSURL *url = [[[support URLByAppendingPathComponent:@"Stint" isDirectory:YES]
+        URLByAppendingPathComponent:@"Music" isDirectory:YES]
+        URLByAppendingPathComponent:custom[@"filename"]];
+    NSDictionary *values = [url resourceValuesForKeys:@[NSURLFileSizeKey, NSURLIsRegularFileKey] error:NULL];
+    available = values && [values[NSURLIsRegularFileKey] boolValue] &&
+        [values[NSURLFileSizeKey] unsignedLongLongValue] > 0 &&
+        [values[NSURLFileSizeKey] unsignedLongLongValue] <= StintMusicMaximumBytes &&
+        [NSFileManager.defaultManager isReadableFileAtPath:url.path];
+  }
+  result = [self resultByCancellingFade:result];
+  [self stopAllPlayers];
+  [self stopAmbient];
+  self.selectedId = available ? selected : @"quiet_keys";
+  self.volume = MIN(1, MAX(0, [volume doubleValue]));
+  self.followTimer = [follows boolValue];
+  self.ambientLevels = levels;
+  [self.preferences setObject:self.selectedId forKey:StintMusicSelectionKey];
+  [self.preferences setDouble:self.volume forKey:StintMusicVolumeKey];
+  [self.preferences setBool:self.followTimer forKey:StintMusicFollowTimerKey];
+  [self.preferences setObject:levels forKey:StintAmbientLevelsKey];
+  NSMutableDictionary *state = [[self state] mutableCopy];
+  if (!available) state[@"profileWarning"] = @"The saved track is no longer available. Quiet Keys was selected.";
+  result(state);
 }
 
 - (NSDictionary *)customTrack:(NSString *)identifier {
@@ -150,9 +346,9 @@ static FlutterError *StintMusicError(NSString *code, NSString *message) {
   self.youTubePlayer.showPlayer = self.showYouTubePlayer;
   if (self.youTubeViewChanged) self.youTubeViewChanged(self.youTubePlayer.view);
   if (![self.youTubePlayer.videoId isEqualToString:track[@"youtubeVideoId"]]) {
-    [self.youTubePlayer setVideoId:track[@"youtubeVideoId"] title:track[@"title"] volume:self.volume];
+    [self.youTubePlayer setVideoId:track[@"youtubeVideoId"] title:track[@"title"] volume:[self mixedMusicVolume]];
   } else {
-    [self.youTubePlayer setVolume:self.volume];
+    [self.youTubePlayer setVolume:[self mixedMusicVolume]];
   }
 }
 
@@ -208,6 +404,11 @@ static FlutterError *StintMusicError(NSString *code, NSString *message) {
 
 - (void)handleCall:(FlutterMethodCall *)call result:(FlutterResult)result {
   NSString *method = call.method;
+  if ([@[@"ambientLevels", @"ambientPlay", @"ambientPause"] containsObject:method]) {
+    [self handleAmbient:call result:result];
+    return;
+  }
+  if ([method isEqualToString:@"applyProfile"]) { [self applyProfile:call.arguments result:result]; return; }
   if ([method isEqualToString:@"addYouTube"]) { [self addYouTube:call.arguments result:result]; return; }
   if ([method isEqualToString:@"removeCustom"]) {
     NSString *identifier = [call.arguments isKindOfClass:NSString.class] ? call.arguments : nil;
@@ -294,24 +495,28 @@ static FlutterError *StintMusicError(NSString *code, NSString *message) {
       result([self state]);
       return;
     }
-    if (youTube && [@[@"pause", @"resume", @"fadePause"] containsObject:method]) {
+    if (youTube && [method isEqualToString:@"resume"]) {
       result = [self resultByCancellingFade:result];
-      if ([method isEqualToString:@"resume"]) {
-        [self stopPlayer];
-        [self prepareYouTubeTrack:youTube];
-        [self.youTubePlayer play];
-      } else {
-        // Pause immediately so a pending iframe load cannot complete a stale play.
-        [self.youTubePlayer pause];
-      }
+      [self stopPlayer];
+      [self prepareYouTubeTrack:youTube];
+      [self.youTubePlayer play];
+      self.ambientGain = 1;
+      [self updateAmbientVolumes];
+      [self startAmbient];
+      [self updateMusicVolume];
       result([self state]);
       return;
     }
     if ([method isEqualToString:@"fadePause"]) {
+      // YouTube must pause immediately, including a pending iframe load.
+      [self.youTubePlayer pause];
       float initialVolume = self.player.volume;
+      double initialAmbientGain = self.ambientGain;
       FlutterResult superseded = [self cancelFade];
-      if (self.player.isPlaying) {
+      if (self.player.isPlaying || [self isAmbientPlaying]) {
         self.player.volume = initialVolume;
+        self.ambientGain = initialAmbientGain;
+        [self updateAmbientVolumes];
         self.fadePauseResult = result;
         [self fadePlayerToVolume:0 pauseOnCompletion:YES];
       } else {
@@ -323,10 +528,18 @@ static FlutterError *StintMusicError(NSString *code, NSString *message) {
     if ([method isEqualToString:@"pause"] || [method isEqualToString:@"resume"]) {
       result = [self resultByCancellingFade:result];
     }
-    if ([method isEqualToString:@"pause"]) [self.player pause];
+    if ([method isEqualToString:@"pause"]) {
+      [self.player pause];
+      [self.youTubePlayer pause];
+      [self pauseAmbient];
+    }
     if ([method isEqualToString:@"resume"] && self.player && !self.player.isPlaying && ![self.player play]) {
       result(StintMusicError(@"playback_failed", @"The audio could not resume. Try playing the track again."));
       return;
+    }
+    if ([method isEqualToString:@"resume"]) {
+      [self startAmbient];
+      [self updateMusicVolume];
     }
     result([self state]);
     return;
@@ -350,8 +563,7 @@ static FlutterError *StintMusicError(NSString *code, NSString *message) {
     }
     result = [self resultByCancellingFade:result];
     self.volume = MIN(1, MAX(0, [value doubleValue]));
-    self.player.volume = self.volume;
-    [self.youTubePlayer setVolume:self.volume];
+    [self updateMusicVolume];
     [NSUserDefaults.standardUserDefaults setDouble:self.volume forKey:StintMusicVolumeKey];
     result([self state]);
     return;
@@ -376,7 +588,35 @@ static FlutterError *StintMusicError(NSString *code, NSString *message) {
         result(StintMusicError(@"invalid_arguments", @"Fade must be a Boolean."));
         return;
       }
-      [self playTrack:identifier data:args[@"data"] fade:[fade boolValue] result:result];
+      FlutterError *ambientError = nil;
+      BOOL ambientWasPlaying = [self isAmbientPlaying];
+      NSDictionary *levels = self.ambientLevels ?: StintAmbientLevels(@{});
+      NSMutableDictionary *players = [self prepareAmbient:levels data:args[@"ambientData"] error:&ambientError];
+      if (ambientError) { result(ambientError); return; }
+      [self playTrack:identifier data:args[@"data"] fade:[fade boolValue] result:^(id response) {
+        if ([response isKindOfClass:FlutterError.class]) { result(response); return; }
+        self.ambientPlayers = players;
+        self.ambientGain = [fade boolValue] && !ambientWasPlaying ? 0 : 1;
+        [self updateAmbientVolumes];
+        if (![self startAmbient]) {
+          [self.player pause];
+          [self.youTubePlayer pause];
+          result(StintMusicError(@"playback_failed", @"The ambient audio output could not start. Try again."));
+          return;
+        }
+        if ([fade boolValue] && [self isAmbientPlaying]) {
+          // Restart the one fade after all layers exist, so pause/finish uses
+          // one completion boundary for music and every ambient player.
+          [self.fadeTimer invalidate];
+          self.fadeTimer = nil;
+          [self fadePlayerToVolume:[self mixedMusicVolume] pauseOnCompletion:NO];
+        } else if (!self.fadeTimer) {
+          // playTrack may already be fading music without ambient layers.
+          // Preserve its zero starting gain until the first fade tick.
+          [self updateMusicVolume];
+        }
+        result([self state]);
+      }];
     }
     return;
   }
@@ -467,7 +707,9 @@ static FlutterError *StintMusicError(NSString *code, NSString *message) {
 - (FlutterResult)cancelFade {
   [self.fadeTimer invalidate];
   self.fadeTimer = nil;
-  self.player.volume = self.volume;
+  [self updateMusicVolume];
+  self.ambientGain = 1;
+  [self updateAmbientVolumes];
   FlutterResult pending = self.fadePauseResult;
   self.fadePauseResult = nil;
   return pending;
@@ -486,6 +728,7 @@ static FlutterError *StintMusicError(NSString *code, NSString *message) {
 - (void)fadePlayerToVolume:(float)volume pauseOnCompletion:(BOOL)pause {
   AVAudioPlayer *player = self.player;
   float initialVolume = player.volume;
+  double initialAmbientGain = self.ambientGain;
   NSTimeInterval started = NSProcessInfo.processInfo.systemUptime;
   __weak StintMusic *weakSelf = self;
   NSTimer *timer = [NSTimer timerWithTimeInterval:1.0 / 60.0 repeats:YES block:^(NSTimer *timer) {
@@ -496,11 +739,18 @@ static FlutterError *StintMusicError(NSString *code, NSString *message) {
     }
     double progress = MIN(1, MAX(0, (NSProcessInfo.processInfo.systemUptime - started) / StintMusicFadeDuration));
     player.volume = initialVolume + (volume - initialVolume) * progress;
+    self.ambientGain = initialAmbientGain + ((pause ? 0 : 1) - initialAmbientGain) * progress;
+    [self updateAmbientVolumes];
     if (progress < 1) return;
     [timer invalidate];
     self.fadeTimer = nil;
-    if (pause) [player pause];
-    player.volume = self.volume;
+    if (pause) {
+      [player pause];
+      [self pauseAmbient];
+    }
+    [self updateMusicVolume];
+    self.ambientGain = 1;
+    [self updateAmbientVolumes];
     FlutterResult completion = self.fadePauseResult;
     self.fadePauseResult = nil;
     if (completion) completion([self state]);
@@ -609,8 +859,17 @@ static FlutterError *StintMusicError(NSString *code, NSString *message) {
 
 - (void)audioPlayerDecodeErrorDidOccur:(AVAudioPlayer *)player error:(NSError *)error {
   dispatch_async(dispatch_get_main_queue(), ^{
+    if ([self.ambientPlayers.allValues containsObject:player]) {
+      [self stopAmbient];
+      [self.player pause];
+      [self.youTubePlayer pause];
+      [self.channel invokeMethod:@"error" arguments:error.localizedDescription ?: @"Ambient playback stopped. Try playing it again."];
+      [self.channel invokeMethod:@"state" arguments:[self state]];
+      return;
+    }
     if (player != self.player) return;
     [self stopPlayer];
+    [self pauseAmbient];
     [self.channel invokeMethod:@"error" arguments:error.localizedDescription ?: @"Playback stopped because this audio could not be decoded."];
     [self.channel invokeMethod:@"state" arguments:[self state]];
   });
@@ -618,8 +877,17 @@ static FlutterError *StintMusicError(NSString *code, NSString *message) {
 
 - (void)audioPlayerDidFinishPlaying:(AVAudioPlayer *)player successfully:(BOOL)flag {
   dispatch_async(dispatch_get_main_queue(), ^{
+    if ([self.ambientPlayers.allValues containsObject:player]) {
+      [self stopAmbient];
+      [self.player pause];
+      [self.youTubePlayer pause];
+      [self.channel invokeMethod:@"error" arguments:@"Ambient playback stopped unexpectedly. Try playing it again."];
+      [self.channel invokeMethod:@"state" arguments:[self state]];
+      return;
+    }
     if (player != self.player) return;
     [self stopPlayer];
+    [self pauseAmbient];
     if (!flag) [self.channel invokeMethod:@"error" arguments:@"Playback stopped unexpectedly. Try playing the track again."];
     [self.channel invokeMethod:@"state" arguments:[self state]];
   });
@@ -630,6 +898,10 @@ static FlutterError *StintMusicError(NSString *code, NSString *message) {
   if (_fadePauseResult) _fadePauseResult(StintMusicError(@"closed", @"Stint closed before the music fade finished."));
   _player.delegate = nil;
   [_player stop];
+  for (AVAudioPlayer *player in _ambientPlayers.allValues) {
+    player.delegate = nil;
+    [player stop];
+  }
   _suppressYouTubeEvents = YES;
   [_youTubePlayer stop];
   [_channel setMethodCallHandler:nil];

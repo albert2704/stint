@@ -23,6 +23,14 @@ class DayTotal {
   final bool future;
 }
 
+/// Finished focus time for one selected local calendar week.
+class WeekTotal {
+  const WeekTotal({required this.count, required this.seconds});
+  final int count;
+  final int seconds;
+  int get typicalMinutes => count == 0 ? 0 : (seconds / count / 60).round();
+}
+
 /// Read-only view of saved focus sessions for the Progress sheet.
 ///
 /// A session counts on the local day it finished. Only finished focus
@@ -33,6 +41,7 @@ class ProgressSummary {
     required this.today,
     required this.goal,
     required this.firstDayOfWeekIndex,
+    required this.weeklyGoalMinutes,
     required Map<DateTime, (int, int)> days,
     required this.allTimeSeconds,
     required this.todaySessions,
@@ -45,7 +54,9 @@ class ProgressSummary {
     required DateTime now,
     required int goal,
     int firstDayOfWeekIndex = 1,
+    int weeklyGoalMinutes = StintPreferences.defaultWeeklyGoalMinutes,
   }) {
+    RangeError.checkValueInInterval(firstDayOfWeekIndex, 0, 6);
     final today = localDay(now);
     final days = <DateTime, (int, int)>{};
     final todaySessions = <FocusSession>[];
@@ -64,6 +75,7 @@ class ProgressSummary {
       today: today,
       goal: goal,
       firstDayOfWeekIndex: firstDayOfWeekIndex,
+      weeklyGoalMinutes: weeklyGoalMinutes,
       days: days,
       allTimeSeconds: allTime,
       todaySessions: List.unmodifiable(todaySessions),
@@ -74,6 +86,7 @@ class ProgressSummary {
   /// Local midnight today.
   final DateTime today;
   final int goal;
+  final int weeklyGoalMinutes;
 
   /// 0 = Sunday … 6 = Saturday, as in `MaterialLocalizations`.
   final int firstDayOfWeekIndex;
@@ -101,10 +114,12 @@ class ProgressSummary {
   ProgressSummary withPreferences({
     required int goal,
     required int firstDayOfWeekIndex,
+    int? weeklyGoalMinutes,
   }) => ProgressSummary._(
     today: today,
     goal: goal,
     firstDayOfWeekIndex: firstDayOfWeekIndex,
+    weeklyGoalMinutes: weeklyGoalMinutes ?? this.weeklyGoalMinutes,
     days: _days,
     allTimeSeconds: allTimeSeconds,
     todaySessions: todaySessions,
@@ -127,6 +142,14 @@ class ProgressSummary {
   List<DayTotal> week(int weeksBack) {
     final start = weekStart(weeksBack);
     return [for (var i = 0; i < 7; i++) totalFor(_addDays(start, i))];
+  }
+
+  WeekTotal weekTotal(int weeksBack) {
+    final days = week(weeksBack);
+    return WeekTotal(
+      count: days.fold(0, (sum, day) => sum + day.count),
+      seconds: days.fold(0, (sum, day) => sum + day.seconds),
+    );
   }
 
   /// How far back week navigation can go: the week holding the oldest session.

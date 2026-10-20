@@ -187,6 +187,18 @@ int main(void) {
     [blocker handleApplication:(NSRunningApplication *)distraction];
     Check(distraction.hideCalls == hides, @"website only protection does not hide apps");
 
+    BlockerProbe *flowProbe = [[BlockerProbe alloc] init];
+    flowProbe.clock = 100000;
+    BlockerLabelProbe *flowLabel = [[BlockerLabelProbe alloc] init];
+    flowProbe.countdownLabel = (NSTextField *)flowLabel;
+    NSMutableDictionary *flowState = [Snapshot(YES, @"flow", 130000, 130000, @[]) mutableCopy];
+    flowState[@"flowFocus"] = @YES;
+    [flowProbe update:flowState];
+    Check([flowLabel.stringValue isEqualToString:@"Flow"], @"Flow guard never presents its recovery lease as focus time remaining");
+    flowProbe.clock = 131000;
+    [flowProbe guardState];
+    Check(!flowProbe.active, @"Flow guard still releases when its lease expires");
+
     BlockerProbe *actions = [[BlockerProbe alloc] init];
     actions.clock = 100000;
     actions.channel = (FlutterMethodChannel *)channel;

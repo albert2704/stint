@@ -255,9 +255,8 @@ void main() {
       );
       expect(tester.takeException(), isNull);
       await capture(tester, 'progress-small');
-      await tester.drag(
-        find.byType(SingleChildScrollView).last,
-        const Offset(0, -450),
+      await tester.ensureVisible(
+        find.textContaining('Only finished focus stints count.'),
       );
       await tester.pumpAndSettle();
       expect(

@@ -72,7 +72,7 @@ class TimerMusicCoordinator {
                 music.followTimer &&
                 _shouldPlay,
           );
-        } else if (music.wantsPlayback) {
+        } else if (music.wantsAnyPlayback) {
           await music.fadePause();
         }
       } finally {

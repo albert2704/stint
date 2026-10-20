@@ -85,7 +85,7 @@ If a saved goal reports an error, keep Progress open and use **Retry save**. Do 
 
 ## Distraction blocking is not working
 
-First check your build. The blocker is included in [0.2.0 beta](https://github.com/albert2704/stint/releases/tag/v0.2.0-beta.1); the older 0.1.1 download does not include it. Install the beta or [build the current source](development.md), then follow the [setup guide](blocking.md).
+First check your build. The blocker is included in [0.3.0 beta](https://github.com/albert2704/stint/releases/tag/v0.3.0-beta.1); the older 0.1.1 download does not include it. Install the beta or [build the current source](development.md), then follow the [setup guide](blocking.md).
 
 In **Block distractions**, turn on **Block during focus**, choose apps or websites, and use **Save blocklist**. Blocking runs only during an unexpired focus timer. It deliberately releases on pause, breaks, reset, skip or completion. If you chose **Unblock this stint**, it stays released through pause/resume of that interval and returns for the next focus interval. Closing the main window keeps Stint running; quitting it stops protection.
 

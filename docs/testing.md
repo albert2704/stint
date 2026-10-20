@@ -50,6 +50,18 @@ The framework locator supports the local build output, the repository SDK, `FLUT
 
 The native harnesses compile production source with warnings treated as errors. They use fakes for system settings and temporary fixtures for file changes. The transport harness uses real loopback sockets and a local TLS server; it does not change system proxy settings. The Carbon routing test delivers in-process events to the real application event target, but does not synthesize physical keyboard input.
 
+## Focus experience source build verification
+
+On 20 October 2026, the five additions—focus profiles, Flow, ambient layers, weekly progress and Pick up here—passed static analysis and all **216 Flutter tests**. The relevant native harnesses passed **982 checks**: 274 completion/menu bar, 71 blocker, 307 shortcuts, 128 YouTube, 170 music and 32 completion-card checks. Independent code review approved the combined change after fixes for unchanged-value save retries, the music fade's starting volume and the Flow blocker label.
+
+Coverage includes Flow pause/recovery and delayed sleep delivery, exactly-once completion, expiring blocking leases, profile confirmation/cancellation and failure compensation, missing music fallback, ambient transport, migration, calendar-week totals and continuation persistence. Widget checks cover the supported 420 × 600 minimum size and both themes.
+
+The Apple Silicon development app built successfully at `build/focus-experience/Stint.app` and passed deep, strict signature verification. A separate copy with its own bundle identifier and sandbox storage was used for the live walkthrough. Its entitlement to the installed website blocker's shared policy directory was removed, keeping real helper policy out of this check.
+
+The live walkthrough verified Flow counting upward, cancelling a profile switch during Flow, recording one completed session and preparing a one-minute break, applying Writing silently, editing Pick up here, changing the weekly target, playing and pausing ambience alone, and opening the mixer from the native menu bar. After quitting and relaunching, the continuation sentence, idle timer, saved mix and 630-minute weekly target persisted, with audio paused.
+
+These results apply to the local source build, not the published 0.2.0 beta package. Real website enforcement, physical sleep/wake, physical Intel hardware and release packaging were not re-tested for this change. Flow resumes paused from 15-second checkpoints after relaunch; quitting or crashing can lose time since the last checkpoint. Pausing first saves exact elapsed time.
+
 ## Version 0.2.0 beta verification
 
 The beta uses a local HTTP/CONNECT proxy inside the unprivileged app. Its administrator installed helper selects the proxy during a running focus and restores the previous network settings afterward. The earlier hosts based enforcement, browser hiding guard and paid Network Extension approach are no longer used.

@@ -59,6 +59,7 @@ static NSArray<NSDictionary *> *StintBlockerApps(id value) {
 @property(nonatomic) BOOL choosing;
 @property(nonatomic) NSUInteger hideRequest;
 @property(nonatomic) double deadlineMilliseconds;
+@property(nonatomic) BOOL flowFocus;
 @property(nonatomic) double leaseExpiresAt;
 @property(nonatomic, strong) NSPanel *panel;
 @property(nonatomic, strong) NSTextField *appLabel;
@@ -136,7 +137,7 @@ static NSArray<NSDictionary *> *StintBlockerApps(id value) {
 - (void)guardState {
   if (![self isEffective]) { [self releaseBlocking]; return; }
   NSInteger seconds = (NSInteger)ceil(MAX(0, (self.deadlineMilliseconds - [self nowMilliseconds]) / 1000));
-  self.countdownLabel.stringValue = [NSString stringWithFormat:@"%02ld:%02ld", (long)(seconds / 60), (long)(seconds % 60)];
+  self.countdownLabel.stringValue = self.flowFocus ? @"Flow" : [NSString stringWithFormat:@"%02ld:%02ld", (long)(seconds / 60), (long)(seconds % 60)];
 }
 
 - (void)scheduleGuard {
@@ -178,6 +179,7 @@ static NSArray<NSDictionary *> *StintBlockerApps(id value) {
   self.domains = domains;
   self.sessionId = session;
   self.deadlineMilliseconds = [deadline doubleValue];
+  self.flowFocus = [args[@"flowFocus"] isKindOfClass:NSNumber.class] && [args[@"flowFocus"] boolValue];
   self.leaseExpiresAt = MIN(MIN([lease doubleValue], self.deadlineMilliseconds), [self nowMilliseconds] + 30000);
   self.appearance = [args[@"appearance"] isKindOfClass:NSString.class] ? args[@"appearance"] : @"system";
   self.active = YES;

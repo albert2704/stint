@@ -16,6 +16,24 @@ The next interval is prepared, but does not start automatically. After a break, 
 
 ## Timer controls
 
+### Flow mode
+
+Choose **Flow** near the timer to count upward from zero. Pause and Resume preserve focused time. **Take break** records the elapsed focus once and prepares the next break, which waits for you to start it. The suggested break is one fifth of focus time, rounded up to a whole minute and bounded to 1–30 minutes. The fourth stint still leads to the long break position. After a break, the next focus uses Flow again.
+
+Switching mode with unfinished time asks for confirmation. Flow does not schedule an end alert while counting upward. It requests a pause when the Mac sleeps. After relaunch it restores paused from the latest saved checkpoint, without counting time while Stint was closed. Checkpoints save every 15 running seconds, so quitting or a crash can lose up to 15 seconds. Pause before quitting to save the exact elapsed time. Pomodoro keeps its existing deadline recovery.
+
+### Pick up here
+
+Use **Pick up here** to save a short next step, such as “Next: fix the login redirect.” The sentence is optional, limited to 240 characters and kept until you edit or clear it. You can also open its editor from the menu bar panel.
+
+### Focus profiles
+
+Open **Profiles** to choose Coding, Writing or Study, or save your current setup with a name. A profile saves timer mode and durations, selected music and volume, Play with timer, ambient levels, and the blocker list and enabled setting.
+
+Configure the app as you like, then choose **Save current setup…**. A profile's options let you update it from your current setup, rename it or delete it. Applying a profile prepares an idle focus interval. It never starts audio or installs a website helper. An unfinished interval requires confirmation before any settings change. If a saved imported track is missing, Stint uses Quiet Keys and explains the fallback.
+
+These additions are included in [0.3.0 beta](https://github.com/albert2704/stint/releases/tag/v0.3.0-beta.1).
+
 The main window and menu bar panel control the same timer. Click the countdown in the menu bar to open the compact panel; use **Open Stint** to return to the main window.
 
 | Control | What it does |
@@ -40,7 +58,7 @@ The fourth focus position leads to a long break. You can move around the cycle m
 
 Minute adjustment has a one-minute remaining-time floor. Focus is capped at 120 minutes remaining and breaks at 60. If the countdown is already below a minute, the minus button does not extend it back to a minute.
 
-Closing the window keeps Stint running. Choose **Stint → Quit Stint** to exit. The saved deadline lets Stint settle a running interval on its next launch, including an interval that expired while the app was closed. It prepares one next interval instead of inventing unattended cycles.
+Closing the window keeps Stint running. Choose **Stint → Quit Stint** to exit. For Pomodoro focus and timed breaks, the saved deadline lets Stint settle a running interval on its next launch, including an interval that expired while the app was closed. It prepares one next interval instead of inventing unattended cycles. Flow focus restores paused from its last saved checkpoint.
 
 ## Rhythms and settings
 
@@ -62,7 +80,7 @@ Keyboard shortcuts have their own **Save shortcuts** button. Saving that editor 
 
 ## Block distractions
 
-**Beta feature:** app and website blocking are included in [0.2.0 beta](https://github.com/albert2704/stint/releases/tag/v0.2.0-beta.1). The older 0.1.1 download does not include them. Follow the [installation guide](install.md) and [complete blocker setup guide](blocking.md).
+**Beta feature:** app and website blocking are included in [0.3.0 beta](https://github.com/albert2704/stint/releases/tag/v0.3.0-beta.1) and were introduced in 0.2.0. The older 0.1.1 download does not include them. Follow the [installation guide](install.md) and [complete blocker setup guide](blocking.md).
 
 Open **Settings → Block distractions…** or the timer's shield control. Turn on **Block during focus**, use **Choose apps**, and add website domains or HTTP/HTTPS URLs. Choose **Save blocklist** to apply the draft; this save is independent of the parent Settings sheet. Each name covers itself and its subdomains.
 
@@ -74,7 +92,7 @@ Pause, reset, skip, completion and breaks release protection. **Unblock this sti
 
 ## Completion alerts
 
-While Stint is running, a completion produces a Stint card beneath the countdown and plays the selected sound **twice**, separated by a short gap. The direct chime is separate from macOS notification permission, but still depends on your Mac's audio output and volume.
+While Stint is running, a timed interval reaching zero produces a Stint card beneath the countdown and plays the selected sound **twice**, separated by a short gap. Manually ending Flow with **Take break** records the session and prepares a break without this timed alert. The direct chime is separate from macOS notification permission, but still depends on your Mac's audio output and volume.
 
 The card shows the next interval, cycle position, and today's progress. Its title changes for a normal focus completion, the fourth focus stint, the exact daily goal, or the end of a break. Use **Start break**, **Start long break**, or **Start focus** to continue. **Skip break** prepares the next focus interval without starting it. **Not now** dismisses the break-complete card.
 
@@ -89,6 +107,12 @@ To preview without changing your timer:
 While the app is running, Notification Center receives a quiet record to avoid a second banner and sound. On a normal Quit during a running interval, Stint schedules the system notification to supply the later alert. System delivery follows macOS Notifications and Focus settings. The normal-Quit scheduling path is tested in code; audible delivery after Quit remains a live-verification limitation in this version. Force quitting is not the normal-Quit path.
 
 ## Music
+
+### Ambient mix
+
+Expand **Ambient mix** in Sound to set independent Rain, Café hum and Brown noise levels. The original synthesized loops play locally. Choose **Play ambience** to listen without music, or use the main sound control to play the selected track with your configured mix. Layer levels are independent of music volume. Adjusting a silent layer saves its level without starting playback.
+
+Play with timer controls configured layers alongside the selected music. Pausing or ending the interval pauses both. Saved levels survive relaunch, but playback starts silent. You can also open the mixer from the menu bar panel.
 
 ### Built-in and imported audio
 
@@ -124,6 +148,8 @@ The video plays visibly inside the menu bar timer panel with YouTube's controls.
 YouTube requires internet access. Stint uses the official embedded player and does not download or extract audio. Playlist-only links are not supported; saving a video link keeps its video ID, not playlist position or a URL timestamp. Unavailable, restricted, or non-embeddable videos can fail even if they work on the YouTube website. Try another video or a local track.
 
 ## Progress
+
+The selected week includes recorded focus time, completed session count and average session length. Average length is the arithmetic mean of completed sessions, rounded to a minute. A **weekly target** defaults to 10 hours and can be changed in 30 minute steps from 30 minutes to 100 hours. The target compares against the selected week's recorded time; it does not estimate attention or include unfinished focus. Weeks and dates continue to follow the app locale and local calendar.
 
 Click the daily count in the main header, or **Progress** in the menu bar panel. The sheet contains today's finished stints, the weekly chart, your streak, goal days, and all-time focus time.
 

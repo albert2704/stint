@@ -4,6 +4,9 @@ import '../data/controller.dart';
 import '../data/models.dart';
 import '../music.dart';
 import '../blocker.dart';
+import '../focus_profiles.dart';
+import 'focus_profiles.dart';
+import 'single_dialog.dart';
 import 'blocker_settings.dart';
 import 'components.dart';
 import 'music_panel.dart';
@@ -17,13 +20,22 @@ class PomodoroScreen extends StatelessWidget {
     required this.controller,
     this.music,
     this.blocker,
+    this.profiles,
   });
   final StintController controller;
   final FocusMusic? music;
   final BlockerController? blocker;
+  final FocusProfiles? profiles;
 
   String status(BuildContext context) {
     final timer = controller.timer;
+    if (controller.isFlowFocus) {
+      return timer.running
+          ? 'Keep going. Take a break when you are ready.'
+          : controller.timerHasProgress
+          ? 'Paused. Your focus time is saved.'
+          : 'No countdown. Start and find your flow.';
+    }
     if (timer.running) {
       final end = MaterialLocalizations.of(context).formatTimeOfDay(
         TimeOfDay.fromDateTime(timer.endsAt!.toLocal()),
@@ -140,6 +152,42 @@ class PomodoroScreen extends StatelessWidget {
                                 ),
                                 child: Column(
                                   children: [
+                                    Wrap(
+                                      alignment: WrapAlignment.center,
+                                      spacing: 6,
+                                      runSpacing: 4,
+                                      children: [
+                                        for (final mode in FocusMode.values)
+                                          ChoiceChip(
+                                            key: ValueKey('mode-${mode.name}'),
+                                            label: Text(
+                                              mode == FocusMode.flow
+                                                  ? 'Flow'
+                                                  : 'Pomodoro',
+                                            ),
+                                            selected: c.timer.mode == mode,
+                                            labelStyle: TextStyle(
+                                              fontFamily: 'HankenGrotesk',
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w600,
+                                              color: c.timer.mode == mode
+                                                  ? colors.ground
+                                                  : colors.ink2,
+                                            ),
+                                            checkmarkColor: colors.ground,
+                                            onSelected: c.externalActionBusy
+                                                ? null
+                                                : (_) => c.requestMode(mode),
+                                          ),
+                                        if (profiles != null)
+                                          FocusProfileSelector(
+                                            profiles: profiles!,
+                                          ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 10),
+                                    _ContinuationCard(controller: c),
+                                    const SizedBox(height: 22),
                                     Row(
                                       mainAxisAlignment:
                                           MainAxisAlignment.center,
@@ -155,7 +203,7 @@ class PomodoroScreen extends StatelessWidget {
                                             letterSpacing: 1.92,
                                           ),
                                         ),
-                                        if (focus) ...[
+                                        if (focus && !c.isFlowFocus) ...[
                                           const SizedBox(width: 10),
                                           Text(
                                             '${c.timer.cycleStep ~/ 2 + 1} of 4',
@@ -172,22 +220,27 @@ class PomodoroScreen extends StatelessWidget {
                                       height: 106,
                                       child: Row(
                                         children: [
-                                          _RoundControl(
-                                            tooltip: 'Remove a minute',
-                                            size: 40,
-                                            icon: Icons.remove_rounded,
-                                            onPressed:
-                                                c.remaining <= 60 ||
-                                                    c.pendingAction != null
-                                                ? null
-                                                : () => c.adjustCurrent(-1),
-                                          ),
+                                          if (!c.isFlowFocus)
+                                            _RoundControl(
+                                              tooltip: 'Remove a minute',
+                                              size: 40,
+                                              icon: Icons.remove_rounded,
+                                              onPressed:
+                                                  c.remaining <= 60 ||
+                                                      c.pendingAction != null
+                                                  ? null
+                                                  : () => c.adjustCurrent(-1),
+                                            ),
                                           const SizedBox(width: 8),
                                           Expanded(
                                             child: FittedBox(
                                               fit: BoxFit.scaleDown,
                                               child: Text(
-                                                clockText(c.remaining),
+                                                clockText(
+                                                  c.isFlowFocus
+                                                      ? c.elapsedSeconds
+                                                      : c.remaining,
+                                                ),
                                                 key: const Key('countdown'),
                                                 style: TextStyle(
                                                   fontFamily: 'MartianMono',
@@ -203,18 +256,19 @@ class PomodoroScreen extends StatelessWidget {
                                             ),
                                           ),
                                           const SizedBox(width: 8),
-                                          _RoundControl(
-                                            tooltip: 'Add a minute',
-                                            size: 40,
-                                            icon: Icons.add_rounded,
-                                            onPressed:
-                                                c.remaining >=
-                                                        (focus ? 120 : 60) *
-                                                            60 ||
-                                                    c.pendingAction != null
-                                                ? null
-                                                : () => c.adjustCurrent(1),
-                                          ),
+                                          if (!c.isFlowFocus)
+                                            _RoundControl(
+                                              tooltip: 'Add a minute',
+                                              size: 40,
+                                              icon: Icons.add_rounded,
+                                              onPressed:
+                                                  c.remaining >=
+                                                          (focus ? 120 : 60) *
+                                                              60 ||
+                                                      c.pendingAction != null
+                                                  ? null
+                                                  : () => c.adjustCurrent(1),
+                                            ),
                                         ],
                                       ),
                                     ),
@@ -230,7 +284,16 @@ class PomodoroScreen extends StatelessWidget {
                                       ),
                                     ),
                                     const SizedBox(height: 20),
-                                    CycleTrack(controller: c),
+                                    if (!c.isFlowFocus)
+                                      CycleTrack(controller: c)
+                                    else
+                                      Text(
+                                        '${c.suggestedFlowBreakMinutes} min suggested break',
+                                        style: TextStyle(
+                                          color: colors.muted,
+                                          fontSize: 12,
+                                        ),
+                                      ),
                                     const SizedBox(height: 20),
                                     if (c.pendingAction != null)
                                       TimerConfirmBar(controller: c)
@@ -262,18 +325,20 @@ class PomodoroScreen extends StatelessWidget {
                                                     fontWeight: FontWeight.w700,
                                                   ),
                                                 ),
-                                                onPressed: () {
-                                                  final running =
-                                                      c.timer.running;
-                                                  c.tick();
-                                                  if (running &&
-                                                      !c.timer.running) {
-                                                    return;
-                                                  }
-                                                  c.timer.running
-                                                      ? c.pauseTimer()
-                                                      : c.startTimer();
-                                                },
+                                                onPressed: c.externalActionBusy
+                                                    ? null
+                                                    : () {
+                                                        final running =
+                                                            c.timer.running;
+                                                        c.tick();
+                                                        if (running &&
+                                                            !c.timer.running) {
+                                                          return;
+                                                        }
+                                                        c.timer.running
+                                                            ? c.pauseTimer()
+                                                            : c.startTimer();
+                                                      },
                                                 icon: Icon(
                                                   c.timer.running
                                                       ? Icons.pause_rounded
@@ -295,16 +360,74 @@ class PomodoroScreen extends StatelessWidget {
                                           ),
                                           const SizedBox(width: 14),
                                           _RoundControl(
-                                            tooltip: 'Skip to next',
+                                            tooltip: c.isFlowFocus
+                                                ? 'Take break'
+                                                : 'Skip to next',
                                             size: 52,
-                                            icon: Icons.skip_next_rounded,
-                                            onPressed: c.requestSkip,
+                                            icon: c.isFlowFocus
+                                                ? Icons.coffee_outlined
+                                                : Icons.skip_next_rounded,
+                                            onPressed: c.externalActionBusy
+                                                ? null
+                                                : c.isFlowFocus
+                                                ? c.elapsedSeconds > 0
+                                                      ? () {
+                                                          c.finishFlow();
+                                                        }
+                                                      : null
+                                                : c.requestSkip,
                                           ),
                                         ],
                                       ),
                                   ],
                                 ),
                               ),
+                              if (c.isFlowFocus &&
+                                  c.timerHasProgress &&
+                                  c.pendingAction == null)
+                                TextButton.icon(
+                                  key: const Key('flow-take-break'),
+                                  onPressed: c.externalActionBusy
+                                      ? null
+                                      : () {
+                                          c.finishFlow();
+                                        },
+                                  icon: const Icon(
+                                    Icons.coffee_outlined,
+                                    size: 17,
+                                  ),
+                                  label: const Text('Take break'),
+                                ),
+                              if (profiles != null)
+                                ListenableBuilder(
+                                  listenable: profiles!,
+                                  builder: (context, _) =>
+                                      profiles!.error == null &&
+                                          profiles!.warning == null
+                                      ? const SizedBox.shrink()
+                                      : Padding(
+                                          padding: const EdgeInsets.fromLTRB(
+                                            28,
+                                            12,
+                                            28,
+                                            0,
+                                          ),
+                                          child: Semantics(
+                                            liveRegion: true,
+                                            child: Text(
+                                              profiles!.error ??
+                                                  profiles!.warning!,
+                                              textAlign: TextAlign.center,
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                color: profiles!.error != null
+                                                    ? colors.error
+                                                    : colors.muted,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                ),
                               if (blocker != null) ...[
                                 const SizedBox(height: 12),
                                 ListenableBuilder(
@@ -466,7 +589,9 @@ class TimerConfirmBar extends StatelessWidget {
             ),
             const SizedBox(height: 4),
             Text(
-              '${clockText(controller.remaining)} left will be discarded.',
+              controller.isFlowFocus
+                  ? '${clockText(controller.elapsedSeconds)} of unfinished focus will be discarded.'
+                  : '${clockText(controller.remaining)} left will be discarded.',
               style: TextStyle(fontSize: 12, color: c.muted),
             ),
             const SizedBox(height: 10),
@@ -776,4 +901,115 @@ class _StintMarkPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+final _continuationDialog = SingleStintDialog();
+
+Future<void> showContinuationNote(
+  BuildContext context,
+  StintController controller,
+) => _continuationDialog.show(
+  context,
+  (_) => _ContinuationEditor(controller: controller),
+);
+
+class _ContinuationCard extends StatelessWidget {
+  const _ContinuationCard({required this.controller});
+  final StintController controller;
+  @override
+  Widget build(BuildContext context) {
+    final note = controller.workspace.settings.continuationNote;
+    final colors = StintColors.of(context);
+    return SizedBox(
+      width: double.infinity,
+      child: TextButton.icon(
+        key: const Key('pick-up-here'),
+        onPressed: () => showContinuationNote(context, controller),
+        icon: const Icon(Icons.bookmark_border, size: 16),
+        label: Text(
+          note.isEmpty ? 'Pick up here · leave yourself a reminder' : note,
+          maxLines: 3,
+          overflow: TextOverflow.ellipsis,
+          textAlign: TextAlign.left,
+          style: TextStyle(
+            fontSize: 13,
+            color: note.isEmpty ? colors.muted : colors.ink2,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ContinuationEditor extends StatefulWidget {
+  const _ContinuationEditor({required this.controller});
+  final StintController controller;
+  @override
+  State<_ContinuationEditor> createState() => _ContinuationEditorState();
+}
+
+class _ContinuationEditorState extends State<_ContinuationEditor> {
+  late final text = TextEditingController(
+    text: widget.controller.workspace.settings.continuationNote,
+  );
+  String? error;
+  @override
+  void dispose() {
+    text.dispose();
+    super.dispose();
+  }
+
+  void save(String value) {
+    widget.controller.setContinuationNote(value);
+    if (widget.controller.saveError != null) {
+      setState(() => error = widget.controller.saveError);
+    } else {
+      Navigator.pop(context);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => AlertDialog(
+    title: const Text('Pick up here'),
+    content: SizedBox(
+      width: 360,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Leave one useful next step for when you return.',
+            style: TextStyle(fontSize: 13),
+          ),
+          const SizedBox(height: 14),
+          TextField(
+            key: const Key('continuation-note'),
+            controller: text,
+            autofocus: true,
+            maxLength: 240,
+            minLines: 2,
+            maxLines: 4,
+            decoration: const InputDecoration(
+              hintText: 'Next: finish the introduction…',
+              labelText: 'Your next step',
+            ),
+          ),
+          if (error != null)
+            Text(
+              error!,
+              style: TextStyle(color: StintColors.of(context).error),
+            ),
+        ],
+      ),
+    ),
+    actions: [
+      if (widget.controller.workspace.settings.continuationNote.isNotEmpty)
+        TextButton(onPressed: () => save(''), child: const Text('Clear')),
+      TextButton(
+        onPressed: () => Navigator.pop(context),
+        child: const Text('Cancel'),
+      ),
+      FilledButton(onPressed: () => save(text.text), child: const Text('Save')),
+    ],
+  );
 }

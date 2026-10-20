@@ -78,6 +78,11 @@ class FocusMusic extends ChangeNotifier {
       asset: 'assets/music/night_study.wav',
     ),
   ];
+  static const ambientLayers = {
+    'rain': ('Rain', 'assets/music/ambient_rain.wav'),
+    'cafe': ('Café hum', 'assets/music/ambient_cafe.wav'),
+    'brown_noise': ('Brown noise', 'assets/music/ambient_brown_noise.wav'),
+  };
   final MethodChannel channel;
   final AssetBundle assets;
   List<MusicTrack> imported = [];
@@ -87,9 +92,17 @@ class FocusMusic extends ChangeNotifier {
   bool busy = false;
   bool followTimer = false;
   double volume = .35;
+  Map<String, double> _ambientLevels = {
+    for (final id in ambientLayers.keys) id: 0,
+  };
+  bool ambientPlaying = false;
   String? error;
+  String? profileWarning;
   bool _disposed = false;
   bool get wantsPlayback => playing || starting;
+  bool get wantsAnyPlayback => wantsPlayback || ambientPlaying;
+  bool get hasAmbient => _ambientLevels.values.any((level) => level > 0);
+  Map<String, double> get ambientLevels => Map.unmodifiable(_ambientLevels);
 
   List<MusicTrack> get tracks => [...builtIns, ...imported];
   MusicTrack get selected => tracks.firstWhere(
@@ -124,6 +137,18 @@ class FocusMusic extends ChangeNotifier {
     }
     if (result['volume'] is num) {
       volume = (result['volume'] as num).toDouble().clamp(0, 1);
+    }
+    final levels = result['ambientLevels'];
+    if (levels is Map) {
+      _ambientLevels = {
+        for (final id in ambientLayers.keys)
+          id: levels[id] is num && (levels[id] as num).isFinite
+              ? (levels[id] as num).toDouble().clamp(0, 1)
+              : 0,
+      };
+    }
+    if (result['ambientPlaying'] is bool) {
+      ambientPlaying = result['ambientPlaying'] as bool;
     }
   }
 
@@ -195,10 +220,13 @@ class FocusMusic extends ChangeNotifier {
       _run(() async {
         final track = selected;
         if (shouldPlay != null && !shouldPlay()) return null;
+        final ambientData = await _loadAmbient(_ambientLevels);
+        if (_disposed || (shouldPlay != null && !shouldPlay())) return null;
         if (track.asset == null) {
           return channel.invokeMethod<Object?>('play', {
             'id': track.id,
             if (fade) 'fade': true,
+            if (ambientData.isNotEmpty) 'ambientData': ambientData,
           });
         }
         final bytes = await assets.load(track.asset!);
@@ -207,12 +235,111 @@ class FocusMusic extends ChangeNotifier {
         return channel.invokeMethod<Object?>('play', {
           'id': track.id,
           if (fade) 'fade': true,
+          if (ambientData.isNotEmpty) 'ambientData': ambientData,
           'data': bytes.buffer.asUint8List(
             bytes.offsetInBytes,
             bytes.lengthInBytes,
           ),
         });
       });
+
+  Map<String, double> _normalizedLevels(Map<String, double> levels) => {
+    for (final id in ambientLayers.keys)
+      id: (levels[id] ?? 0).isFinite ? (levels[id] ?? 0).clamp(0, 1) : 0,
+  };
+
+  Future<Map<String, Uint8List>> _loadAmbient(
+    Map<String, double> levels,
+  ) async {
+    final data = <String, Uint8List>{};
+    for (final entry in levels.entries) {
+      if (entry.value <= 0) continue;
+      final bytes = await assets.load(ambientLayers[entry.key]!.$2);
+      data[entry.key] = bytes.buffer.asUint8List(
+        bytes.offsetInBytes,
+        bytes.lengthInBytes,
+      );
+    }
+    return data;
+  }
+
+  void previewAmbientLevel(String id, double value) {
+    if (!ambientLayers.containsKey(id) || !value.isFinite) return;
+    _ambientLevels = {..._ambientLevels, id: value.clamp(0, 1)};
+    notifyListeners();
+  }
+
+  Future<void> setAmbientLevel(String id, double value) async {
+    if (!ambientLayers.containsKey(id) || !value.isFinite) return;
+    await applyAmbientLevels({..._ambientLevels, id: value.clamp(0, 1)});
+  }
+
+  Future<void> applyAmbientLevels(Map<String, double> levels) => _run(() async {
+    final normalized = _normalizedLevels(levels);
+    final data = ambientPlaying ? await _loadAmbient(normalized) : null;
+    if (_disposed) return null;
+    return channel.invokeMethod<Object?>('ambientLevels', {
+      'levels': normalized,
+      'data': ?data,
+    });
+  });
+
+  Future<void> playAmbient({bool fade = false, bool Function()? shouldPlay}) =>
+      _run(() async {
+        if (!hasAmbient || (shouldPlay != null && !shouldPlay())) return null;
+        final data = await _loadAmbient(_ambientLevels);
+        if (_disposed || (shouldPlay != null && !shouldPlay())) return null;
+        return channel.invokeMethod<Object?>('ambientPlay', {
+          'data': data,
+          if (fade) 'fade': true,
+        });
+      });
+
+  Future<void> pauseAmbient() => _command('ambientPause');
+  Future<void> toggleAmbient() =>
+      ambientPlaying ? pauseAmbient() : playAmbient();
+
+  /// Applies a complete profile silently as one native transaction. A missing
+  /// saved track falls back to Quiet Keys and is reported through profileWarning.
+  Future<bool> applySoundProfile({
+    required String selectedId,
+    required double volume,
+    required bool followTimer,
+    required Map<String, double> ambientLevels,
+  }) async {
+    // Stopping a timer can have just started its linked audio fade. Wait for
+    // that command to settle before applying the complete sound configuration.
+    final deadline = DateTime.now().add(const Duration(seconds: 5));
+    while (busy && !_disposed && DateTime.now().isBefore(deadline)) {
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+    }
+    if (_disposed) return false;
+    if (busy || !volume.isFinite) {
+      error = busy
+          ? 'Finish the current sound action before applying this profile.'
+          : 'This profile has an invalid sound volume.';
+      notifyListeners();
+      return false;
+    }
+    var applied = false;
+    profileWarning = null;
+    await _run(() async {
+      final result = await channel.invokeMethod<Object?>('applyProfile', {
+        'selectedId': selectedId,
+        'volume': volume.clamp(0, 1),
+        'followTimer': followTimer,
+        'ambientLevels': _normalizedLevels(ambientLevels),
+      });
+      if (result is Map) {
+        applied = true;
+        profileWarning = result['profileWarning'] is String
+            ? result['profileWarning'] as String
+            : null;
+      }
+      return result;
+    });
+    return applied && error == null;
+  }
 
   void previewVolume(double value) {
     volume = value.clamp(0, 1);

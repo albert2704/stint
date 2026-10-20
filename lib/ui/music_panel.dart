@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../music.dart';
+import 'ambient_mixer.dart';
 import 'youtube_link.dart';
 import 'components.dart';
 import 'theme.dart';
@@ -363,6 +364,8 @@ class MusicPanel extends StatelessWidget {
                   ),
                 ],
               ),
+              const SizedBox(height: 12),
+              AmbientMixer(music: music),
               if (music.error != null)
                 Padding(
                   padding: const EdgeInsets.only(top: 6),

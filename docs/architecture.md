@@ -37,6 +37,8 @@ flowchart LR
 | [`lib/data/controller.dart`](../lib/data/controller.dart) | Timer transitions, confirmations, completion records, persistence requests, and Progress cache. |
 | [`lib/data/store.dart`](../lib/data/store.dart) | File-backed and in-memory stores; atomic replacement and previous-save recovery. |
 | [`lib/data/progress.dart`](../lib/data/progress.dart) | Calendar grouping, weekly totals, streaks, goals, and focus-time formatting. |
+| [`lib/focus_profiles.dart`](../lib/focus_profiles.dart) | Local profile snapshots, atomic file persistence, confirmed application and compensation across timer, music and blocker configuration. |
+| [`lib/ui/ambient_mixer.dart`](../lib/ui/ambient_mixer.dart) | Independent ambient layer controls sharing the native music service. |
 | [`lib/native_timer.dart`](../lib/native_timer.dart) | Native timer snapshots and validated commands coming back to Dart. |
 | [`lib/music.dart`](../lib/music.dart), [`lib/timer_music.dart`](../lib/timer_music.dart) | Music view state, commands, and timer transition coordination. |
 | [`lib/alert_sounds.dart`](../lib/alert_sounds.dart), [`lib/keymap.dart`](../lib/keymap.dart) | Typed alert and shortcut settings interfaces on the timer channel. |

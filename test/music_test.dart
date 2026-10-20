@@ -41,6 +41,12 @@ class FakeMusicHost {
   bool cancelImport = true;
   bool failPlay = false;
   bool followTimer = false;
+  final ambientLevels = <String, double>{
+    'rain': 0,
+    'cafe': 0,
+    'brown_noise': 0,
+  };
+  bool ambientPlaying = false;
   Completer<void>? pendingFade;
   Completer<void>? pendingImport;
 
@@ -50,6 +56,8 @@ class FakeMusicHost {
     'volume': volume,
     'playing': playing,
     'followTimer': followTimer,
+    'ambientLevels': Map<String, double>.of(ambientLevels),
+    'ambientPlaying': ambientPlaying,
   };
 
   Future<Object?> handle(MethodCall call) async {
@@ -57,6 +65,7 @@ class FakeMusicHost {
     switch (call.method) {
       case 'load':
         playing = false;
+        ambientPlaying = false;
       case 'import':
         await pendingImport?.future;
         if (!cancelImport) {
@@ -81,15 +90,40 @@ class FakeMusicHost {
         }
         selectedId = (call.arguments as Map)['id'] as String;
         playing = true;
+        ambientPlaying = ambientLevels.values.any((level) => level > 0);
       case 'pause':
         playing = false;
+        ambientPlaying = false;
       case 'fadePause':
         await pendingFade?.future;
         playing = false;
+        ambientPlaying = false;
       case 'followTimer':
         followTimer = call.arguments as bool;
       case 'volume':
         volume = call.arguments as double;
+      case 'ambientLevels':
+        final levels = (call.arguments as Map)['levels'] as Map;
+        ambientLevels
+          ..clear()
+          ..addAll(levels.cast<String, double>());
+        if (!ambientLevels.values.any((level) => level > 0)) {
+          ambientPlaying = false;
+        }
+      case 'ambientPlay':
+        ambientPlaying = ambientLevels.values.any((level) => level > 0);
+      case 'ambientPause':
+        ambientPlaying = false;
+      case 'applyProfile':
+        final args = call.arguments as Map;
+        selectedId = args['selectedId'] as String;
+        volume = args['volume'] as double;
+        followTimer = args['followTimer'] as bool;
+        ambientLevels
+          ..clear()
+          ..addAll((args['ambientLevels'] as Map).cast<String, double>());
+        playing = false;
+        ambientPlaying = false;
       default:
         throw MissingPluginException(
           'Unexpected music command: ${call.method}',
@@ -364,7 +398,9 @@ void main() {
           theme: stintTheme(Brightness.light),
           home: Scaffold(
             body: Center(
-              child: SizedBox(width: 400, child: MusicPanel(music: music)),
+              child: SingleChildScrollView(
+                child: SizedBox(width: 400, child: MusicPanel(music: music)),
+              ),
             ),
           ),
         ),

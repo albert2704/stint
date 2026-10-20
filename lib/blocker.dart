@@ -43,8 +43,9 @@ class BlockerController extends ChangeNotifier {
       timer.timer.phase == TimerPhase.focus &&
       timer.timer.running &&
       sessionId != null &&
-      timer.timer.endsAt != null &&
-      timer.timer.endsAt!.isAfter(timer.now());
+      (timer.isFlowFocus ||
+          (timer.timer.endsAt != null &&
+              timer.timer.endsAt!.isAfter(timer.now())));
   String get statusLabel {
     if (!ready) return 'Blocker unavailable';
     if (error != null) return 'Blocker needs attention';
@@ -93,10 +94,15 @@ class BlockerController extends ChangeNotifier {
 
   Map<String, Object?> get nativeState {
     final now = timer.now().millisecondsSinceEpoch;
-    final deadline = timer.timer.endsAt?.millisecondsSinceEpoch;
+    // Flow has no planned end. Renew the same short lease used for crash
+    // recovery so native protection cannot outlive a stalled controller.
+    final deadline = timer.isFlowFocus
+        ? now + 30000
+        : timer.timer.endsAt?.millisecondsSinceEpoch;
     final isActive = active;
     return {
       'active': isActive,
+      'flowFocus': timer.isFlowFocus,
       'sessionId': sessionId,
       'deadlineMilliseconds': deadline,
       'leaseExpiresAt': isActive ? min(now + 30000, deadline!) : now + 30000,

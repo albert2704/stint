@@ -14,6 +14,9 @@ class NativeTimerBridge {
     this.onAdjust,
     this.onProgress,
     this.onBlocker,
+    this.onProfiles,
+    this.onContinuation,
+    this.onAmbient,
     this.music,
     MethodChannel? channel,
   }) : channel = channel ?? const MethodChannel('stint/timer') {
@@ -27,6 +30,9 @@ class NativeTimerBridge {
   final Future<void> Function()? onAdjust;
   final Future<void> Function()? onProgress;
   final Future<void> Function()? onBlocker;
+  final Future<void> Function()? onProfiles;
+  final Future<void> Function()? onContinuation;
+  final Future<void> Function()? onAmbient;
   final MethodChannel channel;
   final FocusMusic? music;
   String? _previous;
@@ -44,6 +50,12 @@ class NativeTimerBridge {
             : 0);
     return {
       'remaining': controller.remaining,
+      'flowFocus': controller.isFlowFocus,
+      'flowElapsedSeconds': controller.isFlowFocus
+          ? controller.elapsedSeconds
+          : 0,
+      'continuationNote': controller.workspace.settings.continuationNote,
+      'externalActionBusy': controller.externalActionBusy,
       'totalSeconds': controller.timer.totalSeconds,
       'running': controller.timer.running,
       'hasProgress': controller.timerHasProgress,
@@ -75,6 +87,8 @@ class NativeTimerBridge {
           'busy': music!.busy,
           'volume': music!.volume,
           'followTimer': music!.followTimer,
+          'ambientPlaying': music!.ambientPlaying,
+          'ambientLevels': music!.ambientLevels,
           'error': music!.error,
         },
     };
@@ -143,6 +157,32 @@ class NativeTimerBridge {
       case 'progress':
         controller.tick();
         await onProgress?.call();
+      case 'profiles':
+        controller.tick();
+        await onProfiles?.call();
+      case 'continuation':
+        controller.tick();
+        await onContinuation?.call();
+      case 'ambient':
+        await onAmbient?.call();
+      case 'finishFlow':
+        final context = call.arguments;
+        if (context is Map &&
+            controller.isFlowFocus &&
+            context['sessionId'] is String &&
+            context['sessionId'] == controller.timer.sessionId &&
+            context['cycleStep'] == controller.timer.cycleStep) {
+          controller.finishFlow();
+        }
+      case 'systemWillSleep':
+        if (controller.isFlowFocus && controller.timer.running) {
+          final milliseconds = call.arguments;
+          controller.pauseFlowForSleep(
+            milliseconds is int
+                ? DateTime.fromMillisecondsSinceEpoch(milliseconds)
+                : controller.now(),
+          );
+        }
       case 'reset':
         controller.requestReset();
       case 'skip':
@@ -178,7 +218,7 @@ class NativeTimerBridge {
       case 'musicToggle':
         final player = music;
         if (player != null) {
-          await (player.wantsPlayback ? player.pause() : player.play());
+          await (player.wantsAnyPlayback ? player.pause() : player.play());
         }
       case 'musicSelect':
         final id = call.arguments;

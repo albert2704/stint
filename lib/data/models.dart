@@ -10,6 +10,13 @@ enum Priority { low, normal, high }
 
 enum TimerPhase { focus, shortBreak, longBreak }
 
+enum FocusMode { pomodoro, flow }
+
+/// A continuation is one short sentence, not a separate note document.
+String normalizeContinuationNote(String value) => String.fromCharCodes(
+  value.trim().replaceAll(RegExp(r'\s+'), ' ').runes.take(240),
+);
+
 TimerPhase phaseForCycleStep(int step) {
   if (step < 0 || step > 7) throw RangeError.range(step, 0, 7, 'step');
   if (step == 7) return TimerPhase.longBreak;
@@ -167,6 +174,8 @@ class FocusSession {
     required this.seconds,
     required this.finishedAt,
     this.taskId,
+    this.mode = FocusMode.pomodoro,
+    this.continuationNote = '',
   });
   final String id;
   final String? taskId;
@@ -174,6 +183,8 @@ class FocusSession {
   final String projectName;
   final int seconds;
   final DateTime finishedAt;
+  final FocusMode mode;
+  final String continuationNote;
   Map<String, dynamic> toJson() => {
     'id': id,
     'taskId': taskId,
@@ -181,6 +192,8 @@ class FocusSession {
     'projectName': projectName,
     'seconds': seconds,
     'finishedAt': finishedAt.toIso8601String(),
+    'mode': mode.name,
+    'continuationNote': continuationNote,
   };
   factory FocusSession.fromJson(Map<String, dynamic> j) => FocusSession(
     id: j['id'] as String,
@@ -189,6 +202,8 @@ class FocusSession {
     projectName: j['projectName'] as String,
     seconds: j['seconds'] as int,
     finishedAt: DateTime.parse(j['finishedAt'] as String),
+    mode: FocusMode.values.byName(j['mode'] as String? ?? 'pomodoro'),
+    continuationNote: j['continuationNote'] as String? ?? '',
   );
 }
 
@@ -279,9 +294,16 @@ class StintPreferences {
     List<FocusRoutine>? customRoutines,
     this.preferredRoutineId,
     this.dailyGoal = defaultDailyGoal,
+    this.focusMode = FocusMode.pomodoro,
+    this.weeklyGoalMinutes = defaultWeeklyGoalMinutes,
+    this.continuationNote = '',
   }) : customRoutines = customRoutines ?? [];
   static const defaultDailyGoal = 8;
   static const maxDailyGoal = 16;
+  static const defaultWeeklyGoalMinutes = 600;
+  static const minWeeklyGoalMinutes = 30;
+  static const maxWeeklyGoalMinutes = 6000;
+  static const weeklyGoalStepMinutes = 30;
   int focusMinutes;
   int shortBreakMinutes;
   int longBreakMinutes;
@@ -290,6 +312,9 @@ class StintPreferences {
   String? preferredRoutineId;
   // Finished focus stints per day, 1 to [maxDailyGoal].
   int dailyGoal;
+  FocusMode focusMode;
+  int weeklyGoalMinutes;
+  String continuationNote;
   int secondsFor(TimerPhase phase) =>
       60 *
       switch (phase) {
@@ -307,6 +332,9 @@ class StintPreferences {
         .toList(),
     'preferredRoutineId': preferredRoutineId,
     'dailyGoal': dailyGoal,
+    'focusMode': focusMode.name,
+    'weeklyGoalMinutes': weeklyGoalMinutes,
+    'continuationNote': continuationNote,
   };
   factory StintPreferences.fromJson(Map<String, dynamic> j) => StintPreferences(
     focusMinutes: j['focusMinutes'] as int,
@@ -319,6 +347,10 @@ class StintPreferences {
     preferredRoutineId: j['preferredRoutineId'] as String?,
     // Older workspaces have no goal and start with the default.
     dailyGoal: j['dailyGoal'] as int? ?? defaultDailyGoal,
+    focusMode: FocusMode.values.byName(j['focusMode'] as String? ?? 'pomodoro'),
+    weeklyGoalMinutes:
+        j['weeklyGoalMinutes'] as int? ?? defaultWeeklyGoalMinutes,
+    continuationNote: j['continuationNote'] as String? ?? '',
   );
 }
 
@@ -335,6 +367,9 @@ class FocusTimer {
     this.completedCount = 0,
     int? cycleStep,
     this.completedSessionId,
+    this.mode = FocusMode.pomodoro,
+    this.elapsedMilliseconds = 0,
+    this.flowStartedAt,
   }) : cycleStep = cycleStep ?? _legacyCycleStep(phase, completedCount);
   TimerPhase phase;
   int remaining;
@@ -349,7 +384,13 @@ class FocusTimer {
   // The completion that offered this untouched idle interval. Notification
   // actions must match this context, including after a process restart.
   String? completedSessionId;
-  bool get running => endsAt != null;
+  FocusMode mode;
+  // Active time captured at the last save. No time since this checkpoint is
+  // credited after loading a workspace, even when it was saved while running.
+  int elapsedMilliseconds;
+  DateTime? flowStartedAt;
+  bool get isFlowFocus => mode == FocusMode.flow && phase == TimerPhase.focus;
+  bool get running => isFlowFocus ? flowStartedAt != null : endsAt != null;
   Map<String, dynamic> toJson() => {
     'phase': phase.name,
     'remaining': remaining,
@@ -362,6 +403,9 @@ class FocusTimer {
     'completedCount': completedCount,
     'cycleStep': cycleStep,
     'completedSessionId': completedSessionId,
+    'mode': mode.name,
+    'elapsedMilliseconds': elapsedMilliseconds,
+    'flowStartedAt': flowStartedAt?.toIso8601String(),
   };
   factory FocusTimer.fromJson(Map<String, dynamic> j) => FocusTimer(
     phase: TimerPhase.values.byName(j['phase'] as String),
@@ -375,6 +419,11 @@ class FocusTimer {
     completedCount: j['completedCount'] as int,
     cycleStep: j['cycleStep'] as int?,
     completedSessionId: j['completedSessionId'] as String?,
+    mode: FocusMode.values.byName(j['mode'] as String? ?? 'pomodoro'),
+    elapsedMilliseconds: j['elapsedMilliseconds'] as int? ?? 0,
+    flowStartedAt: j['flowStartedAt'] == null
+        ? null
+        : DateTime.parse(j['flowStartedAt'] as String),
   );
 }
 
@@ -431,7 +480,9 @@ class Workspace {
         sessions: (j['sessions'] as List)
             .map((x) => FocusSession.fromJson(x as Map<String, dynamic>))
             .toList(),
-        settings: StintPreferences.fromJson(j['settings'] as Map<String, dynamic>),
+        settings: StintPreferences.fromJson(
+          j['settings'] as Map<String, dynamic>,
+        ),
         timer: FocusTimer.fromJson(j['timer'] as Map<String, dynamic>),
       );
       final projectIds = w.projects.map((p) => p.id).toSet();
@@ -454,7 +505,12 @@ class Workspace {
                 t.noteIds.any((id) => !noteIds.contains(id)),
           ) ||
           w.notes.any((n) => !projectIds.contains(n.projectId)) ||
-          w.sessions.any((s) => s.seconds <= 0)) {
+          w.sessions.any(
+            (s) =>
+                s.seconds <= 0 ||
+                normalizeContinuationNote(s.continuationNote) !=
+                    s.continuationNote,
+          )) {
         throw const FormatException(
           'Workspace contains invalid records or links.',
         );
@@ -470,6 +526,10 @@ class Workspace {
           !['system', 'light', 'dark'].contains(s.appearance) ||
           s.dailyGoal < 1 ||
           s.dailyGoal > StintPreferences.maxDailyGoal ||
+          s.weeklyGoalMinutes < StintPreferences.minWeeklyGoalMinutes ||
+          s.weeklyGoalMinutes > StintPreferences.maxWeeklyGoalMinutes ||
+          s.weeklyGoalMinutes % StintPreferences.weeklyGoalStepMinutes != 0 ||
+          normalizeContinuationNote(s.continuationNote) != s.continuationNote ||
           routineIds.length != s.customRoutines.length ||
           s.customRoutines.any(
             (routine) =>
@@ -489,10 +549,18 @@ class Workspace {
           t.cycleStep > 7 ||
           phaseForCycleStep(t.cycleStep) != t.phase ||
           t.completedSessionId == '' ||
+          t.elapsedMilliseconds < 0 ||
+          (t.isFlowFocus && t.endsAt != null) ||
+          (!t.isFlowFocus &&
+              (t.flowStartedAt != null || t.elapsedMilliseconds != 0)) ||
+          (t.elapsedMilliseconds > 0 && t.sessionId == null) ||
           (t.running && t.sessionId == null) ||
           (t.taskId != null && !w.tasks.any((task) => task.id == t.taskId))) {
         throw const FormatException('Invalid timer state.');
       }
+      // A count up timer has no trustworthy deadline to recover. Keep the
+      // saved checkpoint and require an explicit resume after every load.
+      if (t.isFlowFocus) t.flowStartedAt = null;
       return w;
     } on FormatException {
       rethrow;

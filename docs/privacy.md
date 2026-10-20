@@ -14,6 +14,8 @@ The animated countdown is an illustration. It does not run or record your focus 
 
 The workspace stores your current timer, interval settings, saved rhythms, daily goal, appearance, and completed focus sessions. The native preferences store music settings, alert selection, and keyboard shortcuts. Imported audio is copied into a local music library. Saved YouTube sources contain a video ID and the name you provided.
 
+Version 0.3.0 also stores Flow checkpoints, a weekly target and the optional Pick up here sentence in the workspace. Completed sessions can retain that sentence as it was at completion. `focus-profiles.json` stores named snapshots of timer, music, ambient levels and blocker settings. Ambient preferences and original bundled loops remain local. These features add no analytics or cloud service.
+
 Version 0.2.0 beta adds `blocker.json` for the enabled setting, selected app names and bundle identifiers, website domains, and current-stint override. It is separate from `workspace.json` and its previous-save backup. Stint does not store visited URLs. Stint does not encrypt local files itself.
 
 Version 0.1.1 uses the `io.github.albert2704.stint` bundle identity, `Stint` Application Support directory, and Stint native preference keys. It starts with fresh settings, history, music library, and permissions when you upgrade from 0.1.0. The previous data is left untouched and is not read or imported automatically.

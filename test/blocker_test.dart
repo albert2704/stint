@@ -77,6 +77,54 @@ void main() {
   });
 
   test(
+    'Flow renews bounded protection and releases at pause and finish',
+    () async {
+      var now = DateTime(2026, 10, 20, 10);
+      final timer = StintController(
+        MemoryWorkspaceStore(),
+        now: () => now,
+        tickAutomatically: false,
+      );
+      final blocker = BlockerController(
+        timer,
+        store: MemoryBlockerStore(),
+        channel: channel,
+        automaticHeartbeat: false,
+      );
+      addTearDown(() {
+        blocker.dispose();
+        timer.dispose();
+      });
+      await blocker.initialize();
+      await blocker.save(enabled: true, apps: [app], domains: ['example.com']);
+      timer.applyMode(FocusMode.flow);
+      timer.startTimer();
+      expect(timer.timer.endsAt, isNull);
+      expect(blocker.active, isTrue);
+      expect(
+        blocker.nativeState['deadlineMilliseconds'],
+        now.millisecondsSinceEpoch + 30000,
+      );
+      now = now.add(const Duration(hours: 2));
+      timer.tick();
+      expect(blocker.active, isTrue);
+      expect(
+        blocker.nativeState['leaseExpiresAt'],
+        now.millisecondsSinceEpoch + 30000,
+      );
+      timer.pauseTimer();
+      expect(blocker.nativeState['active'], isFalse);
+      timer.startTimer();
+      expect(blocker.active, isTrue);
+      timer.finishFlow();
+      expect(blocker.active, isFalse);
+      expect(timer.timer.phase, TimerPhase.shortBreak);
+      timer.startTimer();
+      expect(blocker.active, isFalse);
+    },
+  );
+
+  test(
     'settings validate size, protected apps, duplicate and damaged data',
     () {
       for (final bundle in protectedBundleIds) {
@@ -317,7 +365,10 @@ void main() {
       await blocker.refreshFilter();
       expect(blocker.error, isNull);
       expect(blocker.filter.state, WebsiteFilterState.configured);
-      expect(blocker.statusLabel, 'App guard on · website protection starting…');
+      expect(
+        blocker.statusLabel,
+        'App guard on · website protection starting…',
+      );
       blocker.filter = const WebsiteFilterStatus(
         WebsiteFilterState.configured,
         'Proxy routing active',

@@ -2,7 +2,7 @@
 
 Stint combines a Flutter interface with small native macOS services. The local development route builds an Apple Silicon debug app using Apple's Command Line Tools. A separate full Xcode workflow builds a universal release app and downloadable DMG and ZIP files. Version 0.1.1 passed the [packaging workflow](https://github.com/albert2704/stint/actions/runs/38021166173) and [CI checks](https://github.com/albert2704/stint/actions/runs/38021166305).
 
-Version 0.2.0 beta adds app and website blocking. Download the [beta release](https://github.com/albert2704/stint/releases/tag/v0.2.0-beta.1) or build the current checkout. The older 0.1.1 downloads do not include the blocker. See [blocker setup](blocking.md).
+Version 0.3.0 beta adds profiles, Flow, ambient mixing, weekly targets and a continuation sentence, alongside the app and website blocking introduced in 0.2.0. Download the [beta release](https://github.com/albert2704/stint/releases/tag/v0.3.0-beta.1) or build the current checkout. The older 0.1.1 downloads do not include the blocker. See [blocker setup](blocking.md).
 
 [Architecture](architecture.md) · [Contributing](../CONTRIBUTING.md) · [Troubleshooting](troubleshooting.md) · [README](../README.md)
 
@@ -53,6 +53,8 @@ open 'build/local/Stint.app'
 ```
 
 The script fetches dependencies, precaches the macOS engine, assembles Flutter debug assets, compiles the Objective-C host and native services, installs the supplied icon resources, and signs the result locally with an ad hoc signature. It verifies that signature before reporting success. This signature supports local development; it is not Developer ID distribution signing.
+
+When dependencies and the macOS engine are already cached, set `STINT_SKIP_DEPENDENCY_SETUP=1` to skip package resolution and precaching. For offline regression checks, use `bash scripts/flutter.sh test --no-pub`. Flutter tests need permission to bind a local loopback socket.
 
 The output is `build/local/Stint.app`, with executable `Stint` and bundle identifier `io.github.albert2704.stint`. The Dart package and channel prefix are `stint`. Version 0.1.1 uses a fresh `Stint` data folder and native preference keys; it does not read, migrate, or delete data belonging to 0.1.0.
 

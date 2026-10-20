@@ -7,7 +7,7 @@
 <p align="center">
   <a href="https://stint-focus.vercel.app/">Website</a> ·
   <a href="LICENSE">MIT license</a> ·
-  <a href="https://github.com/albert2704/stint/releases/tag/v0.2.0-beta.1">Download beta for Mac</a> ·
+  <a href="https://github.com/albert2704/stint/releases/tag/v0.3.0-beta.1">Download beta for Mac</a> ·
   <a href="docs/user-guide.md">User guide</a> ·
   <a href="docs/development.md">Build from source</a> ·
   <a href="CONTRIBUTING.md">Contribute</a>
@@ -23,15 +23,15 @@ Explore the [Stint website](https://stint-focus.vercel.app/) for an animated fea
 
 ## Download and install
 
-[**Download Stint 0.2.0 beta for Mac (.dmg)**](https://github.com/albert2704/stint/releases/download/v0.2.0-beta.1/Stint-0.2.0-macos-universal.dmg) · [ZIP alternative](https://github.com/albert2704/stint/releases/download/v0.2.0-beta.1/Stint-0.2.0-macos-universal.zip) · [Release notes and checksums](https://github.com/albert2704/stint/releases/tag/v0.2.0-beta.1)
+[**Download Stint 0.3.0 beta for Mac (.dmg)**](https://github.com/albert2704/stint/releases/download/v0.3.0-beta.1/Stint-0.3.0-macos-universal.dmg) · [ZIP alternative](https://github.com/albert2704/stint/releases/download/v0.3.0-beta.1/Stint-0.3.0-macos-universal.zip) · [Release notes and checksums](https://github.com/albert2704/stint/releases/tag/v0.3.0-beta.1)
 
-This beta adds optional app and website blocking. The earlier [0.1.1 preview](https://github.com/albert2704/stint/releases/tag/v0.1.1) remains available without the blocker.
+This beta adds focus profiles, Flow mode, an ambient mixer, weekly focus targets and Pick up here. It also includes the optional app and website blocker from 0.2.0. The earlier [0.1.1 preview](https://github.com/albert2704/stint/releases/tag/v0.1.1) remains available without the blocker.
 
 Open the DMG, drag **Stint.app** to **Applications**, then open it there. Flutter and developer tools are not required. See the [installation guide](docs/install.md) for first-launch approval, checksums, and updates.
 
 **“Stint” Not Opened?** This beta is not notarized, so macOS may say Apple could not verify it is free of malware. If you trust your copy from the official release page, select **Done**, then **System Settings → Privacy & Security → Open Anyway** for Stint and confirm. See the [warning screenshot and complete steps](docs/install.md#first-launch-and-gatekeeper).
 
-**Upgrading from 0.1.1:** quit Stint and replace the app. The beta keeps the same app identity and saved data. If you tested the older website helper from source, run **Set up website blocker** once to upgrade it. See the [beta release notes](docs/releases/v0.2.0-beta.1.md).
+**Upgrading from 0.1.1 or 0.2.0:** quit Stint and replace the app. The beta keeps the same app identity and saved data. If you tested the older website helper from source, run **Set up website blocker** once to upgrade it. See the [beta release notes](docs/releases/v0.3.0-beta.1.md).
 
 **Upgrading from 0.1.0:** quit the old app first. Version 0.1.1 uses a new Stint app identity and starts with fresh settings, history, music library, and permissions. Your previous data is left untouched and is not imported automatically. See the [0.1.1 release notes](docs/releases/v0.1.1.md).
 
@@ -43,21 +43,28 @@ Open the DMG, drag **Stint.app** to **Applications**, then open it there. Flutte
 
 ## What you can do
 
+The 0.3.0 beta includes all the features below.
+
 | Feature | How it works |
 | --- | --- |
 | Menu bar timer | See the countdown while working elsewhere. Open a compact panel for timer, music, progress, and settings. |
 | Adjustable rhythms | Start with Quick focus, Classic, or Deep work. Save custom durations and change the current interval by one minute. |
+| Focus profiles | Save timer mode, rhythm, music, ambient mix and blocklist together. Coding, Writing and Study are editable starting examples. Applying a profile leaves the timer idle. |
+| Flow mode | Count upward until you choose Take break. The suggested break is one fifth of focused time, rounded up to a minute, between 1 and 30 minutes. |
 | Four-stint cycle | Follow four focus sessions with short breaks, then a long break. Reset, skip, or jump with confirmation before discarding unfinished time. |
 | Completion alerts | Hear your chosen alert twice and see a Stint completion card. Preview the card or sound before a session. |
 | Music | Choose three original loops, import audio, or add a YouTube link. Play with timer starts and pauses music with focus and breaks. |
+| Ambient mixer | Blend original Rain, Café hum and Brown noise loops with music or play them on their own. Save independent layer volumes. |
 | Progress | See today's count, weekly activity, streaks, goal days, and total focus time. Set a daily goal from 1 to 16. |
+| Weekly focus | See recorded time, completed sessions and average session length for the selected week. Set a weekly target in minutes. |
+| Pick up here | Save one optional sentence about your next step. It stays near the timer until you edit or clear it. |
 | Keyboard shortcuts | Record your own Start/Pause, Reset, Skip, and Show panel keys. Choose Mac-wide or app-only scope. |
 | Appearance | Use System, Light, or Dark with the same compact interface. |
 | Distraction blocker (beta) | Hide chosen Mac apps and block selected website names through a free administrator-installed helper. Browsers stay open; early unblock needs confirmation. |
 
-**Blocker setup:** version 0.2.0 beta includes app hiding and a local website proxy. Setup installs or upgrades a small helper with administrator approval; no Apple Developer subscription or browser extension is needed. Browsers stay open, and HTTPS stays encrypted. See [setup, recovery and limits](docs/blocking.md).
+**Blocker setup:** the beta includes app hiding and a local website proxy. Setup installs or upgrades a small helper with administrator approval; no Apple Developer subscription or browser extension is needed. Browsers stay open, and HTTPS stays encrypted. See [setup, recovery and limits](docs/blocking.md).
 
-Live Edge checks confirmed that YouTube was blocked while an existing allowed tab remained accessible, and access returned after pausing. App crash recovery also restored the saved proxy settings. Chrome is intended to use the same macOS proxy settings but has not been tested for this beta. Loaded pages and buffered video can remain visible; apps that ignore macOS proxy settings are outside its protection.
+Live Edge checks on 0.2.0 confirmed that YouTube was blocked while an existing allowed tab remained accessible, and access returned after pausing. App crash recovery also restored the saved proxy settings. Chrome is intended to use the same macOS proxy settings but has not been tested. Real website enforcement was not re-tested for 0.3.0. Loaded pages and buffered video can remain visible; apps that ignore macOS proxy settings are outside its protection.
 
 ## Build and run
 
